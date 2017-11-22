@@ -1,5 +1,5 @@
 let
 
 in rec {
-  modules = import ./module-list.nix;
+  modules = import ./modules/module-list.nix;
 }
