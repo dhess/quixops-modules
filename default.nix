@@ -1,1 +1,5 @@
-import ./module-list.nix
+let
+
+in rec {
+  modules = import ./module-list.nix;
+}
