@@ -7,8 +7,8 @@ let
     try = builtins.tryEval <quixops_pkgs>;
   in
     if try.success
-    then builtins.trace "Using <quixops_pkgs>" try.value
-    else import ./fetch-nixpkgs.nix;
+      then builtins.trace "Using <quixops_pkgs>" try.value
+      else import ./fetch-nixpkgs.nix;
 
   pkgs = import fetchNixPkgs {};
   lib = pkgs.lib;
@@ -16,5 +16,30 @@ let
 in lib // (rec {
 
   inherit fetchNixPkgs;
+
+  importTest = fn: args: system: import fn ({
+    inherit system;
+  } // args);
+
+  callTest = forSystems: fn: args: forSystems (system: lib.hydraJob (importTest fn args system));
+
+  callSubTests = forSystems: fn: args:
+  let
+    discover = attrs:
+    let
+      subTests = lib.filterAttrs (lib.const (lib.hasAttr "test")) attrs;
+    in
+     lib.mapAttrs (lib.const (t: lib.hydraJob t.test)) subTests;
+
+    discoverForSystem = system: lib.mapAttrs (_: test: {
+      ${system} = test;
+    }) (discover (importTest fn args system));
+
+  # If the test is only for a particular system, use only the specified
+  # system instead of generating attributes for all available systems.
+  in
+    if args ? system
+      then discover (import fn args)
+      else lib.foldAttrs lib.mergeAttrs {} (lib.map discoverForSystem forSystems);
 
 })
