@@ -1,10 +1,14 @@
-{ nixpkgs ? (import ./fetch-nixpkgs.nix)
+let
+
+  localLib = import ./lib.nix;
+
+in
+
+{ pkgs ? (import (localLib.fetchNixPkgs) { system = "x86_64-linux"; })
 , supportedSystems ? [ "x86_64-linux" ]
 }:
 
 let
-
-  pkgs = import nixpkgs { system = "x86_64-linux"; };
 
   forAllSystems = pkgs.lib.genAttrs supportedSystems;
 
