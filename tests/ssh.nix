@@ -1,20 +1,18 @@
 let
 
+  quixopsModules = (import ../.).modules;
+
 in
 
 import <nixpkgs/nixos/tests/make-test.nix> ({ pkgs, ... }: {
 
-  name = "test";
+  name = "ssh";
 
-  nodes = {
-    machine = { config, pkgs, ... }: {
-      imports = [];
-      services.sshd.enable = true;
-    };
+  machine = { config, pkgs, ... }: {
+      imports = quixopsModules;
   };
 
   testScript  = ''
-    startAll
     $machine->waitForUnit("sshd.service");
     $machine->waitForOpenPort(22);
   '';

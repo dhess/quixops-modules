@@ -16,6 +16,6 @@ let
 
 in rec {
 
-  test = callTest ./test.nix {};
+  ssh = callTest ./ssh.nix {};
 
 }
