@@ -15,7 +15,11 @@ let
   
 in lib // (rec {
 
+  quixopsModules = (import ./default.nix).modules;
+
   inherit fetchNixPkgs;
+
+  ## Testing stuff.
 
   importTest = fn: args: system: import fn ({
     inherit system;
