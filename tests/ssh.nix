@@ -68,6 +68,24 @@ in rec
           bobPublicKey
         ];
     };
+    badserver = { config, pkgs, ... }: {
+        imports = [
+          ./common/users.nix
+          ./common/root-user.nix
+        ];
+        users.users.root.openssh.authorizedKeys.keys = [
+          rootPublicKey
+        ];
+        users.users.alice.openssh.authorizedKeys.keys = [
+          alicePublicKey
+        ];
+        users.users.bob.openssh.authorizedKeys.keys = [
+          bobPublicKey
+        ];
+        services.openssh.enable = true;
+        services.openssh.passwordAuthentication = true;
+        services.openssh.permitRootLogin = "yes";
+    };
     client = { config, pkgs, ... }: {
         imports = lib.quixopsModules;
     };
@@ -106,17 +124,23 @@ in rec
     };
 
     subtest "user-password-disallowed", sub {
-      $client->fail("${pkgs.sshpass}/bin/sshpass -p ${alice.password}" .
-                       " ssh -o UserKnownHostsFile=/dev/null" .
-                       " -o StrictHostKeyChecking=no" .
-                       " -l alice server true") =~ /Permission denied (publickey,keyboard-interactive)/;
+      my $sshcmd = "${pkgs.sshpass}/bin/sshpass -p ${alice.password}" .
+                   " ssh -o UserKnownHostsFile=/dev/null" .
+                   " -o StrictHostKeyChecking=no -l alice";
+      $client->fail($sshcmd . " server true") =~ /Permission denied (publickey,keyboard-interactive)/;
+
+      # Make sure the same command succeeds on the misconfigured server.
+      $client->succeed($sshcmd . " badserver true");
     };
 
     subtest "root-password-disallowed", sub {
-      $client->fail("${pkgs.sshpass}/bin/sshpass -p ${root.password}" .
-                       " ssh -o UserKnownHostsFile=/dev/null" .
-                       " -o StrictHostKeyChecking=no" .
-                       " -l root server true") =~ /Permission denied (publickey,keyboard-interactive)/;
+      my $sshcmd = "${pkgs.sshpass}/bin/sshpass -p ${root.password}" .
+                   " ssh -o UserKnownHostsFile=/dev/null" .
+                   " -o StrictHostKeyChecking=no -l root";
+      $client->fail($sshcmd . " server true") =~ /Permission denied (publickey,keyboard-interactive)/;
+
+      # Make sure the same command succeeds on the misconfigured server.
+      $client->succeed($sshcmd . " badserver true");
     };
 
   '';
