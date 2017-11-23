@@ -19,7 +19,9 @@ in lib // (rec {
 
   inherit fetchNixPkgs;
 
-  ## Testing stuff.
+
+  ## Test harness.
+  #
 
   importTest = fn: args: system: import fn ({
     inherit system;
@@ -45,5 +47,13 @@ in lib // (rec {
     if args ? system
       then discover (import fn args)
       else lib.foldAttrs lib.mergeAttrs {} (lib.map discoverForSystem forSystems);
+
+
+  ## Local maintainers.
+  #
+
+  quixopsMaintainers = {
+    dhess = "Drew Hess <dhess-src@quixoftic.com>";
+  };
 
 })
