@@ -16,6 +16,7 @@ let
 
 in rec {
 
+  environment = callTest ./environment.nix {};
   ssh = callTest ./ssh.nix {};
 
 }
