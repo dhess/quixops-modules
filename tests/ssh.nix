@@ -67,6 +67,7 @@ in rec
         users.users.bob.openssh.authorizedKeys.keys = [
           bobPublicKey
         ];
+        quixops.defaults.enable = true;
     };
     badserver = { config, pkgs, ... }: {
         imports = [
@@ -88,6 +89,7 @@ in rec
     };
     client = { config, pkgs, ... }: {
         imports = lib.quixopsModules;
+        quixops.defaults.enable = true;
     };
   };
 

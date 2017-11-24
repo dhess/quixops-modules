@@ -20,6 +20,7 @@ in rec
     imports = [
       ./common/users.nix
     ] ++ lib.quixopsModules;
+    quixops.defaults.enable = true;
   };
 
   testScript = { ... }:
@@ -36,6 +37,14 @@ in rec
       $whoami eq "alice\n" or die "su failed";
       my $histfile = $machine->fail("su - alice -c 'printenv HISTFILE'");
       $histfile eq "" or die "Unexpected output from 'printenv HISTFILE'";
+    };
+
+    subtest "git-is-in-path", sub {
+      $machine->succeed("git init") =~ /Initialized empty Git repository in/;
+    };
+
+    subtest "wget-is-in-path", sub {
+      $machine->succeed("wget --version") =~ /GNU Wget/;
     };
   '';
 

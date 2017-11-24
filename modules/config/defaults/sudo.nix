@@ -1,9 +1,30 @@
 # Safer sudo defaults.
 
-{ config, ... }:
+{ config, lib, ... }:
 
+with lib;
+
+let
+
+  cfg = config.quixops.defaults.sudo;
+  enabled = cfg.enable;
+
+in
 {
-  config = {
+  options.quixops.defaults.sudo = {
+
+    enable = mkOption {
+      type = types.bool;
+      default = false;
+      description = ''
+        Enable the Quixops sudo configuration defaults.
+      '';
+    };
+
+  };
+
+  config = mkIf enabled {
+
     # If we don't reset TZ, services that are started in a sudo shell
     # might use the user's original timezone settings, rather than the
     # system's.
@@ -22,5 +43,6 @@
         export HISTFILE=
       '';
     environment.etc."sudo.env".mode = "0640";
+
   };
 }

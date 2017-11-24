@@ -1,10 +1,32 @@
-{ config, ... }:
+{ config, lib, ... }:
 
+with lib;
+
+let
+
+  cfg = config.quixops.defaults.system;
+  enabled = cfg.enable;
+
+in
 {
-  config = {
+  options.quixops.defaults.system = {
+
+    enable = mkOption {
+      type = types.bool;
+      default = false;
+      description = ''
+        Enable the Quixops system configuration defaults.
+      '';
+    };
+
+  };
+
+  config = mkIf enabled {
+
     i18n.defaultLocale = "en_US.UTF-8";
     services.logrotate.enable = true;
     sound.enable = false;
     time.timeZone = "Etc/UTC";
+
   };
 }

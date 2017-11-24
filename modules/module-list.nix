@@ -1,4 +1,5 @@
 [
+  ./config/defaults/default.nix
   ./config/defaults/environment.nix
   ./config/defaults/networking.nix
   ./config/defaults/nix.nix

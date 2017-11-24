@@ -1,7 +1,28 @@
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 
+with lib;
+
+let
+
+  cfg = config.quixops.defaults.environment;
+  enabled = cfg.enable;
+
+in
 {
-  config = {
+  options.quixops.defaults.environment = {
+
+    enable = mkOption {
+      type = types.bool;
+      default = false;
+      description = ''
+        Enable the Quixops shell environment configuration defaults.
+      '';
+    };
+
+  };
+
+  config = mkIf enabled {
+
     environment.systemPackages = with pkgs; [
       git
       wget
@@ -27,5 +48,7 @@
     environment.noXlibs = true;
 
     programs.bash.enableCompletion = true;
+
   };
+
 }
