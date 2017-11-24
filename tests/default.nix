@@ -12,11 +12,11 @@ let
 
   forAllSystems = lib.genAttrs supportedSystems;
   callTest = lib.callTest forAllSystems;
-  callSubTests = lib.callSubTests forAllSystems;
+  callSubTests = lib.callSubTests supportedSystems;
 
 in rec {
 
-  environment = callTest ./environment.nix {};
+  environment = callSubTests ./environment.nix {};
   ssh = callTest ./ssh.nix {};
 
 }

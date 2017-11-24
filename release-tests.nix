@@ -5,12 +5,12 @@ let
 in
 
 { pkgs ? (import (lib.fetchNixPkgs) { system = "x86_64-linux"; })
-, supportedSystems ? [ "x86_64-linux" ]
+, supportedSystems ? [ "x86_64-linux" "armv7l-linux" ]
 }:
 
 let
 
 in
-  lib.mapAttrsToList
-    (n: v: v.x86_64-linux or {})
+  lib.collect
+    lib.isDerivation
     (import ./release.nix { inherit pkgs supportedSystems; }).tests
