@@ -5,7 +5,7 @@ let
 in
 
 { pkgs ? (import (lib.fetchNixPkgs) { system = "x86_64-linux"; })
-, supportedSystems ? [ "x86_64-linux" "armv7l-linux" ]
+, supportedSystems ? [ "x86_64-linux" ]
 }:
 
 let
