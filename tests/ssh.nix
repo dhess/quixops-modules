@@ -4,7 +4,11 @@ let
 
 in
 
-import <nixpkgs/nixos/tests/make-test.nix> ({ pkgs, ... }:
+import <nixpkgs/nixos/tests/make-test.nix> (
+
+{ system ? builtins.currentSystem
+, pkgs ? (import lib.fetchNixPkgs) { inherit system; }
+, ... }:
 
 let
 
