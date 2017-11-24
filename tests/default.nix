@@ -17,6 +17,6 @@ let
 in rec {
 
   environment = callSubTests ./environment.nix {};
-  ssh = callTest ./ssh.nix {};
+  ssh = callSubTests ./ssh.nix {};
 
 }

@@ -4,13 +4,14 @@ let
 
 in
 
-import <nixpkgs/nixos/tests/make-test.nix> (
-
 { system ? builtins.currentSystem
 , pkgs ? (import lib.fetchNixPkgs) { inherit system; }
 , ... }:
 
 let
+
+  testing = import <nixpkgs/nixos/lib/testing.nix> { inherit system; };
+  inherit (testing) makeTest;
 
   alicePrivateKey = pkgs.writeText "alice.key" ''
     -----BEGIN OPENSSH PRIVATE KEY-----
@@ -48,107 +49,110 @@ let
 
   rootPublicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPnpwChRRru8LDlpDuNeBR9S+cUzU8o6JJVgqQJ2zZ4F root";
 
+  makeSshTest = name: machineAttrs: makeTest {
+    name = "ssh-${name}";
+    meta = with lib.quixopsMaintainers; {
+      maintainers = [ dhess ];
+    };
+
+    nodes = {
+      server = { config, pkgs, ... }: {
+          imports = [
+            ./common/users.nix
+            ./common/root-user.nix
+          ] ++ lib.quixopsModules;
+          users.users.root.openssh.authorizedKeys.keys = [
+            rootPublicKey
+          ];
+          users.users.alice.openssh.authorizedKeys.keys = [
+            alicePublicKey
+          ];
+          users.users.bob.openssh.authorizedKeys.keys = [
+            bobPublicKey
+          ];
+      } // machineAttrs;
+      badserver = { config, pkgs, ... }: {
+          imports = [
+            ./common/users.nix
+            ./common/root-user.nix
+          ];
+          users.users.root.openssh.authorizedKeys.keys = [
+            rootPublicKey
+          ];
+          users.users.alice.openssh.authorizedKeys.keys = [
+            alicePublicKey
+          ];
+          users.users.bob.openssh.authorizedKeys.keys = [
+            bobPublicKey
+          ];
+          services.openssh.enable = true;
+          services.openssh.passwordAuthentication = true;
+          services.openssh.permitRootLogin = "yes";
+      };
+      client = { config, pkgs, ... }: {
+          imports = lib.quixopsModules;
+      };
+    };
+
+    testScript  = { nodes, ... }:
+    let
+      alice = nodes.server.config.users.users.alice;
+      bob = nodes.server.config.users.users.bob;
+      root = nodes.server.config.users.users.root;
+    in
+    ''
+      startAll;
+      $server->waitForUnit("sshd.service");
+
+      subtest "user-authkey", sub {
+        $client->succeed("cat ${alicePrivateKey} > alice.key");
+        $client->succeed("chmod 0600 alice.key");
+        $client->succeed("ssh -o UserKnownHostsFile=/dev/null" .
+                         " -o StrictHostKeyChecking=no -i alice.key" .
+                         " -l alice server true");
+
+        $client->succeed("cat ${bobPrivateKey} > bob.key");
+        $client->succeed("chmod 0600 bob.key");
+        $client->succeed("ssh -o UserKnownHostsFile=/dev/null" .
+                         " -o StrictHostKeyChecking=no -i bob.key" .
+                         " -l bob server true");
+      };
+
+      subtest "root-authkey", sub {
+        $client->succeed("cat ${rootPrivateKey} > root.key");
+        $client->succeed("chmod 0600 root.key");
+        $client->succeed("ssh -o UserKnownHostsFile=/dev/null" .
+                         " -o StrictHostKeyChecking=no -i root.key" .
+                         " -l root server true");
+      };
+
+      subtest "user-password-disallowed", sub {
+        my $sshcmd = "${pkgs.sshpass}/bin/sshpass -p ${alice.password}" .
+                     " ssh -o UserKnownHostsFile=/dev/null" .
+                     " -o StrictHostKeyChecking=no -l alice";
+        $client->fail($sshcmd . " server true") =~ /Permission denied (publickey,keyboard-interactive)/;
+
+        # Make sure the same command succeeds on the misconfigured server.
+        $client->succeed($sshcmd . " badserver true");
+      };
+
+      subtest "root-password-disallowed", sub {
+        my $sshcmd = "${pkgs.sshpass}/bin/sshpass -p ${root.password}" .
+                     " ssh -o UserKnownHostsFile=/dev/null" .
+                     " -o StrictHostKeyChecking=no -l root";
+        $client->fail($sshcmd . " server true") =~ /Permission denied (publickey,keyboard-interactive)/;
+
+        # Make sure the same command succeeds on the misconfigured server.
+        $client->succeed($sshcmd . " badserver true");
+      };
+
+    '';
+  };
+
 in rec
 {
 
-  name = "ssh";
-  meta = with lib.quixopsMaintainers; {
-    maintainers = [ dhess ];
-  };
+  globalEnableTest = makeSshTest "global-enable" { quixops.defaults.enable = true; };
+  sshEnableTest = makeSshTest "ssh-enable" { quixops.defaults.ssh.enable = true; };
 
-  nodes = {
-    server = { config, pkgs, ... }: {
-        imports = [
-          ./common/users.nix
-          ./common/root-user.nix
-        ] ++ lib.quixopsModules;
-        users.users.root.openssh.authorizedKeys.keys = [
-          rootPublicKey
-        ];
-        users.users.alice.openssh.authorizedKeys.keys = [
-          alicePublicKey
-        ];
-        users.users.bob.openssh.authorizedKeys.keys = [
-          bobPublicKey
-        ];
-        quixops.defaults.enable = true;
-    };
-    badserver = { config, pkgs, ... }: {
-        imports = [
-          ./common/users.nix
-          ./common/root-user.nix
-        ];
-        users.users.root.openssh.authorizedKeys.keys = [
-          rootPublicKey
-        ];
-        users.users.alice.openssh.authorizedKeys.keys = [
-          alicePublicKey
-        ];
-        users.users.bob.openssh.authorizedKeys.keys = [
-          bobPublicKey
-        ];
-        services.openssh.enable = true;
-        services.openssh.passwordAuthentication = true;
-        services.openssh.permitRootLogin = "yes";
-    };
-    client = { config, pkgs, ... }: {
-        imports = lib.quixopsModules;
-        quixops.defaults.enable = true;
-    };
-  };
-
-  testScript  = { nodes, ... }:
-  let
-    alice = nodes.server.config.users.users.alice;
-    bob = nodes.server.config.users.users.bob;
-    root = nodes.server.config.users.users.root;
-  in
-  ''
-    startAll;
-    $server->waitForUnit("sshd.service");
-
-    subtest "user-authkey", sub {
-      $client->succeed("cat ${alicePrivateKey} > alice.key");
-      $client->succeed("chmod 0600 alice.key");
-      $client->succeed("ssh -o UserKnownHostsFile=/dev/null" .
-                       " -o StrictHostKeyChecking=no -i alice.key" .
-                       " -l alice server true");
-
-      $client->succeed("cat ${bobPrivateKey} > bob.key");
-      $client->succeed("chmod 0600 bob.key");
-      $client->succeed("ssh -o UserKnownHostsFile=/dev/null" .
-                       " -o StrictHostKeyChecking=no -i bob.key" .
-                       " -l bob server true");
-    };
-
-    subtest "root-authkey", sub {
-      $client->succeed("cat ${rootPrivateKey} > root.key");
-      $client->succeed("chmod 0600 root.key");
-      $client->succeed("ssh -o UserKnownHostsFile=/dev/null" .
-                       " -o StrictHostKeyChecking=no -i root.key" .
-                       " -l root server true");
-    };
-
-    subtest "user-password-disallowed", sub {
-      my $sshcmd = "${pkgs.sshpass}/bin/sshpass -p ${alice.password}" .
-                   " ssh -o UserKnownHostsFile=/dev/null" .
-                   " -o StrictHostKeyChecking=no -l alice";
-      $client->fail($sshcmd . " server true") =~ /Permission denied (publickey,keyboard-interactive)/;
-
-      # Make sure the same command succeeds on the misconfigured server.
-      $client->succeed($sshcmd . " badserver true");
-    };
-
-    subtest "root-password-disallowed", sub {
-      my $sshcmd = "${pkgs.sshpass}/bin/sshpass -p ${root.password}" .
-                   " ssh -o UserKnownHostsFile=/dev/null" .
-                   " -o StrictHostKeyChecking=no -l root";
-      $client->fail($sshcmd . " server true") =~ /Permission denied (publickey,keyboard-interactive)/;
-
-      # Make sure the same command succeeds on the misconfigured server.
-      $client->succeed($sshcmd . " badserver true");
-    };
-
-  '';
-
-})
+}
