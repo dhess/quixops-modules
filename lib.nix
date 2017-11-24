@@ -29,13 +29,10 @@ in lib // (rec {
 
   callTest = forSystems: fn: args: forSystems (system: lib.hydraJob (importTest fn args system));
 
-  callSubTests = forSystems: fn: args:
-  let
-    discover = attrs:
-    let
+  callSubTests = supportedSystems: fn: args: let
+    discover = attrs: let
       subTests = lib.filterAttrs (lib.const (lib.hasAttr "test")) attrs;
-    in
-     lib.mapAttrs (lib.const (t: lib.hydraJob t.test)) subTests;
+    in lib.mapAttrs (lib.const (t: lib.hydraJob t.test)) subTests;
 
     discoverForSystem = system: lib.mapAttrs (_: test: {
       ${system} = test;
@@ -43,11 +40,8 @@ in lib // (rec {
 
   # If the test is only for a particular system, use only the specified
   # system instead of generating attributes for all available systems.
-  in
-    if args ? system
-      then discover (import fn args)
-      else lib.foldAttrs lib.mergeAttrs {} (lib.map discoverForSystem forSystems);
-
+  in if args ? system then discover (import fn args)
+     else lib.foldAttrs lib.mergeAttrs {} (map discoverForSystem supportedSystems);
 
   ## Local maintainers.
   #
