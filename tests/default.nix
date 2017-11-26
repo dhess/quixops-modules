@@ -22,5 +22,6 @@ in rec {
   sudo = callSubTests ./sudo.nix {};
   ssh = callSubTests ./ssh.nix {};
   system = callSubTests ./system.nix {};
+  users = callSubTests ./users.nix {};
 
 }
