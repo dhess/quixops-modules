@@ -19,6 +19,7 @@ in rec {
   environment = callSubTests ./environment.nix {};
   networking = callSubTests ./networking.nix {};
   security = callSubTests ./security.nix {};
+  sudo = callSubTests ./sudo.nix {};
   ssh = callSubTests ./ssh.nix {};
 
 }

@@ -27,13 +27,14 @@ in
 
     # If we don't reset TZ, services that are started in a sudo shell
     # might use the user's original timezone settings, rather than the
-    # system's.
+    # system's. Note that we must remove TZ from both env_check, and
+    # then explicitly "unset" it in sudo.env, to make sure it's not
+    # set in the sudo environment.
     security.sudo.extraConfig =
       ''
         Defaults        !lecture,tty_tickets,!fqdn,always_set_home,env_reset,env_file="/etc/sudo.env"
-        Defaults        env_keep -= TZ
-        Defaults        env_keep -= TMOUT
-        Defaults        env_keep -= HISTFILE
+        Defaults        env_check -= "TZ"
+        Defaults        env_keep -= "TZ TMOUT HISTFILE"
       '';
 
     # Don't save shell history and time out idle shells.
@@ -41,6 +42,7 @@ in
       ''
         export TMOUT=120
         export HISTFILE=
+        export TZ=
       '';
     environment.etc."sudo.env".mode = "0640";
 
