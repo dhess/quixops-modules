@@ -11,8 +11,11 @@ in
 
 let
 
+  testing = import <nixpkgs/nixos/lib/testing.nix> { inherit system; };
+  inherit (testing) makeTest;
+
   makeEnvTest = name: machineAttrs:
-    lib.makeTest {
+    makeTest {
       name = "environment-${name}";
       meta = with lib.quixopsMaintainers; {
         maintainers = [ dhess ];
@@ -21,6 +24,7 @@ let
         imports = [
           ./common/users.nix
         ] ++ lib.quixopsModules;
+        nixpkgs.overlays = lib.quixopsOverlays;
       } // machineAttrs;
       testScript = { ... }:
       ''

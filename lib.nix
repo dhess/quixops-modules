@@ -16,22 +16,15 @@ let
 
   lib = pkgs.lib;
 
-  # XXX dhess: <nixpkgs/...> here refers to the "nixpkgs=..." part of
-  # NIX_PATH in the user's environment. Is there a way to use the
-  # nixpkgs in this `let`?
-
-  testing = import <nixpkgs/nixos/lib/testing.nix> { system = builtins.currentSystem; };
-
 in lib // (rec {
 
   quixopsModules = (import ./default.nix).modules;
+  quixopsOverlays = (import ./default.nix).overlays;
 
   inherit fetchNixPkgs nixpkgs;
 
   ## Test harness.
   #
-
-  inherit (testing) makeTest;
 
   importTest = fn: args: system: import fn ({
     inherit system;

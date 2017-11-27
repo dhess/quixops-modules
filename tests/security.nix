@@ -11,8 +11,11 @@ in
 
 let
 
+  testing = import <nixpkgs/nixos/lib/testing.nix> { inherit system; };
+  inherit (testing) makeTest;
+
   makeSecurityTest = name: machineAttrs:
-    lib.makeTest {
+    makeTest {
 
       name = "security-${name}";
 
@@ -24,6 +27,7 @@ let
 
         imports = [
         ] ++ lib.quixopsModules;
+        nixpkgs.overlays = lib.quixopsOverlays;
 
       } // machineAttrs;
 

@@ -11,7 +11,10 @@ in
 
 let
 
-  makeNetworkingTest = name: machineAttrs: lib.makeTest {
+  testing = import <nixpkgs/nixos/lib/testing.nix> { inherit system; };
+  inherit (testing) makeTest;
+
+  makeNetworkingTest = name: machineAttrs: makeTest {
 
     name = "networking-${name}";
 
@@ -23,9 +26,11 @@ let
 
       server = { config, pkgs, ... }: {
         imports = lib.quixopsModules;
+        nixpkgs.overlays = lib.quixopsOverlays;
       } // machineAttrs;
 
       client = { ... }: {
+        nixpkgs.overlays = lib.quixopsOverlays;
       };
 
     };

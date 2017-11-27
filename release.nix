@@ -4,7 +4,8 @@ let
 
 in
 
-{ pkgs ? (import (lib.fetchNixPkgs) { system = "x86_64-linux"; })
+{ system ? builtins.currentSytem
+, pkgs ? (import (lib.fetchNixPkgs) { inherit system; })
 , supportedSystems ? [ "x86_64-linux" ]
 }:
 

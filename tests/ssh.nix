@@ -10,6 +10,9 @@ in
 
 let
 
+  testing = import <nixpkgs/nixos/lib/testing.nix> { inherit system; };
+  inherit (testing) makeTest;
+
   alicePrivateKey = pkgs.writeText "alice.key" ''
     -----BEGIN OPENSSH PRIVATE KEY-----
     b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
@@ -46,7 +49,7 @@ let
 
   rootPublicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPnpwChRRru8LDlpDuNeBR9S+cUzU8o6JJVgqQJ2zZ4F root";
 
-  makeSshTest = name: machineAttrs: lib.makeTest {
+  makeSshTest = name: machineAttrs: makeTest {
     name = "ssh-${name}";
     meta = with lib.quixopsMaintainers; {
       maintainers = [ dhess ];
@@ -58,6 +61,7 @@ let
             ./common/users.nix
             ./common/root-user.nix
           ] ++ lib.quixopsModules;
+          nixpkgs.overlays = lib.quixopsOverlays;
           users.users.root.openssh.authorizedKeys.keys = [
             rootPublicKey
           ];
@@ -73,6 +77,7 @@ let
             ./common/users.nix
             ./common/root-user.nix
           ];
+          nixpkgs.overlays = lib.quixopsOverlays;
           users.users.root.openssh.authorizedKeys.keys = [
             rootPublicKey
           ];
@@ -88,6 +93,7 @@ let
       };
       client = { config, pkgs, ... }: {
           imports = lib.quixopsModules;
+          nixpkgs.overlays = lib.quixopsOverlays;
       };
     };
 
