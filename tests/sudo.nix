@@ -11,9 +11,6 @@ in
 
 let
 
-  testing = import <nixpkgs/nixos/lib/testing.nix> { inherit system; };
-  inherit (testing) makeTest;
-
   aliceBashProfile = pkgs.writeText "alice.bash_profile" ''
     export TZ="America/Los_Angeles"
     export TMOUT=300
@@ -21,7 +18,7 @@ let
   '';
 
   makeSudoTest = name: machineAttrs:
-    makeTest {
+    lib.makeTest {
 
       name = "sudo-${name}";
 

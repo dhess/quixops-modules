@@ -11,11 +11,8 @@ in
 
 let
 
-  testing = import <nixpkgs/nixos/lib/testing.nix> { inherit system; };
-  inherit (testing) makeTest;
-
   makeSystemTest = name: machineAttrs:
-    makeTest {
+    lib.makeTest {
       name = "system-${name}";
       meta = with lib.quixopsMaintainers; {
         maintainers = [ dhess ];

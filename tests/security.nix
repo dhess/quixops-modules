@@ -11,11 +11,8 @@ in
 
 let
 
-  testing = import <nixpkgs/nixos/lib/testing.nix> { inherit system; };
-  inherit (testing) makeTest;
-
   makeSecurityTest = name: machineAttrs:
-    makeTest {
+    lib.makeTest {
 
       name = "security-${name}";
 

@@ -11,10 +11,7 @@ in
 
 let
 
-  testing = import <nixpkgs/nixos/lib/testing.nix> { inherit system; };
-  inherit (testing) makeTest;
-
-  makeNetworkingTest = name: machineAttrs: makeTest {
+  makeNetworkingTest = name: machineAttrs: lib.makeTest {
 
     name = "networking-${name}";
 
