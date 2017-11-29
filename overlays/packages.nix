@@ -8,6 +8,8 @@ let
 
 in rec {
 
-  unbound-block-hosts = callPackage pkgs/dns/unbound-block-hosts.nix {};
+  bb-org-overlays = callPackage ./pkgs/hardware/bb-org-overlays.nix {};
+
+  unbound-block-hosts = callPackage ./pkgs/dns/unbound-block-hosts.nix {};
 
 }

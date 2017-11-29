@@ -18,6 +18,7 @@ let
 in rec {
 
   ## Overlays.
+  #bb-org-overlays = callSubTests ./bb-org-overlays.nix { system = "armv7l-linux"; };
   unbound-block-hosts = callSubTests ./unbound-block-hosts.nix {};
 
   ## Configuration.
