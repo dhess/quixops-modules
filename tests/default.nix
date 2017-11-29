@@ -17,6 +17,11 @@ let
 
 in rec {
 
+  ## Overlays.
+  unbound-block-hosts = callSubTests ./unbound-block-hosts.nix {};
+
+  ## Configuration.
+
   environment = callSubTests ./environment.nix {};
   networking = callSubTests ./networking.nix {};
   security = callSubTests ./security.nix {};
