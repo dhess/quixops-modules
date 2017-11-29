@@ -19,6 +19,7 @@ in rec {
 
   ## Overlays.
   #bb-org-overlays = callSubTests ./bb-org-overlays.nix { system = "armv7l-linux"; };
+  ffmpeg-snapshot = callSubTests ./ffmpeg-snapshot.nix {};
   unbound-block-hosts = callSubTests ./unbound-block-hosts.nix {};
 
   ## Configuration.
