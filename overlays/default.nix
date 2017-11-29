@@ -6,8 +6,8 @@ with super.lib;
 
 (foldl' (flip extends) (_: super) [
 
+  (import ./custom-packages.nix)
   (import ./disable-tests.nix)
   (import ./haskell.nix)
-  (import ./packages.nix)
 
 ]) self
