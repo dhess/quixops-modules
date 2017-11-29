@@ -8,6 +8,7 @@ with super.lib;
 
   (import ./custom-packages.nix)
   (import ./disable-tests.nix)
+  (import ./functions.nix)
   (import ./haskell.nix)
 
 ]) self
