@@ -16,7 +16,7 @@ let
 
   makeBBOverlaysTest = name: machineAttrs:
     makeTest {
-      name = "environment-${name}";
+      name = "bb-org-overlays-${name}";
       meta = with lib.quixopsMaintainers; {
         maintainers = [ dhess ];
       };
