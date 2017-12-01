@@ -15,7 +15,7 @@ let
       extraCerts));
 
 in
-lib.overrideDerivation cacert (oldAttrs: {
+cacert.overrideAttrs (oldAttrs: {
 
   installPhase = ''
     mkdir -pv $out/etc/ssl/certs
