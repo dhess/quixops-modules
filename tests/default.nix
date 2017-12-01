@@ -23,6 +23,9 @@ in rec {
   ffmpeg-snapshot = callSubTests ./ffmpeg-snapshot.nix {};
   unbound-block-hosts = callSubTests ./unbound-block-hosts.nix {};
 
+  ## Modules.
+  znc = callSubTests ./znc.nix {};
+
   ## Configuration.
 
   environment = callSubTests ./environment.nix {};

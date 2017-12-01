@@ -8,4 +8,5 @@
   ./config/defaults/sudo.nix
   ./config/defaults/system.nix
   ./config/defaults/users.nix
+  ./services/znc/default.nix
 ]

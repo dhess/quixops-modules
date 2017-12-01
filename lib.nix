@@ -19,6 +19,7 @@ let
 in lib // (rec {
 
   quixopsModules = (import ./default.nix).modules;
+  quixopsModulesLib = (import ./default.nix).modulesLib;
   quixopsOverlays = (import ./default.nix).overlays;
 
   inherit fetchNixPkgs nixpkgs;
