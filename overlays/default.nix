@@ -10,5 +10,6 @@ with super.lib;
   (import ./disable-tests.nix)
   (import ./functions.nix)
   (import ./haskell.nix)
+  (import ./patches.nix)
 
 ]) self
