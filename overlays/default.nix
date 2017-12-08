@@ -11,5 +11,6 @@ with super.lib;
   (import ./functions.nix)
   (import ./haskell.nix)
   (import ./patches.nix)
+  (import ./versions.nix)
 
 ]) self
