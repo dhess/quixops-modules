@@ -24,6 +24,7 @@ in rec {
   unbound-block-hosts = callSubTests ./unbound-block-hosts.nix {};
 
   ## Modules.
+  netsniff-ng = callSubTests ./netsniff-ng.nix {};
   znc = callSubTests ./znc.nix {};
 
   ## Configuration.
