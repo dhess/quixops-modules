@@ -20,6 +20,9 @@ stdenv.mkDerivation rec {
     libnetfilter_conntrack libpcap libsodium liburcu ncurses perl
     pkgconfig zlib ];
 
+  # trafgen can call out to cpp to process config files.
+  propagatedBuildInputs = [ stdenv.cc ];
+
   # ./configure is not autoGNU but some home-brewn magic
   configurePhase = ''
     patchShebangs configure
