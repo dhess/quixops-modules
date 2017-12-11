@@ -20,4 +20,6 @@ in rec {
 
   unbound-block-hosts = callPackage ./pkgs/dns/unbound-block-hosts.nix {};
 
+  tsoff = callPackage ./pkgs/networking/tsoff {};
+
 }
