@@ -13,7 +13,6 @@ stdenv.mkDerivation rec {
     makeWrapper
     perl
     perlPackages.GetoptLong
-    perlPackages.LogLog4perl
     perlPackages.PodUsage
   ];
 
@@ -27,7 +26,7 @@ stdenv.mkDerivation rec {
   '';
 
   meta = {
-    description = "Disable TSO features on an Ethernet NIC";
+    description = "Disable offloading features on an Ethernet device";
     maintainers = [ "Drew Hess <src@drewhess.com>" ];
     license = pkgs.lib.licenses.mit;
   };
