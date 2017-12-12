@@ -103,10 +103,12 @@ in
             inputInterface = "eno1";
             interval = "1MiB";
             bindToCPU = 0;
+            serviceRequires = [ "pcap-prep-eno1.service" ];
           };
         '';
         description = ''
-          Zero or more netsniff-ng instances for packet capture.
+          Zero or more <literal>netsniff-ng<literal> instances for
+          packet capture.
 
           Note that there are many fiddly <command>netsniff-ng</command>
           options, many of which have profound performance implications.
@@ -123,6 +125,22 @@ in
           corresponding configuration option can be passed as a raw
           string to the <literal>netsniff-ng</literal> service instance
           via the <option>extraOptions</option> option.
+
+          Note that <literal>netsniff-ng</literal> instances will not
+          configure the network interface on which they capture
+          packets. You will probably also want to configure a
+          <option>services.pcap-prep</option> service for each network
+          interface on which a <literal>netsniff-ng</literal> instance
+          runs, and add the name of that service to the corresponding
+          <literal>netsniff-ng</literal>'s
+          <option>serviceRequires</option> list. Without this
+          additional service, it is likely that you will lose packets,
+          because network interfaces are typically not set up for
+          high-speed packet catpure by default.
+          (<literal>netsniff-ng</literal> instances cannot do this
+          themselves because there may be multiple packet capture
+          services running on the same interface, and each service's
+          needs must be considered when configuring the interface.)
         '';
       };
     };
@@ -149,16 +167,6 @@ in
     users.groups = optional (cfg.group == defaultGroup) {
       name = defaultGroup;
     };
-
-    # Configure each interface for packet capture.
-    networking.interfaces = listToAttrs (filter (x: x.value != null) (
-      (mapAttrsToList
-        (_: conf: nameValuePair "${conf.inputInterface}" ({
-
-          useDHCP = false;
-
-        })) cfg.instances)
-    ));
 
     systemd.services = listToAttrs (filter (x: x.value != null) (
       (mapAttrsToList

@@ -8,6 +8,7 @@
   ./config/defaults/sudo.nix
   ./config/defaults/system.nix
   ./config/defaults/users.nix
+  ./networking/pcap-prep
   ./services/znc
   ./services/netsniff-ng
 ]
