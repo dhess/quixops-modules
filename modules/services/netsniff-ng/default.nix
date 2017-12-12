@@ -4,14 +4,9 @@
 # switch, or added a TAP device(s), to mirror/capture packets and have
 # them sent to the interface(s) on which netsniff-ng listens.
 #
-# Most of the dirty tricks employed by this service come from the
-# following sources:
-#
-# http://blog.securityonion.net/2011/10/when-is-full-packet-capture-not-full.html
-# http://mailman.icsi.berkeley.edu/pipermail/bro/2017-January/011280.html
-# https://groups.google.com/forum/#!topic/security-onion/1nW4M4zD9D4
-# https://github.com/pevma/SEPTun
-# https://github.com/Security-Onion-Solutions/securityonion-nsmnow-admin-scripts/blob/21e36844409f8b863b4558912aefc085283fb408/usr/sbin/nsm_sensor_ps-start#L466
+# Currently this service only supports packet capture to disk, but it
+# could fairly easily be extended to support other forms of output,
+# e.g., packet redirection via a different interface.
 
 { config, lib, pkgs, ... }:
 
@@ -111,8 +106,7 @@ in
           };
         '';
         description = ''
-          Zero or more netsniff-ng instances for packet capture,
-          analysis, or redirection.
+          Zero or more netsniff-ng instances for packet capture.
 
           Note that there are many fiddly <command>netsniff-ng</command>
           options, many of which have profound performance implications.
