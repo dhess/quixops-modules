@@ -22,6 +22,7 @@ in rec {
   custom-cacert = callSubTests ./custom-cacert.nix {};
   ffmpeg-snapshot = callSubTests ./ffmpeg-snapshot.nix {};
   unbound-block-hosts = callSubTests ./unbound-block-hosts.nix {};
+  tsoff = callSubTests ./tsoff.nix {};
 
   ## Modules.
   netsniff-ng = callSubTests ./netsniff-ng.nix {};
