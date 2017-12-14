@@ -24,29 +24,6 @@ in lib // (rec {
 
   inherit fetchNixPkgs nixpkgs;
 
-  ## Test harness.
-  #
-
-  importTest = fn: args: system: import fn ({
-    inherit system;
-  } // args);
-
-  callTest = forSystems: fn: args: forSystems (system: lib.hydraJob (importTest fn args system));
-
-  callSubTests = supportedSystems: fn: args: let
-    discover = attrs: let
-      subTests = lib.filterAttrs (lib.const (lib.hasAttr "test")) attrs;
-    in lib.mapAttrs (lib.const (t: lib.hydraJob t.test)) subTests;
-
-    discoverForSystem = system: lib.mapAttrs (_: test: {
-      ${system} = test;
-    }) (discover (importTest fn args system));
-
-  # If the test is only for a particular system, use only the specified
-  # system instead of generating attributes for all available systems.
-  in if args ? system then discover (import fn args)
-     else lib.foldAttrs lib.mergeAttrs {} (map discoverForSystem supportedSystems);
-
   ## Local maintainers.
   #
 

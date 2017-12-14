@@ -6,13 +6,11 @@ in
 
 { system ? builtins.currentSystem
 , pkgs ? (import lib.fetchNixPkgs) { inherit system; }
+, makeTest
 , ... }:
 
 
 let
-
-  testing = import <nixpkgs/nixos/lib/testing.nix> { inherit system; };
-  inherit (testing) makeTest;
 
   aliceBashProfile = pkgs.writeText "alice.bash_profile" ''
     export TZ="America/Los_Angeles"

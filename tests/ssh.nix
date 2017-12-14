@@ -6,12 +6,10 @@ in
 
 { system ? builtins.currentSystem
 , pkgs ? (import lib.fetchNixPkgs) { inherit system; }
+, makeTest
 , ... }:
 
 let
-
-  testing = import <nixpkgs/nixos/lib/testing.nix> { inherit system; };
-  inherit (testing) makeTest;
 
   alicePrivateKey = pkgs.writeText "alice.key" ''
     -----BEGIN OPENSSH PRIVATE KEY-----

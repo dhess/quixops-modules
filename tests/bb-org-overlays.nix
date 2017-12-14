@@ -6,13 +6,11 @@ in
 
 { system ? "armv7l-linux"
 , pkgs ? (import lib.fetchNixPkgs) { inherit system; }
+, makeTest
 , ... }:
 
 
 let
-
-  testing = import <nixpkgs/nixos/lib/testing.nix> { inherit system; };
-  inherit (testing) makeTest;
 
   makeBBOverlaysTest = name: machineAttrs:
     makeTest {

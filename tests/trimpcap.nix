@@ -6,12 +6,10 @@ in
 
 { system ? builtins.currentSystem
 , pkgs ? (import lib.fetchNixPkgs) { inherit system; }
+, makeTest
 , ... }:
 
 let
-
-  testing = import <nixpkgs/nixos/lib/testing.nix> { inherit system; };
-  inherit (testing) makeTest;
 
   pcapFile = ./testfiles/DHCPv6.pcap;
 
