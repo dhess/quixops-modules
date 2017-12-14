@@ -2,6 +2,8 @@ self: super:
 
 let
 
+  lib = import ../lib.nix;
+
   stdenv = super.stdenv;
 
   haskellLib = super.haskell.lib;
@@ -24,9 +26,9 @@ rec {
     packages = super.haskell.packages //
       (if stdenv.system == "armv7l-linux" || stdenv.system == "aarch64-linux" then {
 
-        ghc802 = callHaskellPackage <nixpkgs/pkgs/development/haskell-modules> {
+        ghc802 = callHaskellPackage "${lib.fetchNixPkgs}/pkgs/development/haskell-modules" {
           ghc = ghc802From801Binary;
-          compilerConfig = callHaskellPackage <nixpkgs/pkgs/development/haskell-modules/configuration-ghc-8.0.x.nix> { };
+          compilerConfig = callHaskellPackage "${lib.fetchNixPkgs}/pkgs/development/haskell-modules/configuration-ghc-8.0.x.nix" { };
         };
 
       } else {});

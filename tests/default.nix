@@ -14,7 +14,7 @@ let
   ## Test harness.
   #
 
-  testing = import <nixpkgs/nixos/lib/testing.nix> { inherit system; };
+  testing = import "${lib.fetchNixPkgs}/nixos/lib/testing.nix" { inherit system; };
   inherit (testing) makeTest;
 
   forAllSystems = lib.genAttrs supportedSystems;
