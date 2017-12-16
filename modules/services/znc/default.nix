@@ -380,6 +380,9 @@ in
 
   config = mkIf cfg.enable {
 
+    quixops.assertions.moduleHashes."services/networking/znc.nix" =
+      "69d993848c9da0b95725070a94acf3d5efb954104cde7b447dcfa32e49f1e7fc";
+
     networking.firewall = mkIf cfg.openFirewall {
       allowedTCPPorts = [ cfg.confOptions.port ];
     };
