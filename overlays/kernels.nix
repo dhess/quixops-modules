@@ -10,7 +10,6 @@ rec {
   linux_beagleboard = callPackage ./pkgs/kernels/linux-beagleboard.nix {
     kernelPatches =
       [ kernelPatches.bridge_stp_helper
-        kernelPatches.p9_fixes
         kernelPatches.cpu-cgroup-v2."4.9"
         kernelPatches.modinst_arg_list_too_long
       ];
