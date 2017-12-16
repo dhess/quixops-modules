@@ -5,9 +5,9 @@ let
   lib = import ../../../lib.nix;
 
   name = "bb-org-overlays-${version}";
-  version = "20171107";
-  rev = "b25f6aa6ae0fa7eae6b33902044bd0aacfde9bb2";
-  sha256 = "1sky57dyplvsisbqyc2ccx2cap3fprvfarfq0p3wil63qd96pi1c";
+  version = "20171215";
+  rev = "8bc1d2a89f81763eefa62a3e7f44ab505ff582cf";
+  sha256 = "120drcbji08r005x73yllq9wyi6a7lqma8bmmdmscdzs685nrm0y";
 
 in
 stdenv.mkDerivation rec {
@@ -21,6 +21,8 @@ stdenv.mkDerivation rec {
 
   buildInputs = [ dtc ];
   propagatedBuildInputs = [ dash bash sudo ];
+
+  patches = [ ./dtc-1.45.patch ];
 
   postPatch = ''
     substituteInPlace tools/beaglebone-universal-io/config-pin --replace "sudo" "${sudo}/bin/sudo"

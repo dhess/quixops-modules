@@ -8,7 +8,7 @@ let
 
 in rec {
 
-  bb-org-overlays = callPackage ./pkgs/hardware/bb-org-overlays.nix {};
+  bb-org-overlays = callPackage ./pkgs/hardware/bb-org-overlays {};
 
   ffmpeg-snapshot = callPackage ./pkgs/multimedia/ffmpeg-snapshot.nix rec {
     inherit (self.pkgs.darwin.apple_sdk.frameworks) Cocoa CoreMedia;
