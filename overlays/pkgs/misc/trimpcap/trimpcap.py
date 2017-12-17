@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 #
-# TrimPCAP 1.0
+# TrimPCAP
 #
-# Trims capture files (PCAP and PCAP-NG) by truncating flows to a desired max size
-#
+# Trims capture files (PCAP and PCAP-NG) by truncating flows to a
+# desired max size
 #
 # Created by: Erik Hjelmvik, NETRESEC
+# Modifications by Drew Hess <src@drewhess.com>
 # Open Source License: GPLv2
 #
-#
-# Usage: ./trimpcap.py 8192 somefile1.pcap somefile2.pcap
-# Usage: ./trimpcap.py 100000 *.pcap
+# Usage: trimpcap.py somefile1.pcap somefile2.pcap
+# Usage: trimpcap.py --flowsize 100000 --replace *.pcap
 #
 # ==DEPENDENCIES==
 # python 2.6 or 2.7
@@ -19,15 +19,15 @@
 #
 # On Debian/Ubuntu you can also do:
 # apt-get install python-dpkt python-repoze.lru
-#
+
+import argparse
 import dpkt
 import socket
 import sys
 import os
 from repoze.lru import LRUCache
 
-#change this variable to False if you prefer to keep the *.trimmed files rather than overwriting the original capture files
-OVERWRITE_SOURCE = True
+__version__ = '1.0.1'
 
 
 def inet_to_str(ip_addr):
@@ -35,6 +35,7 @@ def inet_to_str(ip_addr):
         return socket.inet_ntop(socket.AF_INET, ip_addr)
     except ValueError:
         return socket.inet_ntop(socket.AF_INET6, ip_addr)
+
 
 def get_fivetuple_from_ip(ip):
     try:
@@ -53,6 +54,7 @@ def get_fivetuple_from_ip(ip):
     else:
         return str(proto) + "_" + dst + "-" + src
 
+
 def get_fivetuple(buf, pcap, pcap_file):
     if pcap.datalink() == dpkt.pcap.DLT_LINUX_SLL:
         sll = dpkt.sll.SLL(buf)
@@ -67,7 +69,7 @@ def get_fivetuple(buf, pcap, pcap_file):
         except dpkt.UnpackError as e:
             return None
     elif pcap.datalink() == dpkt.pcap.DLT_RAW or pcap.datalink() == dpkt.pcap.DLT_LOOP:
-        #Raw IP only supported for ETH_TYPE 0x0c. Type 0x65 is not supported by DPKT
+        # Raw IP only supported for ETH_TYPE 0x0c. Type 0x65 is not supported by DPKT
         return get_fivetuple_from_ip(dpkt.ip.IP(buf))
     elif pcap.datalink() == dpkt.pcap.DLT_NULL:
         frame = dpkt.loopback.Loopback(buf)
@@ -76,17 +78,19 @@ def get_fivetuple(buf, pcap, pcap_file):
         print >> sys.stderr, "unknown datalink in " + pcap_file
         exit
 
-def trim(flist, flowmaxbytes):
+
+def trim(flist, flowmaxbytes, preserve_times, post_process):
     cache = LRUCache(10000)
     trimmed_bytes = 0
     for pcap_file in flist:
+        trimmed_file = pcap_file + ".trimmed"
         with open(pcap_file, "rb") as f:
             try:
                 if pcap_file.endswith("pcapng"):
                     pcap = dpkt.pcapng.Reader(f)
                 else:
                     pcap = dpkt.pcap.Reader(f)
-                with open(pcap_file + ".trimmed", "wb") as trimmed:
+                with open(trimmed_file, "wb") as trimmed:
                     if pcap_file.endswith("pcapng"):
                         pcap_out = dpkt.pcapng.Writer(trimmed)
                     else:
@@ -103,31 +107,61 @@ def trim(flist, flowmaxbytes):
                             trimmed_bytes += len(buf)
             except dpkt.dpkt.NeedData: pass
             except ValueError: pass
-        if OVERWRITE_SOURCE and os.path.exists(pcap_file + ".trimmed"):
-            os.rename(pcap_file + ".trimmed", pcap_file)
+        if os.path.exists(trimmed_file):
+            if preserve_times:
+                stat = os.stat(pcap_file)
+                os.utime(trimmed_file, (stat.st_atime, stat.st_mtime))
+            if post_process:
+                post_process(pcap_file, trimmed_file)
     return trimmed_bytes
 
 
+def post_replace(orig, trimmed):
+    os.rename(trimmed, orig)
 
-USAGE_MESSAGE = 'Usage: %s <max_bytes_per_flow> <pcap_file(s)>' % sys.argv[0]
-if len(sys.argv) < 3:
-    sys.exit(USAGE_MESSAGE)
-else:
+
+def post_delete(orig, _):
+    os.remove(orig)
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        prog='trimpcap',
+        description='Trim pcap files by truncating flows to a desired max size')
+    parser.add_argument('files', metavar='FILE', nargs='+', help='A pcap file')
+    parser.add_argument('--flowsize', '-s', metavar='BYTES', type=int,
+                        default=8192, help='Trim flows to this size (in bytes)')
+    parser.add_argument('--preserve-file-times', '-p', action='store_true',
+                        help="Preserve the original file's mtime, atime, etc.")
+    parser.add_argument('--version', action='version',
+                        version='%(prog)s {}'.format(__version__))
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('--replace', '-r', action='store_true',
+                       help='Replace the original file with the trimmed one')
+    group.add_argument('--delete', '-D', action='store_true',
+                       help='Delete the original file')
+    args = parser.parse_args()
+
     flist = list()
-    try:
-        flowmaxbytes = int(sys.argv[1])
-        print "Trimming capture files to max " + str(flowmaxbytes) + " bytes per flow."
-        source_bytes = 0
-        for file in sys.argv[2:]:
-            if not os.path.exists(file):
-                print "ERROR: File " + file + " does not exist!"
-            else:
-                flist.append(file)
-                source_bytes += os.path.getsize(file)
-        trimmed_bytes = trim(flist, flowmaxbytes)
-        if source_bytes > 0:
-            print "Dataset reduced by " + "{0:.2f}".format(trimmed_bytes * 100.0 / source_bytes) +  "% = " + str(trimmed_bytes) + " bytes"
+    print "Trimming capture files to max {} bytes per flow.".format(args.flowsize)
+    source_bytes = 0
+    postproc = None
+    if args.delete:
+        postproc = post_delete
+    elif args.replace:
+        postproc = post_replace
+    for file in args.files:
+        if not os.path.exists(file):
+            print "ERROR: File " + file + " does not exist!"
         else:
-            sys.exit(USAGE_MESSAGE)
-    except ValueError:
-        sys.exit(USAGE_MESSAGE)
+            flist.append(file)
+            source_bytes += os.path.getsize(file)
+    trimmed_bytes = trim(flist, args.flowsize, args.preserve_file_times, postproc)
+    if source_bytes > 0 and trimmed_bytes > 0:
+        print "Dataset reduced by {0:.2f}% = {1} bytes".format(trimmed_bytes * 100.0 / source_bytes, trimmed_bytes)
+    else:
+        print "No files were trimmed"
+
+
+if __name__ == "__main__":
+    main()
