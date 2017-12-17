@@ -64,6 +64,47 @@ let
       --silent --verbose ${conf.extraOptions}
   '';
 
+  # Note: delete expired files first, and then trim from highest
+  # 'afterDays' to lowest to guarantee we only process each file at
+  # most once. Note that we use trimpcap's '--extension' option to
+  # move pcap files out of the way while we're trimming -- again, so
+  # that files are only trimmed once.
+
+  trimScript = conf:
+  let
+    dir = outputDir conf;
+
+    deleteCmd = ''
+      echo "Deleting files older than ${toString conf.trim.deleteAfterDays} days"
+      find "${dir}" -type f -name "${conf.pcapPrefix}*.pcap" -mtime +${toString conf.trim.deleteAfterDays} -exec rm {} \;
+    '';
+
+    trimExtension = params: ".${toString params.afterDays}days";
+
+    trimCmd = params: ''
+      echo "Trimming files older than ${toString params.afterDays} days"
+      find "${dir}" -type f -name "${conf.pcapPrefix}*.pcap" -mtime +${toString params.afterDays} -execdir ${pkgs.trimpcap}/bin/trimpcap --flowsize ${toString params.size} --delete --extension "${trimExtension params}" --preserve-file-times {} +
+    '';
+
+    postTrimCmd = params: ''
+      echo "Replacing trimmed files older than ${toString params.afterDays} days"
+      find "${dir}" -type f -name "${conf.pcapPrefix}*.pcap${trimExtension params}" -execdir sh -c 'mv {} $(${pkgs.coreutils}/bin/basename {} ${trimExtension params})' \;
+    '';
+
+    trimSchedule =
+      concatStrings (map (s: trimCmd s)
+                         (sort (a: b: a.afterDays > b.afterDays) conf.trim.schedule));
+
+    postTrimSchedule =
+      concatStrings (map (s: postTrimCmd s) 
+                         (sort (a: b: a.afterDays > b.afterDays) conf.trim.schedule));
+
+  in ''
+    ${optionalString (conf.trim.deleteAfterDays != null) deleteCmd}
+    ${trimSchedule}
+    ${postTrimSchedule}
+  '';
+
 in
 {
   options = {
@@ -107,7 +148,7 @@ in
           };
         '';
         description = ''
-          Zero or more <literal>netsniff-ng<literal> instances for
+          Zero or more <literal>netsniff-ng</literal> instances for
           packet capture.
 
           Note that there are many fiddly <command>netsniff-ng</command>
@@ -179,8 +220,34 @@ in
           preStart = preCmd conf;
           script = netsniffNgCmd conf;
 
+        })) cfg.instances) ++
+      (mapAttrsToList
+        (_: conf: nameValuePair "netsniff-ng@${conf.name}-trim" ({
+
+          description = "Trim netsniff-ng@${conf.name} pcap files";
+          after = [ "multi-user.target" "netsniff-ng@${conf.name}.service" ];
+          requires = [ "netsniff-ng@${conf.name}.service" ];
+          script = trimScript conf;
+          serviceConfig = {
+            User = cfg.user;
+            Group = cfg.group;
+            Type = "oneshot";
+          };
+
         })) cfg.instances)
     ));
+
+    systemd.timers = listToAttrs (filter (x: x.value != null)
+      (mapAttrsToList
+        (_: conf: nameValuePair "netsniff-ng@${conf.name}-trim" ({
+
+          wantedBy = [ "timers.target" ];
+          timerConfig = {
+            OnCalendar = conf.trim.period;
+            Persistent = "yes";
+          };
+
+        })) cfg.instances));
 
     environment.systemPackages = [ pkgs.netsniff-ng ];
 
