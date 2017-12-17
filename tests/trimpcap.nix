@@ -59,7 +59,7 @@ in makeTest rec {
 
     subtest "trim-extension", sub {
       $machine->succeed("cp ${pcapFile} /tmp/test.pcap");
-      $machine->succeed("${pkgs.trimpcap}/bin/trimpcap --flowsize 512 --extension foo /tmp/test.pcap");
+      $machine->succeed("${pkgs.trimpcap}/bin/trimpcap --flowsize 512 --extension .foo /tmp/test.pcap");
       $machine->succeed("[ -f /tmp/test.pcap.foo ]");
       $machine->succeed("rm /tmp/test.pcap.foo");
     };

@@ -83,7 +83,7 @@ def trim(flist, flowmaxbytes, trimmed_extension, preserve_times, post_process):
     cache = LRUCache(10000)
     trimmed_bytes = 0
     for pcap_file in flist:
-        trimmed_file = pcap_file + "." + trimmed_extension
+        trimmed_file = pcap_file + trimmed_extension
         with open(pcap_file, "rb") as f:
             try:
                 if pcap_file.endswith("pcapng"):
@@ -136,7 +136,7 @@ def main():
         description='Trim pcap files by truncating flows to a desired max size')
     parser.add_argument('files', metavar='FILE', nargs='+', help='A pcap file')
     parser.add_argument('--extension', '-x', metavar='EXT', type=nonempty_string,
-                        default='trimmed',
+                        default='.trimmed',
                         help='Filename extension used while writing trimmed file')
     parser.add_argument('--flowsize', '-s', metavar='BYTES', type=int,
                         default=8192, help='Trim flows to this size (in bytes)')
@@ -152,7 +152,7 @@ def main():
     args = parser.parse_args()
 
     flist = list()
-    print "Trimming capture files to max {} bytes per flow.".format(args.flowsize)
+    print "Trimming capture files to max {} bytes per flow with extension {}.".format(args.flowsize, args.extension)
     source_bytes = 0
     postproc = None
     if args.delete:
