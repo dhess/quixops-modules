@@ -88,7 +88,7 @@ let
 
     postTrimCmd = params: ''
       echo "Replacing trimmed files older than ${toString params.afterDays} days"
-      find "${dir}" -type f -name "${conf.pcapPrefix}*.pcap${trimExtension params}" -execdir sh -c 'mv {} $(${pkgs.coreutils}/bin/basename {} ${trimExtension params})' \;
+      find "${dir}" -type f -name "${conf.pcapPrefix}*.pcap${trimExtension params}" -execdir /bin/sh -c 'mv {} $(${pkgs.coreutils}/bin/basename {} ${trimExtension params})' \;
     '';
 
     trimSchedule =
