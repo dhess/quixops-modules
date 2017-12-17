@@ -79,11 +79,11 @@ def get_fivetuple(buf, pcap, pcap_file):
         exit
 
 
-def trim(flist, flowmaxbytes, preserve_times, post_process):
+def trim(flist, flowmaxbytes, trimmed_extension, preserve_times, post_process):
     cache = LRUCache(10000)
     trimmed_bytes = 0
     for pcap_file in flist:
-        trimmed_file = pcap_file + ".trimmed"
+        trimmed_file = pcap_file + "." + trimmed_extension
         with open(pcap_file, "rb") as f:
             try:
                 if pcap_file.endswith("pcapng"):
@@ -124,11 +124,20 @@ def post_delete(orig, _):
     os.remove(orig)
 
 
+def nonempty_string(string):
+    if string is None or string == "":
+        raise argparse.ArgumentTypeError("cannot be the empty string")
+    return string
+
+
 def main():
     parser = argparse.ArgumentParser(
         prog='trimpcap',
         description='Trim pcap files by truncating flows to a desired max size')
     parser.add_argument('files', metavar='FILE', nargs='+', help='A pcap file')
+    parser.add_argument('--extension', '-x', metavar='EXT', type=nonempty_string,
+                        default='trimmed',
+                        help='Filename extension used while writing trimmed file')
     parser.add_argument('--flowsize', '-s', metavar='BYTES', type=int,
                         default=8192, help='Trim flows to this size (in bytes)')
     parser.add_argument('--preserve-file-times', '-p', action='store_true',
@@ -156,7 +165,7 @@ def main():
         else:
             flist.append(file)
             source_bytes += os.path.getsize(file)
-    trimmed_bytes = trim(flist, args.flowsize, args.preserve_file_times, postproc)
+    trimmed_bytes = trim(flist, args.flowsize, args.extension, args.preserve_file_times, postproc)
     if source_bytes > 0 and trimmed_bytes > 0:
         print "Dataset reduced by {0:.2f}% = {1} bytes".format(trimmed_bytes * 100.0 / source_bytes, trimmed_bytes)
     else:
