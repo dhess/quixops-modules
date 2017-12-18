@@ -20,6 +20,8 @@ in rec {
 
   libnet_1_1 = callPackage ./pkgs/development/libraries/libnet/libnet-1.1.nix {};
 
+  libprelude = callPackage ./pkgs/development/libraries/libprelude {};
+
   unbound-block-hosts = callPackage ./pkgs/dns/unbound-block-hosts.nix {};
 
   suricata = callPackage ./pkgs/networking/suricata {

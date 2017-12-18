@@ -1,7 +1,6 @@
 # XXX dhess TODO:
 # - CUDA (note: requires driver API, not the runtime API, so cudatoolkit doesn't work)
 # - Hyperscan
-# - LibPrelude
 
 { stdenv
 , lib
@@ -18,6 +17,7 @@
 , libnetfilter_queue
 , libnfnetlink
 , libpcap
+, libprelude
 , libyaml
 , luajit
 , nspr
@@ -61,6 +61,7 @@ stdenv.mkDerivation rec {
     libnetfilter_queue
     libnfnetlink
     libpcap
+    libprelude
     libyaml
     luajit
     nspr
@@ -85,7 +86,7 @@ stdenv.mkDerivation rec {
     "--enable-nflog"
     "--enable-nfqueue"
     "--enable-pie"
-    #"--enable-prelude"
+    "--enable-prelude"
     "--enable-python"
     "--enable-rust"
     "--enable-rust-experimental"
