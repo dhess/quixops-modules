@@ -1,6 +1,5 @@
 # XXX dhess TODO:
 # - CUDA (note: requires driver API, not the runtime API, so cudatoolkit doesn't work)
-# - Hyperscan
 
 { stdenv
 , lib
@@ -9,6 +8,7 @@
 , makeWrapper
 , file
 , geoip
+, hyperscan
 , jansson
 , libcap_ng
 , libevent
@@ -33,6 +33,7 @@ let
 
   libmagic = file;
   localLib = import ../../../../lib.nix;
+  hyperscanSupport = stdenv.system == "x86_64-linux" || stdenv.system == "i686-linux";
 
 in
 stdenv.mkDerivation rec {
@@ -70,6 +71,7 @@ stdenv.mkDerivation rec {
     python
     zlib
   ]
+  ++ lib.optional hyperscanSupport [ hyperscan ]
   ++ lib.optional redisSupport [ redis hiredis ]
   ++ lib.optional rustSupport [ rustc cargo ]
   ;
@@ -95,6 +97,10 @@ stdenv.mkDerivation rec {
     "--sysconfdir=/etc"
     "--with-libnet-includes=${libnet}/include"
     "--with-libnet-libraries=${libnet}/lib"
+  ]
+  ++ lib.optional hyperscanSupport [
+    "--with-libhs-includes=${hyperscan}/include"
+    "--with-libhs-libraries=${hyperscan}/lib"
   ]
   ++ lib.optional redisSupport [ "--enable-hiredis" ]
   ;

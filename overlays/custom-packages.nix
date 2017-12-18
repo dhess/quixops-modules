@@ -18,6 +18,8 @@ in rec {
     sha256 = "07a0qwr0rd4shbm41n0dg6ip4vb39kxns7qlh1jd81zmvs3xqi0n";
   };
 
+  hyperscan = callPackage ./pkgs/development/libraries/hyperscan {};
+
   libnet_1_1 = callPackage ./pkgs/development/libraries/libnet/libnet-1.1.nix {};
 
   libprelude = callPackage ./pkgs/development/libraries/libprelude {};
