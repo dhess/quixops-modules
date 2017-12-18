@@ -46,6 +46,7 @@ in rec {
   custom-cacert = callSubTests ./custom-cacert.nix {};
   ffmpeg-snapshot = callSubTests ./ffmpeg-snapshot.nix {};
   unbound-block-hosts = callSubTests ./unbound-block-hosts.nix {};
+  suricata = callTest ./suricata.nix { system = "x86_64-linux"; };
   trimpcap = callTest ./trimpcap.nix {};
   tsoff = callSubTests ./tsoff.nix {};
 
