@@ -92,17 +92,29 @@ stdenv.mkDerivation rec {
     "--enable-rust-experimental"
     "--enable-unix-socket"
     "--localstatedir=/var"
+    "--sysconfdir=/etc"
     "--with-libnet-includes=${libnet}/include"
     "--with-libnet-libraries=${libnet}/lib"
   ]
   ++ lib.optional redisSupport [ "--enable-hiredis" ]
   ;
 
-  # Don't install-conf; it tries to create state outside the store.
+  installFlags = [
+    "e_localstatedir=\${TMPDIR}"
+    "e_logdir=\${TMPDIR}"
+    "e_logcertsdir=\${TMPDIR}"
+    "e_logfilesdir=\${TMPDIR}"
+    "e_rundir=\${TMPDIR}"
+    "e_sysconfdir=\${out}/etc/suricata"
+    "e_sysconfrulesdir=\${out}/etc/suricata/rules"
+    "localstatedir=\${TMPDIR}"
+    "runstatedir=\${TMPDIR}"
+    "sysconfdir=\${out}/etc"
+  ];
+
+  installTargets = "install install-conf";
 
   postInstall = ''
-    mkdir -p "$out/etc/suricata"
-    cp suricata.yaml classification.config reference.config threshold.config "$out/etc/suricata"
     wrapProgram "$out/bin/suricatasc" \
       --prefix PYTHONPATH : $PYTHONPATH:$(toPythonPath "$out")
   '';

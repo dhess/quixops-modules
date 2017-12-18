@@ -14,6 +14,15 @@ stdenv.mkDerivation rec {
     sha256 = "0yj6xjk1wwfhqsfjf32hw5jcjvf86f22d84kzirbddn44mcbp4nk";
   };
 
+  configureFlags = [
+    "--localstatedir=/var"
+    "--sysconfdir=/etc"
+  ];
+
+  installFlags = [
+    "sysconfdir=\${out}/etc"
+  ];
+
   meta = with stdenv.lib; {
     homepage = https://github.com/sam-github/libnet;
     description = "Portable framework for low-level network packet construction";

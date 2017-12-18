@@ -46,6 +46,18 @@ stdenv.mkDerivation rec {
 
   enableParallelBuilding = true;
 
+  configureFlags = [
+    "--localstatedir=/var"
+    "--sysconfdir=/etc"
+  ];
+
+  installFlags = [
+    "PRELUDE_SPOOL_DIR=\${TMPDIR}"
+    "PRELUDE_CONFIG_DIR=\${out}/etc"
+    "localstatedir=\${TMPDIR}"
+    "sysconfdir=\${out}/etc"
+  ];
+
   meta = with stdenv.lib; {
     homepage = https://www.prelude-siem.org/projects/libprelude;
     description = "IDMEF transport library used by all Prelude agents";
