@@ -18,7 +18,15 @@ in rec {
     sha256 = "07a0qwr0rd4shbm41n0dg6ip4vb39kxns7qlh1jd81zmvs3xqi0n";
   };
 
+  libnet_1_1 = callPackage ./pkgs/development/libraries/libnet/libnet-1.1.nix {};
+
   unbound-block-hosts = callPackage ./pkgs/dns/unbound-block-hosts.nix {};
+
+  suricata = callPackage ./pkgs/networking/suricata {
+    libnet = libnet_1_1;
+    redisSupport = true;
+    rustSupport = true;
+  };
 
   trimpcap = callPackage ./pkgs/misc/trimpcap {};
 
