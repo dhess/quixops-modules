@@ -27,5 +27,13 @@ in
     services.openssh.passwordAuthentication = false;
     services.openssh.permitRootLogin = lib.mkForce "prohibit-password";
 
+    # More reliable GPG forwarding.
+    #
+    # Use mkOrder 999 to give the user a chance to override it in
+    # mkFooter.
+
+    services.openssh.extraConfig = lib.mkOrder 999 ''
+      StreamLocalBindUnlink yes
+    '';
   };
 }
