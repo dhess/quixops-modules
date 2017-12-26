@@ -43,6 +43,7 @@ let
           services.nginx = {
             enable = true;
             virtualHosts."server" = {
+              http2 = false;
               locations."/".root = pkgs.runCommand "docroot" {} ''
                 mkdir -p "$out/hosts"
                 cp "${hostsfile}" "$out/hosts/hosts"
