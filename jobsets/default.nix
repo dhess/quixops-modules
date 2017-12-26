@@ -46,6 +46,7 @@ let
   mainJobsets = with pkgs.lib; mapAttrs (name: settings: defaultSettings // settings) (rec {
     quixops-modules = {};
     quixops-modules-nixos-unstable-small = mkQuixopsModules "master" "nixos-unstable-small";
+    quixops-modules-staging = mkQuixopsModules "staging" "nixos-unstable-small";
   });
 
   jobsetsAttrs = mainJobsets;
