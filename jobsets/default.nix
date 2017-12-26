@@ -27,20 +27,24 @@ let
     checkinterval = 60;
     enableemail = false;
     emailoverride = "";
-  };
-
-  mkQuixopsModules = quixopsModulesBranch: nixpkgsRev: {
     nixexprpath = "release.nix";
     nixexprinput = "quixopsModules";
     description = "QuixOps modules";
     inputs = {
-      nixpkgs = mkFetchGithub "https://github.com/NixOS/nixpkgs-channels.git ${nixpkgsRev}";
+      quixopsModules = mkFetchGithub "${quixopsModulesUri} master";
+    };
+  };
+
+  mkQuixopsModules = quixopsModulesBranch: nixpkgsRev: {
+    inputs = {
+      quixops_pkgs = mkFetchGithub "https://github.com/NixOS/nixpkgs-channels.git ${nixpkgsRev}";
       quixopsModules = mkFetchGithub "${quixopsModulesUri} ${quixopsModulesBranch}";
     };
   };
 
   mainJobsets = with pkgs.lib; mapAttrs (name: settings: defaultSettings // settings) (rec {
-    quixops-modules = mkQuixopsModules "master" nixpkgs-src.rev;
+    quixops-modules = {};
+    quixops-modules-nixos-small-unstable = mkQuixopsModules "master" "nixos-small-unstable";
   });
 
   jobsetsAttrs = mainJobsets;
