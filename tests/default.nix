@@ -51,6 +51,7 @@ in rec {
   tsoff = callSubTests ./tsoff.nix {};
 
   ## Modules.
+  hydra-manual-setup = callTest ./hydra-manual-setup.nix { system = "x86_64-linux"; };
   netsniff-ng = callSubTests ./netsniff-ng.nix {};
   znc = callSubTests ./znc.nix {};
 
