@@ -35,7 +35,7 @@ let
     description = "QuixOps modules";
     inputs = {
       nixpkgs = mkFetchGithub "https://github.com/NixOS/nixpkgs-channels.git ${nixpkgsRev}";
-      qixopsModules = mkFetchGithub "${quixopsModulesUri} ${quixopsModulesBranch}";
+      quixopsModules = mkFetchGithub "${quixopsModulesUri} ${quixopsModulesBranch}";
     };
   };
 
