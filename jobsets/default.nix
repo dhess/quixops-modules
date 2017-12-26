@@ -36,6 +36,7 @@ let
   };
 
   mkQuixopsModules = quixopsModulesBranch: nixpkgsRev: {
+    checkinterval = 60 * 60 * 12;
     inputs = {
       quixops_pkgs = mkFetchGithub "https://github.com/NixOS/nixpkgs-channels.git ${nixpkgsRev}";
       quixopsModules = mkFetchGithub "${quixopsModulesUri} ${quixopsModulesBranch}";
