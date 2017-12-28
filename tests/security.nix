@@ -25,7 +25,6 @@ let
 
         imports = [
         ] ++ lib.quixopsModules;
-        nixpkgs.overlays = lib.quixopsOverlays;
 
       } // machineAttrs;
 

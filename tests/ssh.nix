@@ -59,7 +59,6 @@ let
             ./common/users.nix
             ./common/root-user.nix
           ] ++ lib.quixopsModules;
-          nixpkgs.overlays = lib.quixopsOverlays;
           users.users.root.openssh.authorizedKeys.keys = [
             rootPublicKey
           ];
@@ -75,7 +74,6 @@ let
             ./common/users.nix
             ./common/root-user.nix
           ];
-          nixpkgs.overlays = lib.quixopsOverlays;
           users.users.root.openssh.authorizedKeys.keys = [
             rootPublicKey
           ];
@@ -91,7 +89,6 @@ let
       };
       client = { config, pkgs, ... }: {
           imports = lib.quixopsModules;
-          nixpkgs.overlays = lib.quixopsOverlays;
       };
     };
 

@@ -21,7 +21,6 @@ let
       machine = { config, pkgs, ... }: {
         imports = [
         ] ++ lib.quixopsModules;
-        nixpkgs.overlays = lib.quixopsOverlays;
       } // machineAttrs;
       testScript = { ... }:
       ''

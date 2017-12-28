@@ -193,7 +193,7 @@ let
         client = { config, pkgs, ... }: {
           imports = [
           ] ++ lib.quixopsModules;
-          nixpkgs.overlays = lib.quixopsOverlays;
+          quixops.defaults.overlays.enable = true;
         } // clientAttrs;
 
         server1 = { config, pkgs, ... }: {

@@ -30,7 +30,7 @@ in makeTest rec {
     imports = [
       ./common/users.nix
     ] ++ lib.quixopsModules;
-    nixpkgs.overlays = lib.quixopsOverlays;
+    quixops.defaults.overlays.enable = true;
 
   };
 

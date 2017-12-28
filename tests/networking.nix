@@ -24,11 +24,9 @@ let
 
       server = { config, pkgs, ... }: {
         imports = lib.quixopsModules;
-        nixpkgs.overlays = lib.quixopsOverlays;
       } // machineAttrs;
 
       client = { ... }: {
-        nixpkgs.overlays = lib.quixopsOverlays;
       };
 
     };

@@ -24,7 +24,7 @@ let
 
       sniffer = { config, pkgs, ... }: {
         imports = lib.quixopsModules;
-        nixpkgs.overlays = lib.quixopsOverlays;
+        quixops.defaults.overlays.enable = true;
 
         services.netsniff-ng.instances.test = {
           inputInterface = "eth0";
@@ -34,8 +34,6 @@ let
       } // machineAttrs;
 
       pinger = { config, pkgs, ... }: {
-        imports = lib.quixopsModules;
-        nixpkgs.overlays = lib.quixopsOverlays;
       };
 
     };

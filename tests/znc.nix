@@ -26,7 +26,7 @@ let
         {
           imports = [
           ] ++ lib.quixopsModules;
-          nixpkgs.overlays = lib.quixopsOverlays;
+          quixops.defaults.overlays.enable = true;
 
           services.znc = {
             enable = true;
@@ -52,7 +52,7 @@ let
         {
           imports = [
           ] ++ lib.quixopsModules;
-          nixpkgs.overlays = lib.quixopsOverlays;
+          quixops.defaults.overlays.enable = true;
 
           services.znc = {
             enable = true;
