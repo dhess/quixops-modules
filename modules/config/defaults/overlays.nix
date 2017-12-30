@@ -34,7 +34,9 @@ in
 
   config = mkIf enabled {
 
-    nixpkgs.overlays = localLib.quixopsOverlays;
+    nixpkgs.overlays = [
+      (import ../../../overlays)
+    ];
 
   };
 

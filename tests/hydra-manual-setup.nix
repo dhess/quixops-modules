@@ -1,6 +1,7 @@
 let
 
   lib = import ../lib.nix;
+  quixopsModules = (import ../.).modules;
 
 in
 
@@ -59,7 +60,7 @@ in makeTest rec {
     # is.
     
     nohydra = { config, pkgs, ... }: {
-      imports = [ commonSetupConfig ] ++ lib.quixopsModules;
+      imports = [ commonSetupConfig ] ++ quixopsModules;
       quixops.defaults.overlays.enable = true;
     };
 
@@ -67,7 +68,7 @@ in makeTest rec {
     # hydra-manual-setup service should not run in this case.
     
     nosetup = { config, pkgs, ... }: {
-      imports = [ commonHydraConfig ] ++ lib.quixopsModules;
+      imports = [ commonHydraConfig ] ++ quixopsModules;
       quixops.defaults.overlays.enable = true;
     };
 
@@ -77,7 +78,7 @@ in makeTest rec {
       imports = [
         commonSetupConfig
         commonHydraConfig
-      ] ++ lib.quixopsModules;
+      ] ++ quixopsModules;
       quixops.defaults.overlays.enable = true;
     };
 

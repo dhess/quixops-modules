@@ -1,6 +1,7 @@
 let
 
   lib = import ../lib.nix;
+  quixopsModules = (import ../.).modules;
 
 in
 
@@ -23,7 +24,7 @@ let
     nodes = {
 
       server = { config, pkgs, ... }: {
-        imports = lib.quixopsModules;
+        imports = quixopsModules;
       } // machineAttrs;
 
       client = { ... }: {

@@ -1,6 +1,7 @@
 let
 
   lib = import ../lib.nix;
+  quixopsModules = (import ../.).modules;
 
 in
 
@@ -29,7 +30,7 @@ in makeTest rec {
 
     imports = [
       ./common/users.nix
-    ] ++ lib.quixopsModules;
+    ] ++ quixopsModules;
     quixops.defaults.overlays.enable = true;
 
   };

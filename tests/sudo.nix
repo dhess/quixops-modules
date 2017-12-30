@@ -1,6 +1,7 @@
 let
 
   lib = import ../lib.nix;
+  quixopsModules = (import ../.).modules;
 
 in
 
@@ -31,7 +32,7 @@ let
 
         imports = [
           ./common/users.nix
-        ] ++ lib.quixopsModules;
+        ] ++ quixopsModules;
 
       } // machineAttrs;
 

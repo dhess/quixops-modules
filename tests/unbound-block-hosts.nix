@@ -1,6 +1,7 @@
 let
 
   lib = import ../lib.nix;
+  quixopsModules = (import ../.).modules;
 
 in
 
@@ -53,7 +54,7 @@ let
 
         client = { config, pkgs, ... }: {
           imports = [
-          ] ++ lib.quixopsModules;
+          ] ++ quixopsModules;
           quixops.defaults.overlays.enable = true;
         } // clientAttrs;
 

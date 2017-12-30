@@ -1,5 +1,3 @@
-# NOTE: do not use ./lib.nix here, because it imports this module.
-
 let
 
 in rec {

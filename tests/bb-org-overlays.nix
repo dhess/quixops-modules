@@ -1,6 +1,7 @@
 let
 
   lib = import ../lib.nix;
+  quixopsModules = (import ../.).modules;
 
 in
 
@@ -21,7 +22,7 @@ let
       machine = { config, pkgs, ... }: {
         imports = [
           ./common/users.nix
-        ] ++ lib.quixopsModules;
+        ] ++ quixopsModules;
         quixops.defaults.overlays.enable = true;
       } // machineAttrs;
       testScript = { nodes, ... }:

@@ -1,5 +1,7 @@
 let
+
   lib = import ../lib.nix;
+  quixopsModules = (import ../.).modules;
 
 in
 
@@ -11,7 +13,7 @@ in
 
 let
 
-  modulesLib = lib.quixopsModulesLib;
+  modulesLib = (import ../.).modulesLib;
 
   makeZncTest = name: machineAttrs:
     makeTest {
@@ -25,7 +27,7 @@ let
         localhostServer = { config, pkgs, ... }:
         {
           imports = [
-          ] ++ lib.quixopsModules;
+          ] ++ quixopsModules;
           quixops.defaults.overlays.enable = true;
 
           services.znc = {
@@ -51,7 +53,7 @@ let
         server = { config, pkgs, ... }:
         {
           imports = [
-          ] ++ lib.quixopsModules;
+          ] ++ quixopsModules;
           quixops.defaults.overlays.enable = true;
 
           services.znc = {

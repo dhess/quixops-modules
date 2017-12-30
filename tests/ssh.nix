@@ -1,6 +1,7 @@
 let
 
   lib = import ../lib.nix;
+  quixopsModules = (import ../.).modules;
 
 in
 
@@ -58,7 +59,7 @@ let
           imports = [
             ./common/users.nix
             ./common/root-user.nix
-          ] ++ lib.quixopsModules;
+          ] ++ quixopsModules;
           users.users.root.openssh.authorizedKeys.keys = [
             rootPublicKey
           ];
@@ -88,7 +89,7 @@ let
           services.openssh.permitRootLogin = "yes";
       };
       client = { config, pkgs, ... }: {
-          imports = lib.quixopsModules;
+          imports = quixopsModules;
       };
     };
 

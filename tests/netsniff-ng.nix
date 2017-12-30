@@ -1,6 +1,7 @@
 let
 
   lib = import ../lib.nix;
+  quixopsModules = (import ../.).modules;
 
 in
 
@@ -23,7 +24,7 @@ let
     nodes = {
 
       sniffer = { config, pkgs, ... }: {
-        imports = lib.quixopsModules;
+        imports = quixopsModules;
         quixops.defaults.overlays.enable = true;
 
         services.netsniff-ng.instances.test = {
