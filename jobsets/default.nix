@@ -23,7 +23,7 @@ let
     enabled = 1;
     hidden = false;
     keepnr = 5;
-    schedulingshares = 100;
+    schedulingshares = 400;
     checkinterval = 60;
     enableemail = false;
     emailoverride = "";
@@ -35,18 +35,18 @@ let
     };
   };
 
-  mkQuixopsModules = quixopsModulesBranch: nixpkgsRev: {
-    checkinterval = 60 * 60 * 12;
+  mkAlternate = quixopsModulesBranch: nixpkgsQuixopsBranch: nixpkgsRev: {
+    checkinterval = 60;
     inputs = {
       quixops_pkgs = mkFetchGithub "https://github.com/NixOS/nixpkgs-channels.git ${nixpkgsRev}";
+      nixpkgs_quixoftic_override = mkFetchGithub "https://github.com/quixoftic/nixpkgs-quixoftic.git ${nixpkgsQuixopsBranch}";
       quixopsModules = mkFetchGithub "${quixopsModulesUri} ${quixopsModulesBranch}";
     };
   };
 
   mainJobsets = with pkgs.lib; mapAttrs (name: settings: defaultSettings // settings) (rec {
-    quixops-modules = {};
-    quixops-modules-nixos-unstable-small = mkQuixopsModules "master" "nixos-unstable-small";
-    quixops-modules-staging = mkQuixopsModules "staging" "nixos-unstable-small";
+    master = {};
+    nixos-unstable-small = mkAlternate "master" "master" "nixos-unstable-small";
   });
 
   jobsetsAttrs = mainJobsets;
