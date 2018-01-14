@@ -6,8 +6,4 @@ in rec {
 
   modulesLib = import ./modules/lib.nix;
 
-  overlays = [
-    (import ./overlays/default.nix)
-  ];
-
 }

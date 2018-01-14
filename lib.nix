@@ -8,9 +8,18 @@ let
   in
     if try.success
       then builtins.trace "Using <quixops_pkgs>" try.value
-      else import ./fetch-nixpkgs.nix;
+      else (import ./fetch-package.nix) { jsonSpec = builtins.readFile ./nixpkgs-src.json; };
+
+  fetchNixPkgsQuixoftic =
+  let
+    try = builtins.tryEval <nixpkgs_quixoftic_override>;
+  in
+    if try.success
+      then builtins.trace "Using <nixpkgs_quixoftic_override>" try.value
+      else (import ./fetch-package.nix) { jsonSpec = builtins.readFile ./nixpkgs-quixoftic-src.json; };
 
   nixpkgs = import fetchNixPkgs;
+  nixpkgs-quixoftic = import fetchNixPkgsQuixoftic;
 
   pkgs = nixpkgs {};
 
@@ -19,6 +28,7 @@ let
 in lib // (rec {
 
   inherit fetchNixPkgs nixpkgs;
+  inherit fetchNixPkgsQuixoftic nixpkgs-quixoftic;
 
   ## Local maintainers.
   #

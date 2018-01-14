@@ -35,7 +35,7 @@ in
   config = mkIf enabled {
 
     nixpkgs.overlays = [
-      (import ../../../overlays)
+      (import localLib.fetchNixPkgsQuixoftic)
     ];
 
   };

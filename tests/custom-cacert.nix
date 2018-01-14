@@ -234,7 +234,7 @@ let
       testScript = { nodes, ... }:
       let
         pkgs = nodes.client.pkgs;
-        custom-cacert = pkgs.mkCacert { inherit extraCerts; };
+        custom-cacert = pkgs.lib.mkCacert { inherit extraCerts; };
       in
       ''
         startAll;
