@@ -38,7 +38,7 @@ let
   mkAlternate = quixopsModulesBranch: nixpkgsQuixopsBranch: nixpkgsRev: {
     checkinterval = 60;
     inputs = {
-      quixops_pkgs = mkFetchGithub "https://github.com/NixOS/nixpkgs-channels.git ${nixpkgsRev}";
+      nixpkgs_override = mkFetchGithub "https://github.com/NixOS/nixpkgs-channels.git ${nixpkgsRev}";
       nixpkgs_quixoftic_override = mkFetchGithub "https://github.com/quixoftic/nixpkgs-quixoftic.git ${nixpkgsQuixopsBranch}";
       quixopsModules = mkFetchGithub "${quixopsModulesUri} ${quixopsModulesBranch}";
     };

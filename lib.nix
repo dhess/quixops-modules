@@ -4,10 +4,10 @@ let
   
   fetchNixPkgs =
   let
-    try = builtins.tryEval <quixops_pkgs>;
+    try = builtins.tryEval <nixpkgs_override>;
   in
     if try.success
-      then builtins.trace "Using <quixops_pkgs>" try.value
+      then builtins.trace "Using <nixpkgs_override>" try.value
       else (import ./fetch-package.nix) { jsonSpec = builtins.readFile ./nixpkgs-src.json; };
 
   fetchNixPkgsQuixoftic =
