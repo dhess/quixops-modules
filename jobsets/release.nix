@@ -1,6 +1,6 @@
 let
 
-  lib = import ./lib.nix;
+  lib = import ../lib.nix;
 
 in
 
@@ -13,6 +13,6 @@ let
 
 in rec {
 
-  tests = import ./tests { inherit pkgs supportedSystems; };
+  tests = import ../tests { inherit pkgs supportedSystems; };
 
 }

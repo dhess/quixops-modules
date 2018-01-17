@@ -27,7 +27,7 @@ let
     checkinterval = 60;
     enableemail = false;
     emailoverride = "";
-    nixexprpath = "release.nix";
+    nixexprpath = "jobsets/release.nix";
     nixexprinput = "quixopsModules";
     description = "QuixOps modules";
     inputs = {

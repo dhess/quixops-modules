@@ -1,6 +1,11 @@
+# This file is useful for testing from the command line, without
+# needing to round-trip through Hydra:
+#
+# nix-build jobsets/release-tests.nix
+
 let
 
-  lib = import ./lib.nix;
+  lib = import ../lib.nix;
 
 in
 
