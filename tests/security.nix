@@ -1,12 +1,7 @@
-let
-
-  lib = import ../lib.nix;
-  quixopsModules = (import ../.).modules;
-
-in
-
-{ system ? builtins.currentSystem
-, pkgs ? (import lib.fetchNixPkgs) { inherit system; }
+{ system
+, pkgs
+, lib
+, modules
 , makeTest
 , ... }:
 
@@ -24,8 +19,7 @@ let
 
       machine = { config, pkgs, ... }: {
 
-        imports = [
-        ] ++ quixopsModules;
+        imports = modules;
 
       } // machineAttrs;
 

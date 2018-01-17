@@ -1,12 +1,6 @@
-let
-
-  lib = import ../lib.nix;
-  quixopsModules = (import ../.).modules;
-
-in
-
 { system ? "armv7l-linux"
-, pkgs ? (import lib.fetchNixPkgs) { inherit system; }
+, pkgs
+, modules
 , makeTest
 , ... }:
 
@@ -22,7 +16,7 @@ let
       machine = { config, pkgs, ... }: {
         imports = [
           ./common/users.nix
-        ] ++ quixopsModules;
+        ] ++ modules;
         quixops.defaults.overlays.enable = true;
       } // machineAttrs;
       testScript = { nodes, ... }:

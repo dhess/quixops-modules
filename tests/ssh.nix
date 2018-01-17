@@ -1,12 +1,7 @@
-let
-
-  lib = import ../lib.nix;
-  quixopsModules = (import ../.).modules;
-
-in
-
-{ system ? builtins.currentSystem
-, pkgs ? (import lib.fetchNixPkgs) { inherit system; }
+{ system
+, pkgs
+, lib
+, modules
 , makeTest
 , ... }:
 
@@ -59,7 +54,7 @@ let
           imports = [
             ./common/users.nix
             ./common/root-user.nix
-          ] ++ quixopsModules;
+          ] ++ modules;
           users.users.root.openssh.authorizedKeys.keys = [
             rootPublicKey
           ];
@@ -89,7 +84,7 @@ let
           services.openssh.permitRootLogin = "yes";
       };
       client = { config, pkgs, ... }: {
-          imports = quixopsModules;
+          imports = modules;
       };
     };
 

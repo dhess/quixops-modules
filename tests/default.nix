@@ -7,6 +7,7 @@ in
 { system ? builtins.currentSystem
 , pkgs ? (import (lib.fetchNixPkgs) { inherit system; })
 , supportedSystems ? [ "x86_64-linux" ]
+, modules ? (import ../.).modules
 }:
 
 let
@@ -20,7 +21,7 @@ let
   forAllSystems = lib.genAttrs supportedSystems;
 
   importTest = fn: args: system: import fn ({
-    inherit system makeTest;
+    inherit lib system modules pkgs makeTest;
   } // args);
 
   callTest = fn: args: forAllSystems (system: lib.hydraJob (importTest fn args system));

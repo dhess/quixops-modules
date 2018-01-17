@@ -1,12 +1,7 @@
-let
-
-  lib = import ../lib.nix;
-  quixopsModules = (import ../.).modules;
-
-in
-
-{ system ? builtins.currentSystem
-, pkgs ? (import lib.fetchNixPkgs) { inherit system; }
+{ system
+, pkgs
+, lib
+, modules
 , makeTest
 , ... }:
 
@@ -30,7 +25,7 @@ in makeTest rec {
 
     imports = [
       ./common/users.nix
-    ] ++ quixopsModules;
+    ] ++ modules;
     quixops.defaults.overlays.enable = true;
 
   };

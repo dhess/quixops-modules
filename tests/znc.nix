@@ -1,12 +1,7 @@
-let
-
-  lib = import ../lib.nix;
-  quixopsModules = (import ../.).modules;
-
-in
-
-{ system ? builtins.currentSystem
-, pkgs ? (import lib.fetchNixPkgs) { inherit system; }
+{ system
+, pkgs
+, lib
+, modules
 , makeTest
 , ... }:
 
@@ -26,8 +21,7 @@ let
 
         localhostServer = { config, pkgs, ... }:
         {
-          imports = [
-          ] ++ quixopsModules;
+          imports = modules;
           quixops.defaults.overlays.enable = true;
 
           services.znc = {
@@ -52,8 +46,7 @@ let
 
         server = { config, pkgs, ... }:
         {
-          imports = [
-          ] ++ quixopsModules;
+          imports = modules;
           quixops.defaults.overlays.enable = true;
 
           services.znc = {
