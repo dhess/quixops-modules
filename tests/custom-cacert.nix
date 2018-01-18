@@ -1,6 +1,5 @@
 { system
 , pkgs
-, modules
 , makeTest
 , ... }:
 
@@ -186,8 +185,7 @@ let
       nodes = {
 
         client = { config, ... }: {
-          imports = [
-          ] ++ modules;
+          imports = (import pkgs.lib.quixops.modulesPath);
         } // clientAttrs;
 
         server1 = { config, ... }: {

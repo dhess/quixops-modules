@@ -1,6 +1,5 @@
 { system
 , pkgs
-, modules
 , makeTest
 , ... }:
 
@@ -12,10 +11,8 @@ let
       meta = with pkgs.lib.maintainers; {
         maintainers = [ dhess-qx ];
       };
-      machine = { config, pkgs, ... }: {
-        imports = [
-          ./common/users.nix
-        ] ++ modules;
+      machine = { config, ... }: {
+        imports = (import pkgs.lib.quixops.modulesPath);
       } // machineAttrs;
       testScript = { nodes, ... }:
       ''

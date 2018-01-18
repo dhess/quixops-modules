@@ -1,6 +1,5 @@
 { system
 , pkgs
-, modules
 , makeTest
 , ... }:
 
@@ -24,7 +23,7 @@ in makeTest rec {
 
     imports = [
       ./common/users.nix
-    ] ++ modules;
+    ] ++ (import pkgs.lib.quixops.modulesPath);
 
   };
 

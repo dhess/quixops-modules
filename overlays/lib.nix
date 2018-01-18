@@ -17,7 +17,7 @@ in
     quixops = {
 
       ## A list of all the NixOS modules exported by this package.
-      modulePath = ../modules/module-list.nix;
+      modulesPath = ../modules/module-list.nix;
 
 
       ## Helper functions for the modules.

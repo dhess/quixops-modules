@@ -1,6 +1,5 @@
 { system
 , pkgs
-, modules
 , makeTest
 , ... }:
 
@@ -14,7 +13,7 @@ let
   bckey = pkgs.copyPathToStore ./testfiles/hydra-1/secret;
   bcKeyDir = "/etc/nix/hydra-1";
 
-  commonSetupConfig = { config, lib, pkgs, nodes, ... }: {
+  commonSetupConfig = { config, lib, nodes, ... }: {
     services.hydra-manual-setup = {
       enable = true;
       adminUser = {
@@ -32,7 +31,7 @@ let
     };
   };
 
-  commonHydraConfig = { config, lib, pkgs, nodes, ... }: {
+  commonHydraConfig = { config, lib, nodes, ... }: {
     services.hydra = {
       enable = true;
       hydraURL = "http://hydra";
@@ -53,24 +52,24 @@ in makeTest rec {
     # service should not be enabled just because hydra-manual-setup
     # is.
     
-    nohydra = { config, pkgs, ... }: {
-      imports = [ commonSetupConfig ] ++ modules;
+    nohydra = { config, ... }: {
+      imports = [ commonSetupConfig ] ++ (import pkgs.lib.quixops.modulesPath);
     };
 
     # Here hydra is enabled, but hydra-manual-setup is not. The
     # hydra-manual-setup service should not run in this case.
     
-    nosetup = { config, pkgs, ... }: {
-      imports = [ commonHydraConfig ] ++ modules;
+    nosetup = { config, ... }: {
+      imports = [ commonHydraConfig ] ++ (import pkgs.lib.quixops.modulesPath);
     };
 
     # Here both services are enabled.
 
-    hydra = { config, pkgs, ... }: {
+    hydra = { config, ... }: {
       imports = [
         commonSetupConfig
         commonHydraConfig
-      ] ++ modules;
+      ] ++ (import pkgs.lib.quixops.modulesPath);
     };
 
   };

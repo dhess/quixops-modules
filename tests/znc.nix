@@ -1,6 +1,5 @@
 { system
 , pkgs
-, modules
 , makeTest
 , ... }:
 
@@ -16,9 +15,9 @@ let
 
       nodes = {
 
-        localhostServer = { config, pkgs, ... }:
+        localhostServer = { config, ... }:
         {
-          imports = modules;
+          imports = (import pkgs.lib.quixops.modulesPath);
 
           services.znc = {
             enable = true;
@@ -40,9 +39,9 @@ let
           };
         };
 
-        server = { config, pkgs, ... }:
+        server = { config, ... }:
         {
-          imports = modules;
+          imports = (import pkgs.lib.quixops.modulesPath);
 
           services.znc = {
             enable = true;
@@ -63,7 +62,7 @@ let
           };
         };
 
-        client = { config, pkgs, ... }:
+        client = { config, ... }:
         {
         };
 

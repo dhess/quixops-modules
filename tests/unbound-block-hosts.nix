@@ -1,6 +1,5 @@
 { system
 , pkgs
-, modules
 , makeTest
 , ... }:
 
@@ -47,7 +46,7 @@ let
         };
 
         client = { config, ... }: {
-          imports = modules;
+          imports = (import pkgs.lib.quixops.modulesPath);
         } // clientAttrs;
 
       };

@@ -1,6 +1,5 @@
 { system ? "armv7l-linux"
 , pkgs
-, modules
 , makeTest
 , ... }:
 
@@ -13,10 +12,10 @@ let
       meta = with pkgs.lib.maintainers; {
         maintainers = [ dhess-qx ];
       };
-      machine = { config, pkgs, ... }: {
+      machine = { config, ... }: {
         imports = [
           ./common/users.nix
-        ] ++ modules;
+        ] ++ (import pkgs.lib.quixops.modulesPath);
       } // machineAttrs;
       testScript = { nodes, ... }:
       let

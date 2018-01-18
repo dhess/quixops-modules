@@ -20,7 +20,6 @@ in
       (import ../.)
     ];
   }
-, modules ? (import ../modules/module-list.nix)
 }:
 
 let
@@ -28,4 +27,4 @@ let
 in
   lib.collect
     lib.isDerivation
-    (import ./release.nix { inherit system supportedSystems scrubJobs nixpkgsArgs modules; }).tests
+    (import ./release.nix { inherit system supportedSystems scrubJobs nixpkgsArgs; }).tests

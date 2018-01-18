@@ -1,6 +1,5 @@
 { system
 , pkgs
-, modules
 , makeTest
 , ... }:
 
@@ -49,11 +48,11 @@ let
     };
 
     nodes = {
-      server = { config, pkgs, ... }: {
+      server = { config, ... }: {
           imports = [
             ./common/users.nix
             ./common/root-user.nix
-          ] ++ modules;
+          ] ++ (import pkgs.lib.quixops.modulesPath);
           users.users.root.openssh.authorizedKeys.keys = [
             rootPublicKey
           ];
@@ -64,7 +63,7 @@ let
             bobPublicKey
           ];
       } // machineAttrs;
-      badserver = { config, pkgs, ... }: {
+      badserver = { config, ... }: {
           imports = [
             ./common/users.nix
             ./common/root-user.nix
@@ -82,8 +81,8 @@ let
           services.openssh.passwordAuthentication = true;
           services.openssh.permitRootLogin = "yes";
       };
-      client = { config, pkgs, ... }: {
-          imports = modules;
+      client = { config, ... }: {
+          imports = (import pkgs.lib.quixops.modulesPath);
       };
     };
 

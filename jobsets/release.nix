@@ -15,7 +15,6 @@ in
       (import ../.)
     ];
   }
-, modules ? (import ../modules/module-list.nix)
 }:
 
 with import (fixedNixPkgs + "/pkgs/top-level/release-lib.nix") {
@@ -28,7 +27,7 @@ let
   inherit (testing) makeTest;
 
   importTest = fn: args: system: import fn ({
-    inherit system pkgs modules makeTest;
+    inherit system pkgs makeTest;
   } // args);
 
   callTest = fn: args: forAllSystems (system: lib.hydraJob (importTest fn args system));

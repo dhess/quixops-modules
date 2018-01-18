@@ -1,6 +1,5 @@
 { system
 , pkgs
-, modules
 , makeTest
 , ... }:
 
@@ -17,8 +16,8 @@ let
 
     nodes = {
 
-      sniffer = { config, pkgs, ... }: {
-        imports = modules;
+      sniffer = { config, ... }: {
+        imports = (import pkgs.lib.quixops.modulesPath);
 
         services.netsniff-ng.instances.test = {
           inputInterface = "eth0";
@@ -27,7 +26,7 @@ let
 
       } // machineAttrs;
 
-      pinger = { config, pkgs, ... }: {
+      pinger = { config, ... }: {
       };
 
     };

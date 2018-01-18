@@ -1,6 +1,5 @@
 { system
 , pkgs
-, modules
 , makeTest
 , ... }:
 
@@ -14,7 +13,7 @@ let
         maintainers = [ dhess-qx ];
       };
       machine = { config, ... }: {
-        imports = modules;
+        imports = (import pkgs.lib.quixops.modulesPath);
       } // machineAttrs;
       testScript = { nodes, ... }:
       ''
