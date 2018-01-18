@@ -3,7 +3,6 @@
   ./config/defaults/environment.nix
   ./config/defaults/networking.nix
   ./config/defaults/nix.nix
-  ./config/defaults/overlays.nix
   ./config/defaults/security.nix
   ./config/defaults/ssh.nix
   ./config/defaults/sudo.nix

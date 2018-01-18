@@ -19,7 +19,6 @@ let
         localhostServer = { config, pkgs, ... }:
         {
           imports = modules;
-          quixops.defaults.overlays.enable = true;
 
           services.znc = {
             enable = true;
@@ -44,7 +43,6 @@ let
         server = { config, pkgs, ... }:
         {
           imports = modules;
-          quixops.defaults.overlays.enable = true;
 
           services.znc = {
             enable = true;

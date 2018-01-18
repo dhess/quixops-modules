@@ -16,12 +16,8 @@ let
         imports = [
           ./common/users.nix
         ] ++ modules;
-        quixops.defaults.overlays.enable = true;
       } // machineAttrs;
       testScript = { nodes, ... }:
-      let
-        pkgs = nodes.machine.pkgs;
-      in
       ''
         $machine->waitForUnit("multi-user.target");
 

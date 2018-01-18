@@ -13,19 +13,16 @@ in makeTest rec {
     maintainers = [ dhess-qx ];
   };
 
-  machine = { config, pkgs, ... }: {
+  machine = { config, ... }: {
 
     imports = [
       ./common/users.nix
     ] ++ modules;
-    quixops.defaults.overlays.enable = true;
 
   };
 
   testScript = { nodes, ... }:
-  let
-    pkgs = nodes.machine.pkgs;
-  in ''
+  ''
     $machine->waitForUnit("multi-user.target");
 
     subtest "check-features", sub {

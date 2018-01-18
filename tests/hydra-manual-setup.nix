@@ -55,7 +55,6 @@ in makeTest rec {
     
     nohydra = { config, pkgs, ... }: {
       imports = [ commonSetupConfig ] ++ modules;
-      quixops.defaults.overlays.enable = true;
     };
 
     # Here hydra is enabled, but hydra-manual-setup is not. The
@@ -63,7 +62,6 @@ in makeTest rec {
     
     nosetup = { config, pkgs, ... }: {
       imports = [ commonHydraConfig ] ++ modules;
-      quixops.defaults.overlays.enable = true;
     };
 
     # Here both services are enabled.
@@ -73,7 +71,6 @@ in makeTest rec {
         commonSetupConfig
         commonHydraConfig
       ] ++ modules;
-      quixops.defaults.overlays.enable = true;
     };
 
   };

@@ -19,7 +19,6 @@ let
 
       sniffer = { config, pkgs, ... }: {
         imports = modules;
-        quixops.defaults.overlays.enable = true;
 
         services.netsniff-ng.instances.test = {
           inputInterface = "eth0";

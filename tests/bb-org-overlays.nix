@@ -17,7 +17,6 @@ let
         imports = [
           ./common/users.nix
         ] ++ modules;
-        quixops.defaults.overlays.enable = true;
       } // machineAttrs;
       testScript = { nodes, ... }:
       let

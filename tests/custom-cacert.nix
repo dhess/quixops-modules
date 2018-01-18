@@ -185,13 +185,12 @@ let
 
       nodes = {
 
-        client = { config, pkgs, ... }: {
+        client = { config, ... }: {
           imports = [
           ] ++ modules;
-          quixops.defaults.overlays.enable = true;
         } // clientAttrs;
 
-        server1 = { config, pkgs, ... }: {
+        server1 = { config, ... }: {
           networking.firewall.allowedTCPPorts = [ 443 ];
           services.nginx = {
             enable = true;
@@ -207,7 +206,7 @@ let
           };
         };
 
-        server2 = { config, pkgs, ... }: {
+        server2 = { config, ... }: {
           networking.firewall.allowedTCPPorts = [ 443 ];
           services.nginx = {
             enable = true;
@@ -227,7 +226,6 @@ let
 
       testScript = { nodes, ... }:
       let
-        pkgs = nodes.client.pkgs;
         custom-cacert = pkgs.lib.mkCacert { inherit extraCerts; };
       in
       ''

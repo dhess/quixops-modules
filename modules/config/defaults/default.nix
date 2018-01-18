@@ -22,10 +22,6 @@ in
         Quixoftic security requirements. Note that some of the
         defaults may not be appropriate for an interactive desktop
         system.
-
-        This will also enable the QuixOps <literal>nixpkgs</literal>
-        overlays, which provide package overlays that are required for
-        various QuixOps modules to function properly.
       '';
     };
 
@@ -38,7 +34,6 @@ in
       environment.enable = true;
       networking.enable = true;
       nix.enable = true;
-      overlays.enable = true;
       security.enable = true;
       ssh.enable = true;
       sudo.enable = true;

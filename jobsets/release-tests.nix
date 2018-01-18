@@ -8,8 +8,6 @@ let
   lib = import ../lib.nix;
   fixedNixPkgs = lib.fetchNixPkgs;
   packageSet = (import fixedNixPkgs);
-  fixedNixPkgsQuixoftic = lib.fetchNixPkgsQuixoftic;
-  nixpkgsQuixofticOverlays = (import lib.fetchNixPkgsQuixoftic);
 
 in
 
@@ -20,7 +18,6 @@ in
     config = { allowUnfree = false; inHydra = true; };
     overlays = [
       (import ../.)
-      nixpkgsQuixofticOverlays
     ];
   }
 , modules ? (import ../modules/module-list.nix)

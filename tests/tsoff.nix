@@ -13,14 +13,10 @@ let
       meta = with pkgs.lib.maintainers; {
         maintainers = [ dhess-qx ];
       };
-      machine = { config, pkgs, ... }: {
+      machine = { config, ... }: {
         imports = modules;
-        quixops.defaults.overlays.enable = true;
       } // machineAttrs;
       testScript = { nodes, ... }:
-      let
-        pkgs = nodes.machine.pkgs;
-      in
       ''
         $machine->waitForUnit("network.target");
 

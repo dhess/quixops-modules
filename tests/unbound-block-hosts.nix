@@ -33,7 +33,7 @@ let
 
       nodes = {
 
-        server = { config, pkgs, ... }: {
+        server = { config, ... }: {
           networking.firewall.allowedTCPPorts = [ 80 443 ];
           services.nginx = {
             enable = true;
@@ -46,17 +46,13 @@ let
           };          
         };
 
-        client = { config, pkgs, ... }: {
+        client = { config, ... }: {
           imports = modules;
-          quixops.defaults.overlays.enable = true;
         } // clientAttrs;
 
       };
 
       testScript = { nodes, ... }:
-      let
-        pkgs = nodes.client.pkgs;
-      in
       ''
         startAll;
         $client->waitForUnit("multi-user.target");

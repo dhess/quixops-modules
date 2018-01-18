@@ -20,19 +20,16 @@ in makeTest rec {
     maintainers = [ dhess-qx ];
   };
 
-  machine = { config, pkgs, ... }: {
+  machine = { config, ... }: {
 
     imports = [
       ./common/users.nix
     ] ++ modules;
-    quixops.defaults.overlays.enable = true;
 
   };
 
   testScript = { nodes, ... }:
-  let
-    pkgs = nodes.machine.pkgs;
-  in ''
+  ''
     # Sanity check that the file is what we think it is. Note that
     # ngrep doesn't return proper error codes, so we have to grep its
     # grep.
