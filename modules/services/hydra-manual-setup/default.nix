@@ -8,7 +8,7 @@ let
 
   publicKeyFile = pkgs.writeText "public" (builtins.readFile cfg.binaryCache.publicKey);
 
-  defaultPasswordHashKeyName = "hydra-admin-pw-sha1";
+  defaultPasswordKeyName = "hydra-admin-pw";
 
   defaultBinaryCacheKeyName = "hydra-binary-cache";
 
@@ -24,7 +24,7 @@ in
         Hydra setup that normally needs to be done manually.
         Specifically, it will create the admin user and set the admin
         user's initial password in a relatively secure manner; see
-        <option>adminUser.initialPasswordHash</option> for details.
+        <option>adminUser.initialPassword</option> for details.
 
         The service will also copy the server's binary cache
         public/private keypair to a specified location on the Hydra
@@ -73,15 +73,15 @@ in
           '';
         };
 
-        initialPasswordHash = mkOption {
+        initialPassword = mkOption {
           type = types.path;
-          default = "/run/keys/${defaultPasswordHashKeyName}";
+          default = "/run/keys/${defaultPasswordKeyName}";
           description = ''
-            The SHA1 hash of the Hydra admin user's initial password.
-            Note that this file will not copied to the Nix store; the
-            service will expect the file to be at the given path when
-            the service starts, so it must be deployed to the Hydra
-            server out-of-band.
+            The Hydra admin user's initial password. Note that this
+            file will not copied to the Nix store; the service will
+            expect the file to be at the given path when the service
+            starts, so it must be deployed to the Hydra server
+            out-of-band.
 
             The default value specifies a NixOps
             <option>deployment.keys</option> path. If you use NixOps
@@ -90,17 +90,13 @@ in
             automatically wait for that key to be present before it
             runs.
 
-            You can generate the SHA1 hash of the password via the command:
-
-            <command>echo myP4ssw0rd | openssl dgst -sha1</command>
-            
             The <command>hydra-create-user</command> command used to
-            create this user only takes password hashes as strings on
-            the command line, so there is a small chance that an
-            attacker who is on the Hydra master system could see the
+            create this user only takes passwords as strings on the
+            command line, so there is a small chance that an attacker
+            who is on the Hydra master system could see the
             <command>hydra-create-user</command> command as it runs
             using a process tool such as <command>ps</command>, and
-            therefore also see the initial admin user password hash
+            therefore also see the initial admin user password
             command-line argument.
 
             To be fair, the exact same scenario applies if you run the
@@ -179,7 +175,7 @@ in
       description = "Automate Hydra's initial manual setup";
       wantedBy = [ "multi-user.target" ];
       wants = [
-        "${defaultPasswordHashKeyName}-key.service"
+        "${defaultPasswordKeyName}-key.service"
         "${defaultBinaryCacheKeyName}-key.service"
       ];
       requires = [ "hydra-init.service" ];
@@ -190,8 +186,8 @@ in
       let bcKeyDir = cfg.binaryCacheKey.directory;
       in ''
         if [ ! -e ~hydra/.manual-setup-is-complete-v1 ]; then
-          HYDRA_PW_HASH=$(cat "${toString cfg.adminUser.initialPasswordHash}")
-          "${pkgs.hydra}"/bin/hydra-create-user ${cfg.adminUser.userName} --full-name "${cfg.adminUser.fullName}" --email-address ${cfg.adminUser.email} --role admin --password-hash $HYDRA_PW_HASH
+          HYDRA_PW=$(cat "${toString cfg.adminUser.initialPassword}")
+          "${pkgs.hydra}"/bin/hydra-create-user ${cfg.adminUser.userName} --full-name "${cfg.adminUser.fullName}" --email-address ${cfg.adminUser.email} --role admin --password $HYDRA_PW
 
           install -d -m 551 "${bcKeyDir}"
           cp "${toString cfg.binaryCacheKey.private}" "${bcKeyDir}/secret"

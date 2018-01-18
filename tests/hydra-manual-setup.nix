@@ -8,36 +8,10 @@ let
   # Don't do this in production -- it will put the secrets into the
   # Nix store! This is just a convenience for the tests.
 
-  pwhash = pkgs.copyPathToStore ./testfiles/hydra-pw-hash;
+  pw = pkgs.copyPathToStore ./testfiles/hydra-pw;
   bcpubkey = pkgs.copyPathToStore ./testfiles/hydra-1/public;
   bckey = pkgs.copyPathToStore ./testfiles/hydra-1/secret;
   bcKeyDir = "/etc/nix/hydra-1";
-
-  commonSetupConfig = { config, lib, nodes, ... }: {
-    services.hydra-manual-setup = {
-      enable = true;
-      adminUser = {
-        fullName = "Hydra Admin";
-        userName = "hydra";
-        email = "hydra@example.com";
-        # foobar
-        initialPasswordHash = "${pwhash}";
-      };
-      binaryCacheKey = {
-        public = ./testfiles/hydra-1/public;
-        private = "${bckey}";
-        directory = "${bcKeyDir}";
-      };
-    };
-  };
-
-  commonHydraConfig = { config, lib, nodes, ... }: {
-    services.hydra = {
-      enable = true;
-      hydraURL = "http://hydra";
-      notificationSender = "notifier@example.com";
-    };
-  };
 
 in makeTest rec {
   name = "hydra-manual-setup";
@@ -48,28 +22,35 @@ in makeTest rec {
 
   nodes = {
 
-    # Here hydra-manual-setup is enabled, but hydra is not. The hydra
-    # service should not be enabled just because hydra-manual-setup
-    # is.
-    
-    nohydra = { config, ... }: {
-      imports = [ commonSetupConfig ] ++ (import pkgs.lib.quixops.modulesPath);
+    client = { config, ... }: {
     };
-
-    # Here hydra is enabled, but hydra-manual-setup is not. The
-    # hydra-manual-setup service should not run in this case.
-    
-    nosetup = { config, ... }: {
-      imports = [ commonHydraConfig ] ++ (import pkgs.lib.quixops.modulesPath);
-    };
-
-    # Here both services are enabled.
 
     hydra = { config, ... }: {
-      imports = [
-        commonSetupConfig
-        commonHydraConfig
-      ] ++ (import pkgs.lib.quixops.modulesPath);
+      imports = (import pkgs.lib.quixops.modulesPath);
+
+      services.hydra-manual-setup = {
+        enable = true;
+        adminUser = {
+          fullName = "Hydra Admin";
+          userName = "hydra";
+          email = "hydra@example.com";
+          initialPassword = "${pw}";
+        };
+        binaryCacheKey = {
+          public = ./testfiles/hydra-1/public;
+          private = "${bckey}";
+          directory = "${bcKeyDir}";
+        };
+      };
+      
+      services.hydra = {
+        enable = true;
+        notificationSender = "notifier@example.com";
+        port = 3000;
+        hydraURL = "http://hydra:3000";
+      };
+      networking.firewall.allowedTCPPorts = [ 3000 ];
+
     };
 
   };
@@ -77,25 +58,11 @@ in makeTest rec {
   testScript = { nodes, ... }:
   let
   in ''
-    $nohydra->waitForUnit("multi-user.target");
-    subtest "check-no-hydra", sub {
-      $nohydra->fail("systemctl status hydra-manual-setup.service");
-      $nohydra->fail("systemctl status hydra.service");
-    };
+    startAll;
 
-    $nosetup->waitForUnit("multi-user.target");
-    subtest "check-no-manual-setup", sub {
-      # test whether the database is running
-      $nosetup->succeed("systemctl status postgresql.service");
-      # test whether the actual hydra daemons are running
-      $nosetup->succeed("systemctl status hydra-queue-runner.service");
-      $nosetup->succeed("systemctl status hydra-init.service");
-      $nosetup->succeed("systemctl status hydra-evaluator.service");
-      $nosetup->succeed("systemctl status hydra-send-stats.service");
-      $nosetup->fail("systemctl status hydra-manual-setup.service");
-    };
-
+    $client->waitForUnit("multi-user.target");
     $hydra->waitForUnit("multi-user.target");
+
     subtest "check-manual-setup", sub {
 
       # test whether the database is running
@@ -106,6 +73,7 @@ in makeTest rec {
       $hydra->succeed("systemctl status hydra-init.service");
       $hydra->succeed("systemctl status hydra-evaluator.service");
       $hydra->succeed("systemctl status hydra-send-stats.service");
+      $hydra->succeed("systemctl status hydra-server.service");
       $hydra->succeed("systemctl status hydra-manual-setup.service");
 
       # Make sure binary cache keys were copied to the expected
@@ -124,6 +92,15 @@ in makeTest rec {
       $hydra->succeed("[[ `stat -c%G ${bcKeyDir}/secret` -eq hydra ]]");
       $hydra->succeed("diff ${bcKeyDir}/public ${bcpubkey}");
       $hydra->succeed("diff ${bcKeyDir}/secret ${bckey}");
+
+      # Wait for the initial setup to finish.
+      $hydra->waitForFile("/var/lib/hydra/.manual-setup-is-complete-v1");
+
+      # Make sure we can log in. Sometimes it takes some time for the
+      # server to start accepting connections, so we allow retries.
+      
+      my $out = $client->succeed("${pkgs.curl}/bin/curl --retry 10 --retry-delay 5 --retry-connrefused  --referer http://hydra:3000 -d '{\"username\":\"hydra\",\"password\":\"foobar\"}' -H \"Content-Type: application/json\" -X POST http://hydra:3000/login");
+      $out =~ /"username":"hydra"/ or die "hydra-manual-setup user creation failed";
     };
 
   '';
