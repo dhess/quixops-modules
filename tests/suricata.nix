@@ -1,6 +1,5 @@
 { system
 , pkgs
-, lib
 , modules
 , makeTest
 , ... }:
@@ -10,8 +9,8 @@ let
 in makeTest rec {
   name = "suricata";
 
-  meta = with lib.quixopsMaintainers; {
-    maintainers = [ dhess ];
+  meta = with pkgs.lib.maintainers; {
+    maintainers = [ dhess-qx ];
   };
 
   machine = { config, pkgs, ... }: {

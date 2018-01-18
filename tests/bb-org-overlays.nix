@@ -10,8 +10,8 @@ let
   makeBBOverlaysTest = name: machineAttrs:
     makeTest {
       name = "bb-org-overlays-${name}";
-      meta = with lib.quixopsMaintainers; {
-        maintainers = [ dhess ];
+      meta = with pkgs.lib.maintainers; {
+        maintainers = [ dhess-qx ];
       };
       machine = { config, pkgs, ... }: {
         imports = [

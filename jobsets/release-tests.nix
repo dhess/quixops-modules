@@ -6,12 +6,24 @@
 let
 
   lib = import ../lib.nix;
+  fixedNixPkgs = lib.fetchNixPkgs;
+  packageSet = (import fixedNixPkgs);
+  fixedNixPkgsQuixoftic = lib.fetchNixPkgsQuixoftic;
+  nixpkgsQuixofticOverlays = (import lib.fetchNixPkgsQuixoftic);
 
 in
 
 { system ? builtins.currentSystem
-, pkgs ? (import (lib.fetchNixPkgs) { inherit system; })
 , supportedSystems ? [ "x86_64-linux" ]
+, scrubJobs ? true
+, nixpkgsArgs ? {
+    config = { allowUnfree = false; inHydra = true; };
+    overlays = [
+      (import ../.)
+      nixpkgsQuixofticOverlays
+    ];
+  }
+, modules ? (import ../modules/module-list.nix)
 }:
 
 let
@@ -19,4 +31,4 @@ let
 in
   lib.collect
     lib.isDerivation
-    (import ./release.nix { inherit pkgs supportedSystems; }).tests
+    (import ./release.nix { inherit system supportedSystems scrubJobs nixpkgsArgs modules; }).tests

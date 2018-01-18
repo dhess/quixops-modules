@@ -1,9 +1,11 @@
-let
+# From GitHub: mozilla/nixpkgs-mozilla/default.nix.
 
-in rec {
+self: super:
 
-  modules = import ./modules/module-list.nix;
+with super.lib;
 
-  modulesLib = import ./modules/lib.nix;
+(foldl' (flip extends) (_: super) [
 
-}
+  (import ./overlays/lib.nix)
+
+]) self

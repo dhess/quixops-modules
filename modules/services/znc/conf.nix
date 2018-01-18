@@ -1,17 +1,17 @@
-{ lib, zncServiceConfig
+{ pkgs, zncServiceConfig
 }:
 
-with lib;
+with pkgs.lib;
 
 let
 
   mkZncConf = confOpts: ''
     Version = 1.6.3
-    ${lib.optionalString confOpts.hideVersion "HideVersion = true\n"}
+    ${optionalString confOpts.hideVersion "HideVersion = true\n"}
     ${concatMapStrings (n: "LoadModule = ${n}\n") confOpts.modules}
 
     <Listener l>
-            ${lib.optionalString (confOpts.host != "") "Host = ${confOpts.host}\n"}
+            ${optionalString (confOpts.host != "") "Host = ${confOpts.host}\n"}
             Port = ${toString confOpts.port}
             IPv4 = true
             IPv6 = true
@@ -27,12 +27,12 @@ let
             RealName = ${confOpts.realName}
             ${concatMapStrings (n: "LoadModule = ${n}\n") confOpts.userModules}
 
-            ${ lib.concatStringsSep "\n" (lib.mapAttrsToList (name: net: ''
+            ${ concatStringsSep "\n" (mapAttrsToList (name: net: ''
               <Network ${name}>
                   ${concatMapStrings (m: "LoadModule = ${m}\n") net.modules}
-                  Server = ${net.server} ${lib.optionalString net.useSSL "+"}${toString net.port} ${net.password}
+                  Server = ${net.server} ${optionalString net.useSSL "+"}${toString net.port} ${net.password}
                   ${concatMapStrings (c: "<Chan #${c}>\n</Chan>\n") net.channels}
-                  ${lib.optionalString net.hasBitlbeeControlChannel ''
+                  ${optionalString net.hasBitlbeeControlChannel ''
                     <Chan &bitlbee>
                     </Chan>
                   ''}

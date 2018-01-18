@@ -30,11 +30,4 @@ in lib // (rec {
   inherit fetchNixPkgs nixpkgs;
   inherit fetchNixPkgsQuixoftic nixpkgs-quixoftic;
 
-  ## Local maintainers.
-  #
-
-  quixopsMaintainers = {
-    dhess = "Drew Hess <dhess-src@quixoftic.com>";
-  };
-
 })

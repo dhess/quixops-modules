@@ -1,6 +1,5 @@
 { system
 , pkgs
-, lib
 , modules
 , makeTest
 , ... }:
@@ -8,13 +7,11 @@
 
 let
 
-  modulesLib = (import ../.).modulesLib;
-
   makeZncTest = name: machineAttrs:
     makeTest {
       name = "znc-${name}";
-      meta = with lib.quixopsMaintainers; {
-        maintainers = [ dhess ];
+      meta = with pkgs.lib.maintainers; {
+        maintainers = [ dhess-qx ];
       };
 
       nodes = {
@@ -76,12 +73,12 @@ let
 
       testScript = { nodes, ... }:
       let
-        serverZncConf = pkgs.writeText "znc.conf" (modulesLib.mkZncConfig {
-          inherit lib;
+        serverZncConf = pkgs.writeText "znc.conf" (pkgs.lib.quixops.mkZncConfig {
+          inherit pkgs;
           zncServiceConfig = nodes.server.config.services.znc;
         });
-        localhostServerZncConf = pkgs.writeText "znc.conf" (modulesLib.mkZncConfig {
-          inherit lib;
+        localhostServerZncConf = pkgs.writeText "znc.conf" (pkgs.lib.quixops.mkZncConfig {
+          inherit pkgs;
           zncServiceConfig = nodes.localhostServer.config.services.znc;
         });
       in

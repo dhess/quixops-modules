@@ -1,6 +1,5 @@
 { system
 , pkgs
-, lib
 , modules
 , makeTest
 , ... }:
@@ -17,8 +16,8 @@ let
 in makeTest rec {
   name = "trimpcap";
 
-  meta = with lib.quixopsMaintainers; {
-    maintainers = [ dhess ];
+  meta = with pkgs.lib.maintainers; {
+    maintainers = [ dhess-qx ];
   };
 
   machine = { config, pkgs, ... }: {

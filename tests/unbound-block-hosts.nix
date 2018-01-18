@@ -1,6 +1,5 @@
 { system
 , pkgs
-, lib
 , modules
 , makeTest
 , ... }:
@@ -28,8 +27,8 @@ let
 
       name = "unbound-block-hosts-${name}";
 
-      meta = with lib.quixopsMaintainers; {
-        maintainers = [ dhess ];
+      meta = with pkgs.lib.maintainers; {
+        maintainers = [ dhess-qx ];
       };
 
       nodes = {

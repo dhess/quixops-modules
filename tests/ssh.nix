@@ -1,6 +1,5 @@
 { system
 , pkgs
-, lib
 , modules
 , makeTest
 , ... }:
@@ -45,8 +44,8 @@ let
 
   makeSshTest = name: machineAttrs: makeTest {
     name = "ssh-${name}";
-    meta = with lib.quixopsMaintainers; {
-      maintainers = [ dhess ];
+    meta = with pkgs.lib.maintainers; {
+      maintainers = [ dhess-qx ];
     };
 
     nodes = {

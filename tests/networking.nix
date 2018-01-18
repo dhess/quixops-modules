@@ -1,6 +1,5 @@
 { system
 , pkgs
-, lib
 , modules
 , makeTest
 , ... }:
@@ -12,8 +11,8 @@ let
 
     name = "networking-${name}";
 
-    meta = with lib.quixopsMaintainers; {
-      maintainers = [ dhess ];
+    meta = with pkgs.lib.maintainers; {
+      maintainers = [ dhess-qx ];
     };
 
     nodes = {

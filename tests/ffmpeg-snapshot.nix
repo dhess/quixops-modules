@@ -1,6 +1,5 @@
 { system
 , pkgs
-, lib
 , modules
 , makeTest
 , ... }:
@@ -10,8 +9,8 @@ let
   makeFfmpegSnapshotTest = name: machineAttrs:
     makeTest {
       name = "ffmpeg-snapshot-${name}";
-      meta = with lib.quixopsMaintainers; {
-        maintainers = [ dhess ];
+      meta = with pkgs.lib.maintainers; {
+        maintainers = [ dhess-qx ];
       };
       machine = { config, pkgs, ... }: {
         imports = [

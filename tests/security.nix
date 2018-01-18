@@ -1,6 +1,5 @@
 { system
 , pkgs
-, lib
 , modules
 , makeTest
 , ... }:
@@ -13,8 +12,8 @@ let
 
       name = "security-${name}";
 
-      meta = with lib.quixopsMaintainers; {
-        maintainers = [ dhess ];
+      meta = with pkgs.lib.maintainers; {
+        maintainers = [ dhess-qx ];
       };
 
       machine = { config, pkgs, ... }: {

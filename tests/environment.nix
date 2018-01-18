@@ -1,6 +1,5 @@
 { system
 , pkgs
-, lib
 , modules
 , makeTest
 , ... }:
@@ -11,8 +10,8 @@ let
   makeEnvTest = name: machineAttrs:
     makeTest {
       name = "environment-${name}";
-      meta = with lib.quixopsMaintainers; {
-        maintainers = [ dhess ];
+      meta = with pkgs.lib.maintainers; {
+        maintainers = [ dhess-qx ];
       };
       machine = { config, pkgs, ... }: {
         imports = [

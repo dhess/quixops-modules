@@ -1,6 +1,5 @@
 { system
 , pkgs
-, lib
 , modules
 , makeTest
 , ... }:
@@ -180,8 +179,8 @@ let
   makeMkCacertTest = name: clientAttrs:
     makeTest {
       name = "mkCacert-${name}";
-      meta = with lib.quixopsMaintainers; {
-        maintainers = [ dhess ];
+      meta = with pkgs.lib; {
+        maintainers = [ maintainers.dhess-qx ];
       };
 
       nodes = {
