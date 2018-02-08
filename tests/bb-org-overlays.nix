@@ -1,7 +1,8 @@
 { system ? "armv7l-linux"
 , pkgs
 , makeTest
-, ... }:
+, ...
+}:
 
 
 let
@@ -13,6 +14,8 @@ let
         maintainers = [ dhess-qx ];
       };
       machine = { config, ... }: {
+        nixpkgs.system = system;
+
         imports = [
           ./common/users.nix
         ] ++ (import pkgs.lib.quixops.modulesPath);

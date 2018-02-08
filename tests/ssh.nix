@@ -1,7 +1,8 @@
-{ system
+{ system ? "x86_64-linux"
 , pkgs
 , makeTest
-, ... }:
+, ...
+}:
 
 let
 
@@ -49,6 +50,7 @@ let
 
     nodes = {
       server = { config, ... }: {
+          nixpkgs.system = system;
           imports = [
             ./common/users.nix
             ./common/root-user.nix
@@ -64,6 +66,7 @@ let
           ];
       } // machineAttrs;
       badserver = { config, ... }: {
+          nixpkgs.system = system;
           imports = [
             ./common/users.nix
             ./common/root-user.nix
@@ -82,6 +85,7 @@ let
           services.openssh.permitRootLogin = "yes";
       };
       client = { config, ... }: {
+          nixpkgs.system = system;
           imports = (import pkgs.lib.quixops.modulesPath);
       };
     };

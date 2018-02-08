@@ -1,7 +1,8 @@
-{ system
+{ system ? "x86_64-linux"
 , pkgs
 , makeTest
-, ... }:
+, ...
+}:
 
 let
 
@@ -12,6 +13,7 @@ let
         maintainers = [ dhess-qx ];
       };
       machine = { config, ... }: {
+        nixpkgs.system = system;
         imports = (import pkgs.lib.quixops.modulesPath);
       } // machineAttrs;
       testScript = { nodes, ... }:

@@ -1,7 +1,8 @@
-{ system
+{ system ? "x86_64-linux"
 , pkgs
 , makeTest
-, ... }:
+, ...
+}:
 
 
 let
@@ -17,10 +18,12 @@ let
     nodes = {
 
       server = { config, ... }: {
+        nixpkgs.system = system;
         imports = (import pkgs.lib.quixops.modulesPath);
       } // machineAttrs;
 
       client = { ... }: {
+        nixpkgs.system = system;
       };
 
     };

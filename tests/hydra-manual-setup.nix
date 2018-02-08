@@ -1,7 +1,8 @@
-{ system
+{ system ? "x86_64-linux"
 , pkgs
 , makeTest
-, ... }:
+, ...
+}:
 
 let
 
@@ -23,9 +24,11 @@ in makeTest rec {
   nodes = {
 
     client = { config, ... }: {
+      nixpkgs.system = system;
     };
 
     hydra = { config, ... }: {
+      nixpkgs.system = system;
       imports = (import pkgs.lib.quixops.modulesPath);
 
       services.hydra-manual-setup = {

@@ -6,12 +6,10 @@
 let
 
   lib = import ../lib.nix;
-  fixedNixPkgs = lib.fetchNixPkgs;
-  packageSet = (import fixedNixPkgs);
 
 in
 
-{ system ? builtins.currentSystem
+{ system ? "x86_64-linux"
 , supportedSystems ? [ "x86_64-linux" ]
 , scrubJobs ? true
 , nixpkgsArgs ? {

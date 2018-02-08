@@ -1,7 +1,8 @@
-{ system
+{ system ? "x86_64-linux"
 , pkgs
 , makeTest
-, ... }:
+, ...
+}:
 
 
 let
@@ -17,6 +18,7 @@ let
 
         localhostServer = { config, ... }:
         {
+          nixpkgs.system = system;
           imports = (import pkgs.lib.quixops.modulesPath);
 
           services.znc = {
@@ -41,6 +43,7 @@ let
 
         server = { config, ... }:
         {
+          nixpkgs.system = system;
           imports = (import pkgs.lib.quixops.modulesPath);
 
           services.znc = {
@@ -64,6 +67,7 @@ let
 
         client = { config, ... }:
         {
+          nixpkgs.system = system;
         };
 
       } // machineAttrs;

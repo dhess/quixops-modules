@@ -6,7 +6,7 @@ let
 
 in
 
-{ system ? builtins.currentSystem
+{ system ? "x86_64-linux"
 , supportedSystems ? [ "x86_64-linux" ]
 , scrubJobs ? true
 , nixpkgsArgs ? {
@@ -18,7 +18,7 @@ in
 }:
 
 with import (fixedNixPkgs + "/pkgs/top-level/release-lib.nix") {
-  inherit supportedSystems scrubJobs nixpkgsArgs;
+  inherit supportedSystems scrubJobs nixpkgsArgs packageSet;
 };
 
 let

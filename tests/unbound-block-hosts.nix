@@ -1,7 +1,8 @@
-{ system
+{ system ? "x86_64-linux"
 , pkgs
 , makeTest
-, ... }:
+, ...
+}:
 
 
 let
@@ -33,6 +34,7 @@ let
       nodes = {
 
         server = { config, ... }: {
+          nixpkgs.system = system;
           networking.firewall.allowedTCPPorts = [ 80 443 ];
           services.nginx = {
             enable = true;
@@ -46,6 +48,7 @@ let
         };
 
         client = { config, ... }: {
+          nixpkgs.system = system;
           imports = (import pkgs.lib.quixops.modulesPath);
         } // clientAttrs;
 

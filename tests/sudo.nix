@@ -1,7 +1,8 @@
-{ system
+{ system ? "x86_64-linux"
 , pkgs
 , makeTest
-, ... }:
+, ...
+}:
 
 
 let
@@ -22,7 +23,7 @@ let
       };
 
       machine = { config, ... }: {
-
+        nixpkgs.system = system;
         imports = [
           ./common/users.nix
         ] ++ (import pkgs.lib.quixops.modulesPath);
