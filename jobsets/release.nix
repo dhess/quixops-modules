@@ -23,7 +23,7 @@ with import (fixedNixPkgs + "/pkgs/top-level/release-lib.nix") {
 
 let
 
-  testing = import "${lib.fetchNixPkgs}/nixos/lib/testing.nix" { inherit system; };
+  testing = import (fixedNixPkgs + "/nixos/lib/testing.nix") { inherit system; };
   inherit (testing) makeTest;
 
   importTest = fn: args: system: import fn ({
