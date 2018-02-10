@@ -8,6 +8,8 @@
   ./config/defaults/sudo.nix
   ./config/defaults/system.nix
   ./config/defaults/users.nix
+  ./config/hardware/mbr.nix
+  ./config/hardware/uefi.nix
   ./core/module-hashes.nix
   ./networking/pcap-prep
   ./services/hydra-manual-setup
