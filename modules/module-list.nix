@@ -14,6 +14,7 @@
   ./core/module-hashes.nix
   ./networking/pcap-prep
   ./services/hydra-manual-setup
+  ./services/systemd-digitalocean
   ./services/netsniff-ng
   ./services/znc
 ]
