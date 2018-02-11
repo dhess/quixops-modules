@@ -2,6 +2,7 @@
   ./config/defaults/default.nix
   ./config/defaults/environment.nix
   ./config/defaults/networking.nix
+  ./config/defaults/nginx.nix
   ./config/defaults/nix.nix
   ./config/defaults/security.nix
   ./config/defaults/ssh.nix
