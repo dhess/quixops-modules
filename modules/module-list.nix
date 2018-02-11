@@ -13,6 +13,7 @@
   ./config/hardware/uefi.nix
   ./core/module-hashes.nix
   ./networking/pcap-prep
+  ./networking/ndppd
   ./services/hydra-manual-setup
   ./services/systemd-digitalocean
   ./services/netsniff-ng
