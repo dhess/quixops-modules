@@ -12,6 +12,7 @@
   ./config/hardware/mbr.nix
   ./config/hardware/uefi.nix
   ./core/module-hashes.nix
+  ./dns/unbound-adblock
   ./networking/pcap-prep
   ./networking/ndppd
   ./services/hydra-manual-setup
