@@ -76,34 +76,65 @@ in {
       '';
     };
 
-    virtualServiceIpv4 = mkOption {
-      default = "10.8.8.8";
-      example = "10.0.1.1";
-      type = types.str;
+    virtualServiceIpv4s = mkOption {
+      default = [ "10.8.8.8" ];
+      example = [ "10.0.1.1" "10.1.1.1" ];
+      type = types.listOf types.str;
       description = ''
-        The virtual IP on which the service will listen for requests.
-        This address is assigned to the <literal>dummy0</literal>
-        network device. Note that it is configured as a
-        <literal>/32</literal> address (single-host network).
-        
-        Use this address as your resolver address for clients, and
-        make sure this address is routed to the host where the Unbound
-        ad-block service is running.
+        A list of virtual IPv4 addresses on which the service will
+        listen for requests. These addresses are assigned to the
+        <literal>dummy0</literal> network device. Note that they are
+        each configured as a <literal>/32</literal> address
+        (single-host network).
 
-        This address should not be used elsewhere in your network,
+        Use one of these addresses as your resolver address for
+        clients, and make sure these addresses are routed to the host
+        where the Unbound ad-block service is running.
+
+        These addresses should not be used elsewhere in your network,
         except perhaps for other Unbound instances on other hosts,
         where you are using some sort of failover/load-balancing
         routing of virtual service IPs.
+
+        Note: either this list or the
+        <literal>virtualServiceIpv6s</literal> list can be the empty
+        list (<literal>[]</literal>), but not both.
+      '';
+    };
+
+    virtualServiceIpv6s = mkOption {
+      default = [];
+      example = [ "2001:db8::1" "2001:db8:3::1" ];
+      type = types.listOf types.str;
+      description = ''
+        A list of virtual IPv6 addresses on which the service will
+        listen for requests. These addresses are assigned to the
+        <literal>dummy0</literal> network device. Note that they are
+        each configured as a <literal>/128</literal> address
+        (single-host network).
+
+        Use one of these addresses as your resolver address for
+        clients, and make sure these addresses are routed to the host
+        where the Unbound ad-block service is running.
+
+        These addresses should not be used elsewhere in your network,
+        except perhaps for other Unbound instances on other hosts,
+        where you are using some sort of failover/load-balancing
+        routing of virtual service IPs.
+
+        Note: either this list or the
+        <literal>virtualServiceIpv4s</literal> list can be the empty
+        list (<literal>[]</literal>), but not both.
       '';
     };
 
     forwardAddresses = mkOption {
       default = [ "8.8.8.8" "8.8.4.4" "2001:4860:4860::8888" "2001:4860:4860::8844" ];
-      example = [ "8.8.8.8" ];
+      example = [ "8.8.8.8" "2001:4860:4860::8888" ];
       type = types.listOf types.str;
       description = ''
         The address(es) of forwarding servers for this Unbound
-        service.
+        service. Both IPv4 and IPv6 addresses are supported.
       '';
     };
 
@@ -125,8 +156,9 @@ in {
       { assertion = cfg.forwardAddresses != [];
         message = "forwardAddresses must not be the empty list";
       }
-      { assertion = cfg.virtualServiceIpv4 != "";
-        message = "You must set the virtualServiceIpv4 option to a valid IPv4 address";
+      { assertion = (cfg.virtualServiceIpv4s == [] -> cfg.virtualServieIpv6s != []) &&
+                    (cfg.virtualServiceIpv6s == [] -> cfg.virtualServiceIpv4s != []);
+        message = "Both virtualServiceIpv4s and virtualServiceIpv6s cannot be the empty list";
       }
       { assertion = cfg.updateFrequency != "";
         message = "You must set the updateFrequency to a valid systemd.timers OnCalendar value";
@@ -142,14 +174,15 @@ in {
     # https://github.com/NixOS/nixpkgs/issues/7227
 
     boot.kernelModules = [ "dummy" ];
-    networking.interfaces.dummy0.ip4 = [
-      { address = cfg.virtualServiceIpv4; prefixLength = 32; }
-    ];
+    networking.interfaces.dummy0.ip4 =
+      map (ip: { address = ip; prefixLength = 32; }) cfg.virtualServiceIpv4s;
+    networking.interfaces.dummy0.ip6 =
+      map (ip: { address = ip; prefixLength = 128; }) cfg.virtualServiceIpv6s;
 
     services.unbound = {
       enable = true;
       allowedAccess = cfg.allowedAccessIpv4 ++ cfg.allowedAccessIpv6;
-      interfaces = [ cfg.virtualServiceIpv4 ];
+      interfaces = cfg.virtualServiceIpv4s ++ cfg.virtualServiceIpv6s;
       forwardAddresses = cfg.forwardAddresses;
 
       # Don't want DNSSEC, have had issues with it in the past where

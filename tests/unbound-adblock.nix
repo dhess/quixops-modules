@@ -22,7 +22,12 @@ let
     127.0.0.1 doubleclick.net        
   '';
 
-  virtualServiceIpv4 = "192.168.1.251";
+  ipv6_prefix = "fd00:1234:5678::/64";
+
+  serverIpv4_1 = "192.168.1.251";
+  serverIpv4_2 = "192.168.1.252";
+  serverIpv6_1 = "fd00:1234:5678::1";
+  serverIpv6_2 = "fd00:1234:5678::2";
 
 in makeTest rec {
 
@@ -41,12 +46,20 @@ in makeTest rec {
       services.unbound-adblock = {
         enable = true;
         allowedAccessIpv4 = [ "192.168.1.0/24" ];
-        inherit virtualServiceIpv4;
+        allowedAccessIpv6 = [ ipv6_prefix ];
+        virtualServiceIpv4s = [ serverIpv4_1 serverIpv4_2 ];
+        virtualServiceIpv6s = [ serverIpv6_1 serverIpv6_2 ];
       };
+      networking.interfaces.eth1.ip6 = [
+        { address = "fd00:1234:5678::1000"; prefixLength = 64; }
+      ];
     };
 
     client = { config, ... }: {
       nixpkgs.system = system;
+      networking.interfaces.eth1.ip6 = [
+        { address = "fd00:1234:5678::2000"; prefixLength = 64; }
+      ];
     }; 
 
   };
@@ -54,18 +67,32 @@ in makeTest rec {
   testScript = { nodes, ... }:
   ''
     startAll;
+
     $server->waitForUnit("unbound.service");
     $client->waitForUnit("multi-user.target");
-    my $serverip = $server->succeed("ip addr show");
-    $server->log("server ip: " . $serverip);
-    my $clientip = $client->succeed("ip addr show");
-    $client->log("client ip: " . $clientip);
+
+    # Make sure we have IPv6 connectivity and there isn't an issue
+    # with the network setup in the test.
+    
+    $server->succeed("ping -c 1 fd00:1234:5678::2000 >&2");
+    $client->succeed("ping -c 1 fd00:1234:5678::1000 >&2");
+    #$client->succeed("ping -c 1 ${serverIpv6_1} >&2");
+    #$client->succeed("ping -c 1 ${serverIpv6_2} >&2");
+
+    sub testDoubleclick {
+      my ($machine, $dnsip, $extraArg) = @_;
+      my $ipv4 = $machine->succeed("${pkgs.dnsutils}/bin/dig \@$dnsip $extraArg A doubleclick.com +short");
+      $ipv4 =~ /^127\.0\.0\.1$/ or die "doubleclick.com does not resolve to 127.0.0.1";
+      my $ipv6 = $machine->succeed("${pkgs.dnsutils}/bin/dig \@$dnsip $extraArg AAAA doubleclick.com +short");
+      $ipv6 =~ /^::1$/ or die "doubleclick.com does not resolve to ::1";
+    }
 
     subtest "adblock", sub {
-      my $ipv4 = $client->succeed("${pkgs.dnsutils}/bin/dig \@${virtualServiceIpv4} A doubleclick.com +short");
-      $ipv4 =~ /^127\.0\.0\.1$/ or die "doubleclick.com does not resolve to 127.0.0.1";
-      my $ipv6 = $client->succeed("${pkgs.dnsutils}/bin/dig \@${virtualServiceIpv4} AAAA doubleclick.com +short");
-      $ipv6 =~ /^::1$/ or die "doubleclick.com does not resolve to ::1";
+      testDoubleclick $client, "${serverIpv4_1}", "";
+      testDoubleclick $client, "${serverIpv4_2}", "";
+      #testDoubleclick $client, "${serverIpv6_1}", "-6";
+      #testDoubleclick $client, "${serverIpv6_2}", "-6";
     };
+
   '';
 }
