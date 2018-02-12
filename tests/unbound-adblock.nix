@@ -19,7 +19,7 @@ let
     #<doubleclick-sites>
     127.0.0.1 doubleclick.com
     127.0.0.1 doubleclick.de
-    127.0.0.1 doubleclick.net        
+    127.0.0.1 doubleclick.net
   '';
 
   ipv6_prefix = "fd00:1234:5678::/64";
@@ -45,7 +45,7 @@ in makeTest rec {
         { address = "192.168.1.250"; prefixLength = 24; }
       ];
       networking.interfaces.eth1.ip6 = [
-        { address = "fd00:1234:5678::3000"; prefixLength = 64; }
+        { address = "fd00:1234:5678::ffff"; prefixLength = 64; }
       ];
       networking.firewall.allowedUDPPorts = [ 53 ];
       services.nsd.enable = true;
@@ -61,14 +61,18 @@ in makeTest rec {
       nixpkgs.system = system;
       nixpkgs.overlays = [ (import ../.) ];
       imports = (import pkgs.lib.quixops.modulesPath);
+      networking.useDHCP = false;
       services.unbound-adblock = {
         enable = true;
-        allowedAccessIpv4 = [ "192.168.1.0/24" ];
+        allowedAccessIpv4 = [ "192.168.1.2/32" ];
         allowedAccessIpv6 = [ ipv6_prefix ];
         virtualServiceIpv4s = [ serverIpv4_1 serverIpv4_2 ];
         virtualServiceIpv6s = [ serverIpv6_1 serverIpv6_2 ];
         forwardAddresses = [ "192.168.1.250" ];
       };
+      networking.interfaces.eth1.ip4 = [
+        { address = "192.168.1.1"; prefixLength = 24; }
+      ];
       networking.interfaces.eth1.ip6 = [
         { address = "fd00:1234:5678::1000"; prefixLength = 64; }
       ];
@@ -76,10 +80,25 @@ in makeTest rec {
 
     client = { config, ... }: {
       nixpkgs.system = system;
+      networking.useDHCP = false;
+      networking.interfaces.eth1.ip4 = [
+        { address = "192.168.1.2"; prefixLength = 24; }
+      ];
       networking.interfaces.eth1.ip6 = [
         { address = "fd00:1234:5678::2000"; prefixLength = 64; }
       ];
-    }; 
+    };
+
+    badclient = { config, ... }: {
+      nixpkgs.system = system;
+      networking.useDHCP = false;
+      networking.interfaces.eth1.ip4 = [
+        { address = "192.168.1.3"; prefixLength = 24; }
+      ];
+      networking.interfaces.eth1.ip6 = [
+        { address = "fd00:1234:5678::3000"; prefixLength = 64; }
+      ];
+    };
 
   };
 
@@ -90,10 +109,11 @@ in makeTest rec {
     $server->waitForUnit("unbound.service");
     $nsd->waitForUnit("nsd.service");
     $client->waitForUnit("multi-user.target");
+    $badclient->waitForUnit("multi-user.target");
 
     # Make sure we have IPv6 connectivity and there isn't an issue
     # with the network setup in the test.
-    
+
     sub waitForAddress {
         my ($machine, $iface, $scope) = @_;
         $machine->waitUntilSucceeds("[ `ip -o -6 addr show dev $iface scope $scope | grep -v tentative | wc -l` -eq 1 ]");
@@ -102,12 +122,16 @@ in makeTest rec {
         return $ip;
     }
 
-    waitForAddress $client, "eth1", "global";    
-    waitForAddress $server, "eth1", "global";    
-    waitForAddress $nsd, "eth1", "global";    
+    waitForAddress $client, "eth1", "global";
+    waitForAddress $badclient, "eth1", "global";
+    waitForAddress $server, "eth1", "global";
+    waitForAddress $nsd, "eth1", "global";
 
     $server->succeed("ping -c 1 fd00:1234:5678::2000 >&2");
+    $server->succeed("ping -c 1 fd00:1234:5678::3000 >&2");
+    $server->succeed("ping -c 1 fd00:1234:5678::ffff >&2");
     $client->succeed("ping -c 1 fd00:1234:5678::1000 >&2");
+    $badclient->succeed("ping -c 1 fd00:1234:5678::1000 >&2");
     #$client->succeed("ping -c 1 ${serverIpv6_1} >&2");
     #$client->succeed("ping -c 1 ${serverIpv6_2} >&2");
 
@@ -129,6 +153,13 @@ in makeTest rec {
     subtest "forwarding", sub {
       my $ip = $client->succeed("${pkgs.dnsutils}/bin/dig \@${serverIpv4_1} A ipv4.example.com +short");
       $ip =~ /^1\.2\.3\.4$/ or die "ipv4.example.com does not resolve to 1.2.3.4";
+    };
+
+    subtest "badclient", sub {
+      $badclient->fail("${pkgs.dnsutils}/bin/dig \@${serverIpv4_1} A doubleclick.com +time=2");
+      $badclient->fail("${pkgs.dnsutils}/bin/dig \@${serverIpv4_2} A doubleclick.com +time=2");
+      #$badclient->fail("${pkgs.dnsutils}/bin/dig \@${serverIpv6_1} A doubleclick.com +time=2");
+      #$badclient->fail("${pkgs.dnsutils}/bin/dig \@${serverIpv6_2} A doubleclick.com +time=2");
     };
 
   '';
