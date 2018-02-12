@@ -171,10 +171,7 @@ in
 
       description = "Automate Hydra's initial manual setup";
       wantedBy = [ "multi-user.target" ];
-      wants = [
-        "${defaultPasswordKeyName}-key.service"
-        "${defaultBinaryCacheKeyName}-key.service"
-      ];
+      wants = [ "keys.target" ];
       requires = [ "hydra-init.service" ];
       after = [ "hydra-init.service" ] ++ wants;
 
