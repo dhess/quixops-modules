@@ -39,6 +39,24 @@ in makeTest rec {
 
   nodes = {
 
+    nsd = { config, ... }: {
+      nixpkgs.system = system;
+      networking.interfaces.eth1.ip4 = [
+        { address = "192.168.1.250"; prefixLength = 24; }
+      ];
+      networking.interfaces.eth1.ip6 = [
+        { address = "fd00:1234:5678::3000"; prefixLength = 64; }
+      ];
+      networking.firewall.allowedUDPPorts = [ 53 ];
+      services.nsd.enable = true;
+      services.nsd.interfaces = [ "192.168.1.250" ];
+      services.nsd.zones."example.com.".data = ''
+        @ SOA ns.example.com noc.example.com 666 7200 3600 1209600 3600
+        ipv4 A 1.2.3.4
+        ipv6 AAAA abcd::eeff
+      '';
+    };
+
     server = { config, ... }: {
       nixpkgs.system = system;
       nixpkgs.overlays = [ (import ../.) ];
@@ -49,6 +67,7 @@ in makeTest rec {
         allowedAccessIpv6 = [ ipv6_prefix ];
         virtualServiceIpv4s = [ serverIpv4_1 serverIpv4_2 ];
         virtualServiceIpv6s = [ serverIpv6_1 serverIpv6_2 ];
+        forwardAddresses = [ "192.168.1.250" ];
       };
       networking.interfaces.eth1.ip6 = [
         { address = "fd00:1234:5678::1000"; prefixLength = 64; }
@@ -69,11 +88,24 @@ in makeTest rec {
     startAll;
 
     $server->waitForUnit("unbound.service");
+    $nsd->waitForUnit("nsd.service");
     $client->waitForUnit("multi-user.target");
 
     # Make sure we have IPv6 connectivity and there isn't an issue
     # with the network setup in the test.
     
+    sub waitForAddress {
+        my ($machine, $iface, $scope) = @_;
+        $machine->waitUntilSucceeds("[ `ip -o -6 addr show dev $iface scope $scope | grep -v tentative | wc -l` -eq 1 ]");
+        my $ip = (split /[ \/]+/, $machine->succeed("ip -o -6 addr show dev $iface scope $scope"))[3];
+        $machine->log("$scope address on $iface is $ip");
+        return $ip;
+    }
+
+    waitForAddress $client, "eth1", "global";    
+    waitForAddress $server, "eth1", "global";    
+    waitForAddress $nsd, "eth1", "global";    
+
     $server->succeed("ping -c 1 fd00:1234:5678::2000 >&2");
     $client->succeed("ping -c 1 fd00:1234:5678::1000 >&2");
     #$client->succeed("ping -c 1 ${serverIpv6_1} >&2");
@@ -92,6 +124,11 @@ in makeTest rec {
       testDoubleclick $client, "${serverIpv4_2}", "";
       #testDoubleclick $client, "${serverIpv6_1}", "-6";
       #testDoubleclick $client, "${serverIpv6_2}", "-6";
+    };
+
+    subtest "forwarding", sub {
+      my $ip = $client->succeed("${pkgs.dnsutils}/bin/dig \@${serverIpv4_1} A ipv4.example.com +short");
+      $ip =~ /^1\.2\.3\.4$/ or die "ipv4.example.com does not resolve to 1.2.3.4";
     };
 
   '';
