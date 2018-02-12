@@ -15,9 +15,15 @@ let
       };
       machine = { config, ... }: {
         nixpkgs.system = system;
-        imports = (import pkgs.lib.quixops.modulesPath);
+
+        imports = [
+          ./common/users.nix
+        ] ++ (import pkgs.lib.quixops.modulesPath);
       } // machineAttrs;
       testScript = { nodes, ... }:
+      let
+        pkgs = nodes.machine.pkgs;
+      in
       ''
         $machine->waitForUnit("multi-user.target");
 
