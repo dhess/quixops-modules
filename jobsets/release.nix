@@ -7,7 +7,7 @@ let
 in
 
 { system ? "x86_64-linux"
-, supportedSystems ? [ "x86_64-linux" ]
+, supportedSystems ? [ "x86_64-linux" "aarch64-linux" "armv7l-linux" ]
 , scrubJobs ? true
 , nixpkgsArgs ? {
     config = { allowUnfree = false; inHydra = true; };
@@ -48,7 +48,7 @@ let
 
   tests = {
     ## Overlays.
-    #bb-org-overlays = callSubTests ./bb-org-overlays.nix { system = "armv7l-linux"; };
+    #bb-org-overlays = callSubTests ../tests/bb-org-overlays.nix { system = "armv7l-linux"; };
     custom-cacert = callSubTests ../tests/custom-cacert.nix {};
     ffmpeg-snapshot = callSubTests ../tests/ffmpeg-snapshot.nix {};
     unbound-block-hosts = callSubTests ../tests/unbound-block-hosts.nix {};

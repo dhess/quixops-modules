@@ -10,7 +10,7 @@ let
 in
 
 { system ? "x86_64-linux"
-, supportedSystems ? [ "x86_64-linux" ]
+, supportedSystems ? [ "x86_64-linux" "aarch64-linux" "armv7l-linux" ]
 , scrubJobs ? true
 , nixpkgsArgs ? {
     config = { allowUnfree = false; inHydra = true; };
