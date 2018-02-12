@@ -46,8 +46,6 @@ in
   config = mkIf enabled {
 
     services.nginx = {
-      enable = true;
-
       recommendedGzipSettings = true;
       recommendedOptimisation = true;
       recommendedTlsSettings = true;
