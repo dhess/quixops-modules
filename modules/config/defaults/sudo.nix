@@ -12,15 +12,7 @@ let
 in
 {
   options.quixops.defaults.sudo = {
-
-    enable = mkOption {
-      type = types.bool;
-      default = false;
-      description = ''
-        Enable the Quixops sudo configuration defaults.
-      '';
-    };
-
+    enable = mkEnableOption "Enable the Quixops sudo configuration defaults.";
   };
 
   config = mkIf enabled {

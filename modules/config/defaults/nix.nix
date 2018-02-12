@@ -10,15 +10,7 @@ let
 in
 {
   options.quixops.defaults.nix = {
-
-    enable = mkOption {
-      type = types.bool;
-      default = false;
-      description = ''
-        Enable the Quixops Nix configuration defaults.
-      '';
-    };
-
+    enable = mkEnableOption "Enable the Quixops Nix configuration defaults.";
   };
 
   config = mkIf enabled {

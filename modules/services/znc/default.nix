@@ -135,13 +135,7 @@ in
 
   options = {
     services.znc = {
-      enable = mkOption {
-        default = false;
-        type = types.bool;
-        description = ''
-          Enable a ZNC service for a user.
-        '';
-      };
+      enable = mkEnableOption "Enable a ZNC service for a user.";
 
       configFile = mkOption {
         type = types.path;

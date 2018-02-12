@@ -10,15 +10,7 @@ let
 in
 {
   options.quixops.defaults.ssh = {
-
-    enable = mkOption {
-      type = types.bool;
-      default = false;
-      description = ''
-        Enable the Quixops SSH configuration defaults.
-      '';
-    };
-
+    enable = mkEnableOption "Enable the Quixops SSH configuration defaults.";
   };
 
   config = mkIf enabled {

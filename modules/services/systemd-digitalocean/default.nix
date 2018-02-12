@@ -21,13 +21,7 @@ in
 
 {
   options.services.systemd-digitalocean = {
-    enable = mkOption {
-      type = types.bool;
-      default = false;
-      description = ''
-        Enable the systemd DigitalOcean networking module.
-      '';
-    };
+    enable = mkEnableOption "Enable the systemd DigitalOcean networking module.";
   };
 
   config = mkIf cfg.enable (import systemd-digitalocean-module { inherit pkgs config; });

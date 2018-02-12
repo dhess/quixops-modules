@@ -11,20 +11,15 @@ in
 {
 
   options.quixops.defaults = {
+    enable = mkEnableOption
+    ''
+      Enable all of the QuixOps configuration defaults.
 
-    enable = mkOption {
-      type = types.bool;
-      default = false;
-      description = ''
-        Enable all of the QuixOps configuration defaults.
-
-        These defaults will configure a NixOS server according to the
-        Quixoftic security requirements. Note that some of the
-        defaults may not be appropriate for an interactive desktop
-        system.
-      '';
-    };
-
+      These defaults will configure a NixOS server according to the
+      Quixoftic security requirements. Note that some of the
+      defaults may not be appropriate for an interactive desktop
+      system.
+    '';
   };
 
   config = mkIf enabled {

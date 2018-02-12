@@ -13,13 +13,7 @@ let
 in
 {
   options.quixops.hardware.mbr = {
-    enable = mkOption {
-      type = types.bool;
-      default = false;
-      description = ''
-        Enable GRUB for MBR-based boot.
-      '';
-    };
+    enable = mkEnableOption "Enable GRUB for MBR-based boot.";
   };
 
   config = mkIf enabled {

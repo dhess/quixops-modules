@@ -12,24 +12,20 @@ in
 {
   options.quixops.defaults.nginx = {
 
-    enable = mkOption {
-      type = types.bool;
-      default = false;
-      description = ''
-        Enable the Quixops nginx configuration defaults. These include
-        NixOS-recommended compression, proxy, optimization, and TLS
-        settings. It also enables the Mozilla-recommended "modern" SSL
-        ciphers for server-side SSL, disables all TLS versions other
-        than TLS v1.2, and enables perfect forward secrecy via DH
-        parameters, which are generated on first use. In addition,
-        nginx's server tokens are disabled.
+    enable = mkEnableOption ''
+      Enable the Quixops nginx configuration defaults. These include
+      NixOS-recommended compression, proxy, optimization, and TLS
+      settings. It also enables the Mozilla-recommended "modern" SSL
+      ciphers for server-side SSL, disables all TLS versions other
+      than TLS v1.2, and enables perfect forward secrecy via DH
+      parameters, which are generated on first use. In addition,
+      nginx's server tokens are disabled.
 
-        Note that enabling this option does not enable the nginx
-        service itself; it simply ensures that any nginx services you
-        run on this host will be configured with these default
-        settings.
-      '';
-    };
+      Note that enabling this option does not enable the nginx
+      service itself; it simply ensures that any nginx services you
+      run on this host will be configured with these default
+      settings.
+    '';
 
     dhparamsSize = mkOption {
       type = types.int;

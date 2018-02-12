@@ -10,15 +10,7 @@ let
 in
 {
   options.quixops.defaults.security = {
-
-    enable = mkOption {
-      type = types.bool;
-      default = false;
-      description = ''
-        Enable the Quixops security configuration defaults.
-      '';
-    };
-
+    enable = mkEnableOption "Enable the Quixops security configuration defaults.";
   };
 
   config = mkIf enabled {

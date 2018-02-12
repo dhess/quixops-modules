@@ -10,15 +10,7 @@ let
 in
 {
   options.quixops.defaults.environment = {
-
-    enable = mkOption {
-      type = types.bool;
-      default = false;
-      description = ''
-        Enable the Quixops shell environment configuration defaults.
-      '';
-    };
-
+    enable = mkEnableOption "Enable the Quixops shell environment configuration defaults.";
   };
 
   config = mkIf enabled {

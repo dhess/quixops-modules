@@ -10,15 +10,7 @@ let
 in
 {
   options.quixops.defaults.users = {
-
-    enable = mkOption {
-      type = types.bool;
-      default = false;
-      description = ''
-        Enable the Quixops user configuration defaults.
-      '';
-    };
-
+    enable = mkEnableOption "Enable the Quixops user configuration defaults.";
   };
 
   config = mkIf enabled {

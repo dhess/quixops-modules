@@ -10,15 +10,7 @@ let
 in
 {
   options.quixops.defaults.networking = {
-
-    enable = mkOption {
-      type = types.bool;
-      default = false;
-      description = ''
-        Enable the Quixops networking configuration defaults.
-      '';
-    };
-
+    enable = mkEnableOption "Enable the Quixops networking configuration defaults.";
   };
 
   config = mkIf enabled {

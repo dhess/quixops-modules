@@ -13,13 +13,7 @@ let
 in {
 
   options.services.ndppd = {
-    enable = mkOption {
-      type = types.bool;
-      default = false;
-      description = ''
-        Enable the ndppd service.
-      '';
-    };
+    enable = mkEnableOption "Enable the ndppd service.";
 
     config = mkOption {
       type = types.lines;

@@ -13,13 +13,7 @@ let
 in
 {
   options.quixops.hardware.uefi = {
-    enable = mkOption {
-      type = types.bool;
-      default = false;
-      description = ''
-        Enable the systemd-boot EFI boot loader.
-      '';
-    };
+    enable = mkEnableOption "Enable the systemd-boot EFI boot loader.";
   };
 
   config = mkIf enabled {
