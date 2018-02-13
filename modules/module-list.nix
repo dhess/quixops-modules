@@ -19,4 +19,5 @@
   ./services/systemd-digitalocean
   ./services/netsniff-ng
   ./services/znc
+  ./vpn/openvpn-full
 ]

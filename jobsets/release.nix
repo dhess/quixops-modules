@@ -58,6 +58,7 @@ let
 
     ## Modules.
     hydra-manual-setup = callTest ../tests/hydra-manual-setup.nix { system = "x86_64-linux"; };
+    openvpn-full = callTest ../tests/openvpn-full.nix {};
     ndppd = callTest ../tests/ndppd.nix {};
     netsniff-ng = callSubTests ../tests/netsniff-ng.nix {};
     unbound-adblock = callTest ../tests/unbound-adblock.nix {};
