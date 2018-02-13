@@ -61,7 +61,6 @@ let
 
     status ${stateDir}/status.log
     verb 4
-    mute 5
     mute-replay-warnings
   '';
 
