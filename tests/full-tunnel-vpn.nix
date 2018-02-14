@@ -119,6 +119,15 @@ let
     ];
   };
 
+  checkSysctl = ''
+    my $accept_ra = $server->succeed("sysctl net.ipv6.conf.eth1.accept_ra");
+    $accept_ra =~ /^net\.ipv6\.conf\.eth1\.accept_ra = 2$/ or die "net.ipv6.conf.eth1.accept_ra is not 2";
+    my $forwarding = $server->succeed("sysctl net.ipv6.conf.all.forwarding");
+    $forwarding =~ /^net\.ipv6\.conf\.all\.forwarding = 1$/ or die "net.ipv6.conf.all.forwarding is not enabled";
+    my $proxy_ndp = $server->succeed("sysctl net.ipv6.conf.eth1.proxy_ndp");
+    $proxy_ndp =~ /^net\.ipv6\.conf\.eth1\.proxy_ndp = 1$/ or die "net.ipv6.conf.eth1.proxy_ndp is not enabled";
+  '';
+
   ensureIPv6 = ''
     # Make sure we have IPv6 connectivity and there isn't an issue
     # with the network setup in the test.
@@ -157,6 +166,8 @@ let
       $server->waitForUnit("openvpn-vpn2.service");
 
       ${ensureIPv6}
+
+      ${checkSysctl}
 
       subtest "check-ports", sub {
         my $udp = $server->succeed("ss -u -l -n 'sport = :1194'");
@@ -234,6 +245,8 @@ let
       $server->waitForUnit("strongswan.service");
 
       ${ensureIPv6}
+
+      ${checkSysctl}
 
       subtest "check-ports", sub {
         # StrongSwan appears to bind to both *:port and 0.0.0.0:port, so we just look here
