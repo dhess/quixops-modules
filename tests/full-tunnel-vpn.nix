@@ -6,6 +6,24 @@
 
 let
 
+  # Don't do this in production -- it will put the secrets into the
+  # Nix store! This is just a convenience for the tests.
+
+  ca-cert = pkgs.copyPathToStore ./testfiles/certs/root.crt;
+  crl = pkgs.copyPathToStore ./testfiles/crls/acme.com.crl;
+
+  vpn1-cert = pkgs.copyPathToStore ./testfiles/certs/vpn1.acme.com.crt;
+  vpn1-certKey = pkgs.copyPathToStore ./testfiles/keys/vpn1.acme.com.key;
+  vpn1-tlsAuthKey = pkgs.copyPathToStore ./testfiles/keys/vpn1.acme.com-tls-auth.key;
+  vpn2-cert = pkgs.copyPathToStore ./testfiles/certs/vpn2.acme.com.crt;
+  vpn2-certKey = pkgs.copyPathToStore ./testfiles/keys/vpn2.acme.com.key;
+  vpn2-tlsAuthKey = pkgs.copyPathToStore ./testfiles/keys/vpn2.acme.com-tls-auth.key;
+
+  bob-cert = pkgs.copyPathToStore ./testfiles/certs/bob-at-acme.com.crt;
+  bob-certKey = pkgs.copyPathToStore ./testfiles/keys/bob-at-acme.com.key;
+  alice-cert = pkgs.copyPathToStore ./testfiles/certs/alice-at-acme.com.crt;
+  alice-certKey = pkgs.copyPathToStore ./testfiles/keys/alice-at-acme.com.key;
+
   openvpnClientConfig = port: proto: cert: key: tlsAuthKey: ''
     remote server ${port} ${proto}
     dev tun
@@ -26,91 +44,108 @@ let
     verb 4
   '';
 
-  # Don't do this in production -- it will put the secrets into the
-  # Nix store! This is just a convenience for the tests.
-
-  ca-cert = pkgs.copyPathToStore ./testfiles/certs/root.crt;
-  crl = pkgs.copyPathToStore ./testfiles/crls/acme.com.crl;
-
-  vpn1-cert = pkgs.copyPathToStore ./testfiles/certs/vpn1.acme.com.crt;
-  vpn1-certKey = pkgs.copyPathToStore ./testfiles/keys/vpn1.acme.com.key;
-  vpn1-tlsAuthKey = pkgs.copyPathToStore ./testfiles/keys/vpn1.acme.com-tls-auth.key;
-  vpn2-cert = pkgs.copyPathToStore ./testfiles/certs/vpn2.acme.com.crt;
-  vpn2-certKey = pkgs.copyPathToStore ./testfiles/keys/vpn2.acme.com.key;
-  vpn2-tlsAuthKey = pkgs.copyPathToStore ./testfiles/keys/vpn2.acme.com-tls-auth.key;
-
-  bob-cert = pkgs.copyPathToStore ./testfiles/certs/bob-at-acme.com.crt;
-  bob-certKey = pkgs.copyPathToStore ./testfiles/keys/bob-at-acme.com.key;
-  alice-cert = pkgs.copyPathToStore ./testfiles/certs/alice-at-acme.com.crt;
-  alice-certKey = pkgs.copyPathToStore ./testfiles/keys/alice-at-acme.com.key;
-
-  openvpnNodes = {
-    client = { config, ... }: {
-      nixpkgs.system = system;
-      networking.interfaces.eth1.ip6 = [
-        { address = "fd00:1234:5678::2000"; prefixLength = 64; }
-      ];
-      networking.firewall.enable = false;
-      environment.etc."openvpn-bob-vpn1.conf" = {
-        text = openvpnClientConfig "1194" "udp" bob-cert bob-certKey vpn1-tlsAuthKey;
-      };
-      environment.etc."openvpn-alice-vpn1.conf" = {
-        text = openvpnClientConfig "1194" "udp" alice-cert alice-certKey vpn1-tlsAuthKey;
-      };
-      environment.etc."openvpn-bob-vpn2.conf" = {
-        text = openvpnClientConfig "443" "tcp-client" bob-cert bob-certKey vpn2-tlsAuthKey;
-      };
-      environment.etc."openvpn-alice-vpn2.conf" = {
-        text = openvpnClientConfig "443" "tcp-client" alice-cert alice-certKey vpn2-tlsAuthKey;
-      };
+  client = { config, ... }: {
+    nixpkgs.system = system;
+    networking.interfaces.eth1.ip6 = [
+      { address = "fd00:1234:5678::2000"; prefixLength = 64; }
+    ];
+    networking.firewall.enable = false;
+    environment.etc."openvpn-bob-vpn1.conf" = {
+      text = openvpnClientConfig "1194" "udp" bob-cert bob-certKey vpn1-tlsAuthKey;
     };
-
-    server = { config, ... }: {
-      nixpkgs.system = system;
-      imports = (import pkgs.lib.quixops.modulesPath);
-      services.full-tunnel-vpn = {
-        routedInterface = "eth1";
-        openvpn = {
-          vpn1 = {
-            ipv4ClientBaseAddr = "10.150.0.0";
-            ipv6ClientPrefix = "fd00:1234:5678:9::/64";
-            caFile = ca-cert;
-            certFile = vpn1-cert;
-            certKeyFile = vpn1-certKey;
-            crlFile = crl;
-            tlsAuthKey = vpn1-tlsAuthKey;
-            # Don't do this at home -- just for faster testing
-            dhparamsSize = 128;
-          };
-          vpn2 = {
-            port = 443;
-            proto = "tcp6";
-            ipv4ClientBaseAddr = "10.150.1.0";
-            ipv6ClientPrefix = "fd00:1234:5678:a::/64";
-            caFile = ca-cert;
-            certFile = vpn2-cert;
-            certKeyFile = vpn2-certKey;
-            crlFile = crl;
-            tlsAuthKey = vpn2-tlsAuthKey;
-            # Don't do this at home -- just for faster testing
-            dhparamsSize = 128;
-          };
-        };
-      };
-      networking.interfaces.eth1.ip6 = [
-        { address = "fd00:1234:5678::1000"; prefixLength = 64; }
-      ];
+    environment.etc."openvpn-alice-vpn1.conf" = {
+      text = openvpnClientConfig "1194" "udp" alice-cert alice-certKey vpn1-tlsAuthKey;
+    };
+    environment.etc."openvpn-bob-vpn2.conf" = {
+      text = openvpnClientConfig "443" "tcp-client" bob-cert bob-certKey vpn2-tlsAuthKey;
+    };
+    environment.etc."openvpn-alice-vpn2.conf" = {
+      text = openvpnClientConfig "443" "tcp-client" alice-cert alice-certKey vpn2-tlsAuthKey;
     };
   };
 
-  makeOpenVPNTest = nodes: makeTest rec {
-    name = "full-tunnel-vpn-openvpn";
+  noOpenvpn = {};
+
+  openvpn = {
+    vpn1 = {
+      ipv4ClientBaseAddr = "10.150.0.0";
+      ipv6ClientPrefix = "fd00:1234:5678:9::/64";
+      caFile = ca-cert;
+      certFile = vpn1-cert;
+      certKeyFile = vpn1-certKey;
+      crlFile = crl;
+      tlsAuthKey = vpn1-tlsAuthKey;
+      # Don't do this at home -- just for faster testing
+      dhparamsSize = 128;
+    };
+    vpn2 = {
+      port = 443;
+      proto = "tcp6";
+      ipv4ClientBaseAddr = "10.150.1.0";
+      ipv6ClientPrefix = "fd00:1234:5678:a::/64";
+      caFile = ca-cert;
+      certFile = vpn2-cert;
+      certKeyFile = vpn2-certKey;
+      crlFile = crl;
+      tlsAuthKey = vpn2-tlsAuthKey;
+      # Don't do this at home -- just for faster testing
+      dhparamsSize = 128;
+    };
+  };
+
+  noStrongswan = { enable = false; };
+
+  strongswan = {
+    enable = true;
+    remoteId = "vpn1.acme.com";
+    ipv4ClientCidr = "10.150.2.1/24";
+    ipv6ClientPrefix = "fd00:1234:5678:b::0/64";
+    caFile = ca-cert;
+    certFile = vpn1-cert;
+    certKeyFile = vpn1-certKey;
+    crlFile = crl;
+  };
+
+  server = openvpn: strongswan: { config, ... }: {
+    nixpkgs.system = system;
+    imports = (import pkgs.lib.quixops.modulesPath);
+    services.full-tunnel-vpn = {
+      routedInterface = "eth1";
+      inherit openvpn;
+      inherit strongswan;
+    };
+    networking.interfaces.eth1.ip6 = [
+      { address = "fd00:1234:5678::1000"; prefixLength = 64; }
+    ];
+  };
+
+  ensureIPv6 = ''
+    # Make sure we have IPv6 connectivity and there isn't an issue
+    # with the network setup in the test.
+
+    sub waitForAddress {
+        my ($machine, $iface, $scope) = @_;
+        $machine->waitUntilSucceeds("[ `ip -o -6 addr show dev $iface scope $scope | grep -v tentative | wc -l` -eq 1 ]");
+        my $ip = (split /[ \/]+/, $machine->succeed("ip -o -6 addr show dev $iface scope $scope"))[3];
+        $machine->log("$scope address on $iface is $ip");
+        return $ip;
+    }
+
+    waitForAddress $client, "eth1", "global";
+    waitForAddress $server, "eth1", "global";
+
+    $server->succeed("ping -c 1 fd00:1234:5678::2000 >&2");
+    $client->succeed("ping -c 1 fd00:1234:5678::1000 >&2");
+  '';
+
+  makeOpenVPNTest = name: client: server: makeTest rec {
+    inherit name;
 
     meta = with pkgs.lib.maintainers; {
       maintainers = [ dhess-qx ];
     };
 
-    inherit nodes;
+    nodes = { inherit client server; };
 
     testScript = { nodes, ... }:
     let
@@ -121,22 +156,7 @@ let
       $server->waitForUnit("openvpn-vpn1.service");
       $server->waitForUnit("openvpn-vpn2.service");
 
-      # Make sure we have IPv6 connectivity and there isn't an issue
-      # with the network setup in the test.
-
-      sub waitForAddress {
-          my ($machine, $iface, $scope) = @_;
-          $machine->waitUntilSucceeds("[ `ip -o -6 addr show dev $iface scope $scope | grep -v tentative | wc -l` -eq 1 ]");
-          my $ip = (split /[ \/]+/, $machine->succeed("ip -o -6 addr show dev $iface scope $scope"))[3];
-          $machine->log("$scope address on $iface is $ip");
-          return $ip;
-      }
-
-      waitForAddress $client, "eth1", "global";
-      waitForAddress $server, "eth1", "global";
-
-      $server->succeed("ping -c 1 fd00:1234:5678::2000 >&2");
-      $client->succeed("ping -c 1 fd00:1234:5678::1000 >&2");
+      ${ensureIPv6}
 
       subtest "check-ports", sub {
         my $udp = $server->succeed("ss -u -l -n 'sport = :1194'");
@@ -196,7 +216,56 @@ let
     '';
   };
 
+  makeStrongSwanTest = name: client: server: makeTest rec {
+    inherit name;
+
+    meta = with pkgs.lib.maintainers; {
+      maintainers = [ dhess-qx ];
+    };
+
+    nodes = { inherit client server; };
+
+    testScript = { nodes, ... }:
+    let
+    in ''
+      startAll;
+
+      $client->waitForUnit("multi-user.target");
+      $server->waitForUnit("strongswan.service");
+
+      ${ensureIPv6}
+
+      subtest "check-ports", sub {
+        # StrongSwan appears to bind to both *:port and 0.0.0.0:port, so we just look here
+        # for any listener. Also, it takes awhile to spin up, so we keep trying.
+        $server->waitUntilSucceeds("ss -u -l -n 'sport = :500' | grep 500");
+        $server->waitUntilSucceeds("ss -u -l -n 'sport = :4500' | grep 4500");
+      };
+
+      subtest "check-keys", sub {
+        $server->succeed("diff ${vpn1-certKey} /var/lib/strongswan/key");
+      };
+
+      sub testConnection {
+        my ($host, $port, $proto) = @_;
+        $client->succeed("${pkgs.netcat}/bin/nc -w 5 $proto $host $port");
+      };
+
+      subtest "test-connection", sub {
+        testConnection "server", "4500", "-u";
+        testConnection "server", "500", "-u";
+      };
+    '';
+  };
+
 in
 {
-  openvpnTest = makeOpenVPNTest openvpnNodes;
+  ## Generally, we test each type of VPN with a combination of other types enabled/disabled,
+  ## to make sure they a) operate alone and b) don't interfere with each other.
+
+  ovpn1 = makeOpenVPNTest "openvpn-full-tunnel" client (server openvpn noStrongswan);
+  ovpn2 = makeOpenVPNTest "openvpn-full-tunnel+ss" client (server openvpn strongswan);
+
+  strongswan1 = makeStrongSwanTest "strongswan-full-tunnel" client (server noOpenvpn strongswan);
+  strongswan2 = makeStrongSwanTest "strongswan-full-tunnel+ovpn" client (server openvpn strongswan);
 }

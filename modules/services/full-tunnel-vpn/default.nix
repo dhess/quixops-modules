@@ -8,14 +8,21 @@ with lib;
 let
 
   globalCfg = config.services.full-tunnel-vpn;
-  enabled = globalCfg.openvpn != {};
+  enabled = (globalCfg.openvpn != {}) || globalCfg.strongswan.enable;
+
   openvpnCfg = import ./openvpn-config.nix {
     inherit config lib;
     instances = globalCfg.openvpn;
   };
+  strongswanCfg = import ./strongswan-config.nix {
+    inherit lib;
+    cfg = globalCfg.strongswan;
+  };
 
 in
 {
+
+  meta.maintainers = lib.maintainers.dhess-qx;
 
   options.services.full-tunnel-vpn = {
 
@@ -57,22 +64,24 @@ in
         address from the pool assigned to the OpenVPN server.
       '';
       };
+
+    strongswan = import ./strongswan-options.nix { inherit lib; };
+
   };
 
-  config = mkIf enabled {
+  config = mkMerge [
+    (mkIf enabled {
+      networking.nat.enable = true;
+      networking.nat.externalInterface = globalCfg.routedInterface;
 
-    networking.nat.enable = true;
-    networking.nat.externalInterface = globalCfg.routedInterface;
-
-    # In-tunnel IPv6 requires some tweaking.
-    boot.kernel.sysctl = {
-      "net.ipv6.conf.${globalCfg.routedInterface}.accept_ra" = 2;
-      "net.ipv6.conf.all.forwarding" = 1;
-      "net.ipv6.conf.${globalCfg.routedInterface}.proxy_ndp" = 1;
-    };
-
-    meta.maintainers = lib.maintainers.dhess-qx;
-
-  }
-  // openvpnCfg;
+      # In-tunnel IPv6 requires some tweaking.
+      boot.kernel.sysctl = {
+        "net.ipv6.conf.${globalCfg.routedInterface}.accept_ra" = 2;
+        "net.ipv6.conf.all.forwarding" = 1;
+        "net.ipv6.conf.${globalCfg.routedInterface}.proxy_ndp" = 1;
+      };
+    })
+    openvpnCfg
+    strongswanCfg
+  ];
 }
