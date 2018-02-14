@@ -238,6 +238,21 @@ in {
           "${serverCfg.ipv4ClientBaseAddr}/24"
          )) globalCfg.servers);
 
+    networking.firewall.allowedUDPPorts =
+      filter
+        (x: x != null)
+        (mapAttrsToList
+          (_: cfg: if (cfg.proto == "udp" || cfg.proto == "udp6") then cfg.port else null)
+          globalCfg.servers
+        );
+    networking.firewall.allowedTCPPorts =
+      filter
+        (x: x != null)
+        (mapAttrsToList
+          (_: cfg: if (cfg.proto == "tcp" || cfg.proto == "tcp6") then cfg.port else null)
+          globalCfg.servers
+        );
+
     # In-tunnel IPv6 requires some tweaking.
     boot.kernel.sysctl = {
       "net.ipv6.conf.${globalCfg.routedInterface}.accept_ra" = 2;

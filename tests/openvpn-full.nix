@@ -107,9 +107,6 @@ in makeTest rec {
       networking.interfaces.eth1.ip6 = [
         { address = "fd00:1234:5678::1000"; prefixLength = 64; }
       ];
-      networking.firewall.enable = false;
-      networking.firewall.allowedUDPPorts = [ 1194 ];
-      networking.firewall.allowedTCPPorts = [ 443 ];
     };
   };
 
