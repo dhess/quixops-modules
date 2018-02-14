@@ -1,3 +1,8 @@
+# Limitations:
+# - IPv4 netmask for clients is assumed to be 255.255.255.0. This is
+#   because the NAT rules want a CIDR postfix (e.g., "/24") rather
+#   than a netmask and I don't feel like writing a converter.
+
 { name, config, lib }:
 
 with lib;
