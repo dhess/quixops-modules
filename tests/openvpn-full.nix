@@ -75,9 +75,9 @@ in makeTest rec {
     server = { config, ... }: {
       nixpkgs.system = system;
       imports = (import pkgs.lib.quixops.modulesPath);
-      services.openvpn-full = {
+      services.full-tunnel-vpn = {
         routedInterface = "eth1";
-        servers = {
+        openvpn = {
           vpn1 = {
             ipv4ClientBaseAddr = "10.150.0.0";
             ipv6ClientPrefix = "fd00:1234:5678:9::/64";

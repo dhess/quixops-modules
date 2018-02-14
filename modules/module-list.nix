@@ -15,9 +15,9 @@
   ./dns/unbound-adblock
   ./networking/pcap-prep
   ./networking/ndppd
+  ./services/full-tunnel-vpn
   ./services/hydra-manual-setup
   ./services/systemd-digitalocean
   ./services/netsniff-ng
   ./services/znc
-  ./vpn/openvpn-full
 ]
