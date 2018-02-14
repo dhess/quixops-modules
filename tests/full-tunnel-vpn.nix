@@ -44,72 +44,73 @@ let
   alice-cert = pkgs.copyPathToStore ./testfiles/certs/alice-at-acme.com.crt;
   alice-certKey = pkgs.copyPathToStore ./testfiles/keys/alice-at-acme.com.key;
 
+  openvpnNodes = {
+    client = { config, ... }: {
+      nixpkgs.system = system;
+      networking.interfaces.eth1.ip6 = [
+        { address = "fd00:1234:5678::2000"; prefixLength = 64; }
+      ];
+      networking.firewall.enable = false;
+      environment.etc."openvpn-bob-vpn1.conf" = {
+        text = openvpnClientConfig "1194" "udp" bob-cert bob-certKey vpn1-tlsAuthKey;
+      };
+      environment.etc."openvpn-alice-vpn1.conf" = {
+        text = openvpnClientConfig "1194" "udp" alice-cert alice-certKey vpn1-tlsAuthKey;
+      };
+      environment.etc."openvpn-bob-vpn2.conf" = {
+        text = openvpnClientConfig "443" "tcp-client" bob-cert bob-certKey vpn2-tlsAuthKey;
+      };
+      environment.etc."openvpn-alice-vpn2.conf" = {
+        text = openvpnClientConfig "443" "tcp-client" alice-cert alice-certKey vpn2-tlsAuthKey;
+      };
+    };
 
-  makeOpenVPNTest = makeTest rec {
+    server = { config, ... }: {
+      nixpkgs.system = system;
+      imports = (import pkgs.lib.quixops.modulesPath);
+      services.full-tunnel-vpn = {
+        routedInterface = "eth1";
+        openvpn = {
+          vpn1 = {
+            ipv4ClientBaseAddr = "10.150.0.0";
+            ipv6ClientPrefix = "fd00:1234:5678:9::/64";
+            caFile = ca-cert;
+            certFile = vpn1-cert;
+            certKeyFile = vpn1-certKey;
+            crlFile = crl;
+            tlsAuthKey = vpn1-tlsAuthKey;
+            # Don't do this at home -- just for faster testing
+            dhparamsSize = 128;
+          };
+          vpn2 = {
+            port = 443;
+            proto = "tcp6";
+            ipv4ClientBaseAddr = "10.150.1.0";
+            ipv6ClientPrefix = "fd00:1234:5678:a::/64";
+            caFile = ca-cert;
+            certFile = vpn2-cert;
+            certKeyFile = vpn2-certKey;
+            crlFile = crl;
+            tlsAuthKey = vpn2-tlsAuthKey;
+            # Don't do this at home -- just for faster testing
+            dhparamsSize = 128;
+          };
+        };
+      };
+      networking.interfaces.eth1.ip6 = [
+        { address = "fd00:1234:5678::1000"; prefixLength = 64; }
+      ];
+    };
+  };
+
+  makeOpenVPNTest = nodes: makeTest rec {
     name = "full-tunnel-vpn-openvpn";
 
     meta = with pkgs.lib.maintainers; {
       maintainers = [ dhess-qx ];
     };
 
-    nodes = {
-      client = { config, ... }: {
-        nixpkgs.system = system;
-        networking.interfaces.eth1.ip6 = [
-          { address = "fd00:1234:5678::2000"; prefixLength = 64; }
-        ];
-        networking.firewall.enable = false;
-        environment.etc."openvpn-bob-vpn1.conf" = {
-          text = openvpnClientConfig "1194" "udp" bob-cert bob-certKey vpn1-tlsAuthKey;
-        };
-        environment.etc."openvpn-alice-vpn1.conf" = {
-          text = openvpnClientConfig "1194" "udp" alice-cert alice-certKey vpn1-tlsAuthKey;
-        };
-        environment.etc."openvpn-bob-vpn2.conf" = {
-          text = openvpnClientConfig "443" "tcp-client" bob-cert bob-certKey vpn2-tlsAuthKey;
-        };
-        environment.etc."openvpn-alice-vpn2.conf" = {
-          text = openvpnClientConfig "443" "tcp-client" alice-cert alice-certKey vpn2-tlsAuthKey;
-        };
-      };
-
-      server = { config, ... }: {
-        nixpkgs.system = system;
-        imports = (import pkgs.lib.quixops.modulesPath);
-        services.full-tunnel-vpn = {
-          routedInterface = "eth1";
-          openvpn = {
-            vpn1 = {
-              ipv4ClientBaseAddr = "10.150.0.0";
-              ipv6ClientPrefix = "fd00:1234:5678:9::/64";
-              caFile = ca-cert;
-              certFile = vpn1-cert;
-              certKeyFile = vpn1-certKey;
-              crlFile = crl;
-              tlsAuthKey = vpn1-tlsAuthKey;
-              # Don't do this at home -- just for faster testing
-              dhparamsSize = 128;
-            };
-            vpn2 = {
-              port = 443;
-              proto = "tcp6";
-              ipv4ClientBaseAddr = "10.150.1.0";
-              ipv6ClientPrefix = "fd00:1234:5678:a::/64";
-              caFile = ca-cert;
-              certFile = vpn2-cert;
-              certKeyFile = vpn2-certKey;
-              crlFile = crl;
-              tlsAuthKey = vpn2-tlsAuthKey;
-              # Don't do this at home -- just for faster testing
-              dhparamsSize = 128;
-            };
-          };
-        };
-        networking.interfaces.eth1.ip6 = [
-          { address = "fd00:1234:5678::1000"; prefixLength = 64; }
-        ];
-      };
-    };
+    inherit nodes;
 
     testScript = { nodes, ... }:
     let
@@ -197,5 +198,5 @@ let
 
 in
 {
-  openvpnTest = makeOpenVPNTest;
+  openvpnTest = makeOpenVPNTest openvpnNodes;
 }
