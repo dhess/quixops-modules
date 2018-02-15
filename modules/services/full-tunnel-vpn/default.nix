@@ -8,7 +8,9 @@ with lib;
 let
 
   globalCfg = config.services.full-tunnel-vpn;
-  enabled = (globalCfg.openvpn != {}) || globalCfg.strongswan.enable;
+  enabled = (globalCfg.openvpn != {})         ||
+            (globalCfg.wireguard.peers != {}) ||
+            globalCfg.strongswan.enable;
 
   openvpnCfg = import ./openvpn-config.nix {
     inherit config lib;
@@ -17,6 +19,10 @@ let
   strongswanCfg = import ./strongswan-config.nix {
     inherit lib;
     cfg = globalCfg.strongswan;
+  };
+  wireguardCfg = import ./wireguard-config.nix {
+    inherit lib;
+    cfg = globalCfg.wireguard;
   };
 
 in
@@ -67,6 +73,8 @@ in
 
     strongswan = import ./strongswan-options.nix { inherit lib; };
 
+    wireguard = import ./wireguard-options.nix { inherit lib; };
+
   };
 
   config = mkMerge [
@@ -83,5 +91,6 @@ in
     })
     openvpnCfg
     strongswanCfg
+    wireguardCfg
   ];
 }

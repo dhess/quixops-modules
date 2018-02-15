@@ -24,6 +24,13 @@ let
   alice-cert = pkgs.copyPathToStore ./testfiles/certs/alice-at-acme.com.crt;
   alice-certKey = pkgs.copyPathToStore ./testfiles/keys/alice-at-acme.com.key;
 
+  wg-server-key = pkgs.copyPathToStore ./testfiles/wg-server.key;
+  wg-client-key = pkgs.copyPathToStore ./testfiles/wg-client.key;
+  wg-psk = pkgs.copyPathToStore ./testfiles/wg-psk;
+
+  wg-server-pub = ./testfiles/wg-server.pub;
+  wg-client-pub = ./testfiles/wg-client.pub;
+
   openvpnClientConfig = port: proto: cert: key: tlsAuthKey: ''
     remote server ${port} ${proto}
     dev tun
@@ -106,17 +113,33 @@ let
     crlFile = crl;
   };
 
-  server = openvpn: strongswan: { config, ... }: {
+  server = openvpn: strongswan: wireguard: { config, ... }: {
     nixpkgs.system = system;
     imports = (import pkgs.lib.quixops.modulesPath);
     services.full-tunnel-vpn = {
       routedInterface = "eth1";
       inherit openvpn;
       inherit strongswan;
+      inherit wireguard;
     };
     networking.interfaces.eth1.ip6 = [
       { address = "fd00:1234:5678::1000"; prefixLength = 64; }
     ];
+  };
+
+  noWireguard = {};
+
+  wireguard-server = {
+    ipv4ClientCidr = "10.150.3.1/24";
+    ipv6ClientPrefix = "fd00:1234:5678:c::0/64";
+    privateKeyFile = wg-server-key;
+    peers."client" = {
+      # Test with a whole LAN behind the remote peer IP.
+      allowedIPs = [ "10.150.3.2/32" "fd00:1234:5678:c::2/64" "10.0.44.0/24" ];
+      natInternalIPs = [ "10.150.3.2/32" "10.0.44.0/24" ];
+      publicKeyFile = wg-client-pub;
+      presharedKeyFile = wg-psk;
+    };
   };
 
   checkSysctl = ''
@@ -190,7 +213,7 @@ let
         # device, so the easiest thing to do is just to check all
         # possibilities.
         my $tun_ip = $server->succeed("ip addr show $tun");
-        $tun_ip =~ /inet 10\.150\.0\.1\/24/ or $tun_ip =~ /inet 10\.150\.1\.1\/24/ or die "$tun does not the expected IPv4 address";
+        $tun_ip =~ /inet 10\.150\.0\.1\/24/ or $tun_ip =~ /inet 10\.150\.1\.1\/24/ or die "$tun does not have the expected IPv4 address";
         $tun_ip =~ /inet6 fd00:1234:5678:9::1\/64/ or $tun_ip =~ /inet6 fd00:1234:5678:a::1\/64/ or die "$tun does not have the expected IPv6 address";
       };
 
@@ -271,14 +294,65 @@ let
     '';
   };
 
+  makeWireGuardTest = name: client: server: makeTest rec {
+    inherit name;
+
+    meta = with pkgs.lib.maintainers; {
+      maintainers = [ dhess-qx ];
+    };
+
+    nodes = { inherit client server; };
+
+    testScript = { nodes, ... }:
+    let
+    in ''
+      startAll;
+
+      ${ensureIPv6}
+      ${checkSysctl}
+
+      $server->waitForUnit("wireguard-wg0.service");
+      $client->waitForUnit("multi-user.target");
+
+      subtest "check-ports", sub {
+        $server->waitUntilSucceeds("ss -u -l -n 'sport = :51820' | grep 51820");
+      };
+
+      subtest "check-keys", sub {
+        $server->succeed("diff ${wg-psk} /var/lib/wireguard/client/psk");
+        $server->succeed("diff ${wg-server-key} /var/lib/wireguard/key");
+      };
+
+      subtest "check-ips", sub {
+        my $wg_ip = $server->succeed("ip addr show wg0");
+        $wg_ip =~ /inet 10\.150\.3\.1\/24/ or die "wg0 does not have the expected IPv4 address";
+        $server->log("wg0 ip: " . $wg_ip);
+        $wg_ip =~ /inet6 fd00:1234:5678:c::\/64/ or die "wg0 does not have the expected IPv6 address";
+      };
+
+      sub testConnection {
+        my ($host, $port, $proto) = @_;
+        $client->succeed("${pkgs.netcat}/bin/nc -w 5 $proto $host $port");
+      };
+
+      subtest "test-connection", sub {
+        testConnection "server", "51820", "-u";
+        testConnection "fd00:1234:5678::1000", "51820", "-u";
+      };
+    '';
+  };
+
 in
 {
   ## Generally, we test each type of VPN with a combination of other types enabled/disabled,
   ## to make sure they a) operate alone and b) don't interfere with each other.
 
-  ovpn1 = makeOpenVPNTest "openvpn-full-tunnel" client (server openvpn noStrongswan);
-  ovpn2 = makeOpenVPNTest "openvpn-full-tunnel+ss" client (server openvpn strongswan);
+  ovpn1 = makeOpenVPNTest "openvpn-full-tunnel" client (server openvpn noStrongswan noWireguard);
+  ovpn2 = makeOpenVPNTest "openvpn-full-tunnel+ss+wg" client (server openvpn strongswan wireguard-server);
 
-  strongswan1 = makeStrongSwanTest "strongswan-full-tunnel" client (server noOpenvpn strongswan);
-  strongswan2 = makeStrongSwanTest "strongswan-full-tunnel+ovpn" client (server openvpn strongswan);
+  strongswan1 = makeStrongSwanTest "strongswan-full-tunnel" client (server noOpenvpn strongswan noWireguard);
+  strongswan2 = makeStrongSwanTest "strongswan-full-tunnel+ovpn+wg" client (server openvpn strongswan wireguard-server);
+
+  wireguard1 = makeWireGuardTest "wireguard-full-tunnel" client (server noOpenvpn noStrongswan wireguard-server);
+  wireguard2 = makeWireGuardTest "wireguard-full-tunnel+ovpn+wg" client (server openvpn strongswan wireguard-server);
 }
