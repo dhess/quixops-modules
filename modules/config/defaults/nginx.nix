@@ -14,12 +14,10 @@ in
 
     enable = mkEnableOption ''
       Enable the Quixops nginx configuration defaults. These include
-      NixOS-recommended compression, proxy, optimization, and TLS
-      settings. It also enables the Mozilla-recommended "modern" SSL
-      ciphers for server-side SSL, disables all TLS versions other
-      than TLS v1.2, and enables perfect forward secrecy via DH
-      parameters, which are generated on first use. In addition,
-      nginx's server tokens are disabled.
+      NixOS-recommended compression, proxy, and optimization settings.
+      It also enables the Mozilla-recommended "modern" SSL
+      configuration for Nginx. In addition, nginx's server tokens are
+      disabled.
 
       Note that enabling this option does not enable the nginx
       service itself; it simply ensures that any nginx services you
@@ -32,17 +30,38 @@ in
   config = mkIf enabled {
 
     services.nginx = {
+
       recommendedGzipSettings = true;
       recommendedOptimisation = true;
-      recommendedTlsSettings = true;
       recommendedProxySettings = true;
 
       serverTokens = false;
 
-      # Mozilla recommendation.
+
+      ## Mozilla recommendations. See
+      ## https://mozilla.github.io/server-side-tls/ssl-config-generator/?server=nginx-1.10.3&openssl=1.0.1e&hsts=yes&profile=modern
+
       sslCiphers = "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256";
 
       sslProtocols = "TLSv1.2";
+
+      # Everything that isn't covered by an nginx module option.
+
+      appendHttpConfig = ''
+        ssl_session_timeout 1d;
+        ssl_session_cache shared:SSL:50m;
+        ssl_session_tickets off;
+        ssl_prefer_server_ciphers on;
+
+        # HSTS (ngx_http_headers_module is required) (15768000 seconds = 6 months)
+        add_header Strict-Transport-Security max-age=15768000;
+
+        # OCSP Stapling ---
+        # fetch OCSP records from URL in ssl_certificate and cache them
+        ssl_stapling on;
+        ssl_stapling_verify on;
+      '';      
+
     };
 
   };
