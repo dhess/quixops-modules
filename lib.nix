@@ -17,9 +17,17 @@ let
     if try.success
       then builtins.trace "Using <nixpkgs_quixoftic_override>" try.value
       else (import ./fetch-package.nix) { jsonSpec = builtins.readFile ./nixpkgs-quixoftic-src.json; };
+  fetchNixPkgsLibQuixoftic =
+  let
+    try = builtins.tryEval <nixpkgs_lib_quixoftic_override>;
+  in
+    if try.success
+      then builtins.trace "Using <nixpkgs_lib_quixoftic_override>" try.value
+      else (import ./fetch-package.nix) { jsonSpec = builtins.readFile ./nixpkgs-lib-quixoftic-src.json; };
 
   nixpkgs = import fetchNixPkgs;
   nixpkgs-quixoftic = import fetchNixPkgsQuixoftic;
+  nixpkgs-lib-quixoftic = import fetchNixPkgsQuixoftic;
 
   pkgs = nixpkgs {};
 
@@ -29,5 +37,6 @@ in lib // (rec {
 
   inherit fetchNixPkgs nixpkgs;
   inherit fetchNixPkgsQuixoftic nixpkgs-quixoftic;
+  inherit fetchNixPkgsLibQuixoftic nixpkgs-lib-quixoftic;
 
 })

@@ -13,15 +13,15 @@ let
             globalCfg.strongswan.enable;
 
   openvpnCfg = import ./openvpn-config.nix {
-    inherit config lib;
+    inherit pkgs config lib;
     instances = globalCfg.openvpn;
   };
   strongswanCfg = import ./strongswan-config.nix {
-    inherit lib;
+    inherit pkgs lib;
     cfg = globalCfg.strongswan;
   };
   wireguardCfg = import ./wireguard-config.nix {
-    inherit lib;
+    inherit pkgs lib;
     cfg = globalCfg.wireguard;
   };
 
@@ -43,7 +43,7 @@ in
     
     openvpn = mkOption {
       type = types.attrsOf (types.submodule ({ name, ... }: (import ./openvpn-options.nix {
-        inherit name config lib;
+        inherit name config lib pkgs;
       })));
       default = {};
       example = literalExample ''
@@ -71,9 +71,9 @@ in
       '';
       };
 
-    strongswan = import ./strongswan-options.nix { inherit lib; };
+    strongswan = import ./strongswan-options.nix { inherit pkgs lib; };
 
-    wireguard = import ./wireguard-options.nix { inherit lib; };
+    wireguard = import ./wireguard-options.nix { inherit pkgs lib; };
 
   };
 

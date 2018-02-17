@@ -12,6 +12,8 @@ in
 (foldl' (flip extends) (_: super) [
 
   (import localLib.fetchNixPkgsQuixoftic)
+  (import localLib.fetchNixPkgsLibQuixoftic)
+
   (import ./overlays/lib.nix)
 
 ]) self

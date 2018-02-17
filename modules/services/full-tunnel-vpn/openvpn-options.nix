@@ -3,7 +3,7 @@
 #   because the NAT rules want a CIDR postfix (e.g., "/24") rather
 #   than a netmask and I don't feel like writing a converter.
 
-{ name, config, lib }:
+{ name, config, lib, pkgs }:
 
 with lib;
 rec {
@@ -24,7 +24,7 @@ rec {
     };
 
     port = mkOption {
-      type = types.int;
+      type = pkgs.lib.types.port;
       example = 443;
       default = 1194;
       description = ''
@@ -50,11 +50,11 @@ rec {
     };
 
     ipv4ClientBaseAddr = mkOption {
-      type = types.string;
+      type = pkgs.lib.types.ipv4NoCidr;
       example = "10.0.1.0";
       description = ''
         The base of the IPv4 address range that will be used for
-        clients.
+        clients. Do not provide a CIDR suffix.
 
         Note: the netmask for the range is always
         <literal>255.255.255.0</literal>, so you should assign

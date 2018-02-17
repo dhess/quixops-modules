@@ -49,7 +49,7 @@ in {
     allowedAccessIpv4 = mkOption {
       default = [ "127.0.0.0/8" ];
       example = [ "192.168.1.0/24" ];
-      type = types.listOf types.str;
+      type = types.listOf pkgs.lib.types.ipv4Cidr;
       description = ''
         A list of IPv4 networks that can use the server as a resolver,
         in CIDR notation.
@@ -79,7 +79,7 @@ in {
     virtualServiceIpv4s = mkOption {
       default = [ "10.8.8.8" ];
       example = [ "10.0.1.1" "10.1.1.1" ];
-      type = types.listOf types.str;
+      type = types.listOf pkgs.lib.types.ipv4NoCidr;
       description = ''
         A list of virtual IPv4 addresses on which the service will
         listen for requests. These addresses are assigned to the

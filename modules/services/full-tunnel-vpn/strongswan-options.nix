@@ -1,4 +1,4 @@
-{ lib }:
+{ lib, pkgs }:
 
 with lib;
 
@@ -24,7 +24,7 @@ with lib;
   };
 
   ipv4ClientCidr = mkOption {
-    type = types.string;
+    type = pkgs.lib.types.ipv4Cidr;
     example = "10.0.1.0/24";
     description = ''
       The base of the IPv4 address range that will be used for

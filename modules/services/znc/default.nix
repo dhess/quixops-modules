@@ -38,7 +38,7 @@ let
       };
 
       port = mkOption {
-        type = types.int;
+        type = pkgs.lib.types.port;
         default = 6697;
         example = 6697;
         description = ''
@@ -303,7 +303,7 @@ in
         port = mkOption {
           default = 5000;
           example = 5000;
-          type = types.int;
+          type = pkgs.lib.types.port;
           description = ''
             Specifies the port on which to listen.
           '';

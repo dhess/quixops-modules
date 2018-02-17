@@ -1,4 +1,4 @@
-{ lib }:
+{ lib, pkgs }:
 
 with lib;
 
@@ -25,7 +25,7 @@ with lib;
 
   listenPort = mkOption {
     default = 51820;
-    type = types.int;
+    type = pkgs.lib.types.port;
     example = 22883;
     description = ''
       The UDP port on which the WireGuard server will listen for
@@ -34,7 +34,7 @@ with lib;
   };
 
   ipv4ClientCidr = mkOption {
-    type = types.string;
+    type = pkgs.lib.types.ipv4Cidr;
     example = "10.0.1.0/24";
     description = ''
       The base of the IPv4 address range that will be assigned to
@@ -112,7 +112,7 @@ with lib;
         natInternalIPs = mkOption {
           example = [ "10.192.122.3/32" "10.192.124.1/24" ];
           default = [];
-          type = with types; listOf str;
+          type = types.listOf pkgs.lib.types.ipv4Cidr;
           description = ''
             List of RFC1918 IPv4 addresses, in CIDR format. Traffic from these
             IPs is NATed by the WireGuard server, assuming the traffic from
