@@ -59,7 +59,6 @@ in makeTest rec {
 
     server = { config, ... }: {
       nixpkgs.system = system;
-      nixpkgs.overlays = [ (import ../.) ];
       imports = (import pkgs.lib.quixops.modulesPath);
       networking.useDHCP = false;
       services.unbound-adblock = {
