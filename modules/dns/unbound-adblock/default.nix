@@ -132,7 +132,7 @@ in {
     forwardAddresses = mkOption {
       default = [ "8.8.8.8" "8.8.4.4" "2001:4860:4860::8888" "2001:4860:4860::8844" ];
       example = [ "8.8.8.8" "2001:4860:4860::8888" ];
-      type = types.listOf (types.either pkgs.lib.types.ipv4NoCIDR pkgs.lib.types.ipv6NoCIDR);
+      type = types.nonEmptyListOf (types.either pkgs.lib.types.ipv4NoCIDR pkgs.lib.types.ipv6NoCIDR);
       description = ''
         The address(es) of forwarding servers for this Unbound
         service. Both IPv4 and IPv6 addresses are supported.
@@ -142,7 +142,7 @@ in {
     updateFrequency = mkOption {
       default = "daily";
       example = "hourly";
-      type = types.str;
+      type = pkgs.lib.types.nonEmptyStr;
       description = ''
         How often to update the block list. This value should be
         specified as a valid <literal>systemd.timers</literal>
@@ -154,15 +154,9 @@ in {
   config = mkIf cfg.enable {
 
     assertions = [
-      { assertion = cfg.forwardAddresses != [];
-        message = "forwardAddresses must not be the empty list";
-      }
       { assertion = (cfg.virtualServiceIpv4s == [] -> cfg.virtualServieIpv6s != []) &&
                     (cfg.virtualServiceIpv6s == [] -> cfg.virtualServiceIpv4s != []);
         message = "Both virtualServiceIpv4s and virtualServiceIpv6s cannot be the empty list";
-      }
-      { assertion = cfg.updateFrequency != "";
-        message = "You must set the updateFrequency to a valid systemd.timers OnCalendar value";
       }
     ];
 
