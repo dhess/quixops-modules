@@ -33,7 +33,7 @@ in
   options.services.full-tunnel-vpn = {
 
     routedInterface = mkOption {
-      type = types.string;
+      type = pkgs.lib.types.nonEmptyStr;
       example = "eth0";
       description = ''
         Traffic from all VPN clients will be routed via this host

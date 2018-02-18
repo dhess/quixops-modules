@@ -111,7 +111,7 @@ in
     services.netsniff-ng = {
 
       user = mkOption {
-        type = types.string;
+        type = pkgs.lib.types.nonEmptyStr;
         default = defaultUser;
         description = ''
           All <literal>netsniff-ng</literal> services will run as this
@@ -123,7 +123,7 @@ in
       };
 
       group = mkOption {
-        type = types.string;
+        type = pkgs.lib.types.nonEmptyStr;
         default = defaultGroup;
         description = ''
           All <literal>netsniff-ng</literal> services will run as this
@@ -136,7 +136,7 @@ in
 
       instances = mkOption {
         type = types.attrsOf (types.submodule ({ name, ... }: (import ./netsniff-ng-options.nix {
-          inherit name config lib outputDirPerms;
+          inherit name config lib pkgs outputDirPerms;
         })));
         default = {};
         example = literalExample ''

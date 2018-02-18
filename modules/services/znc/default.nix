@@ -30,7 +30,7 @@ let
   networkOpts = { ... }: {
     options = {
       server = mkOption {
-        type = types.str;
+        type = pkgs.lib.types.nonEmptyStr;
         example = "chat.freenode.net";
         description = ''
           IRC server address.
@@ -49,7 +49,7 @@ let
       userName = mkOption {
         default = "";
         example = "johntron";
-        type = types.string;
+        type = types.str;
         description = ''
           A nick identity specific to the IRC server.
         '';
@@ -81,7 +81,7 @@ let
       };
 
       modules = mkOption {
-        type = types.listOf types.str;
+        type = types.listOf pkgs.lib.types.nonEmptyStr;
         default = [ "simple_away" ];
         example = literalExample "[ simple_away sasl ]";
         description = ''
@@ -90,7 +90,7 @@ let
       };
 
       channels = mkOption {
-        type = types.listOf types.str;
+        type = types.listOf pkgs.lib.types.nonEmptyStr;
         default = [];
         example = [ "nixos" ];
         description = ''
@@ -148,7 +148,7 @@ in
       user = mkOption {
         default = "znc";
         example = "john";
-        type = types.string;
+        type = pkgs.lib.types.nonEmptyStr;
         description = ''
           The name of an existing user account to use to own the ZNC server process.
           If not specified, a default user will be created to own the process.
@@ -156,9 +156,9 @@ in
       };
 
       group = mkOption {
-        default = "";
+        default = "znc";
         example = "users";
-        type = types.string;
+        type = pkgs.lib.types.nonEmptyStr;
         description = ''
           Group to own the ZNCserver process.
         '';
@@ -194,7 +194,7 @@ in
 
       confOptions = {
         modules = mkOption {
-          type = types.listOf types.str;
+          type = types.listOf pkgs.lib.types.nonEmptyStr;
           default = [ "webadmin" "adminlog" ];
           example = [ "partyline" "webadmin" "adminlog" "log" ];
           description = ''
@@ -203,7 +203,7 @@ in
         };
 
         userModules = mkOption {
-          type = types.listOf types.str;
+          type = types.listOf pkgs.lib.types.nonEmptyStr;
           default = [ "chansaver" "controlpanel" ];
           example = [ "chansaver" "controlpanel" "fish" "push" ];
           description = ''
@@ -214,7 +214,7 @@ in
         userName = mkOption {
           default = defaultUserName;
           example = "johntron";
-          type = types.string;
+          type = pkgs.lib.types.nonEmptyStr;
           description = ''
             The user name used to log in to the ZNC web admin interface.
           '';
@@ -247,7 +247,7 @@ in
         nick = mkOption {
           default = "znc-user";
           example = "john";
-          type = types.string;
+          type = pkgs.lib.types.nonEmptyStr;
           description = ''
             The default primary IRC nick.
           '';
@@ -256,7 +256,7 @@ in
         altNick = mkOption {
           default = "${cfg.confOptions.nick}_";
           example = "john_";
-          type = types.string;
+          type = pkgs.lib.types.nonEmptyStr;
           description = ''
             The default alternate IRC nick used if the primary IRC
             nick is already in use.
@@ -266,17 +266,16 @@ in
         ident = mkOption {
           default = cfg.confOptions.nick;
           example = "john";
-          type = types.string;
+          type = pkgs.lib.types.nonEmptyStr;
           description = ''
             The default IRC ident value.
-            value.)
           '';
         };
 
         realName = mkOption {
           default = cfg.confOptions.nick;
           example = "Joe User";
-          type = types.string;
+          type = pkgs.lib.types.nonEmptyStr;
           description = ''
             The default displayed IRC real name.
           '';
@@ -284,7 +283,7 @@ in
 
         passBlock = mkOption {
           example = defaultPassBlock;
-          type = types.string;
+          type = pkgs.lib.types.nonEmptyStr;
           description = ''
             Generate with `nix-shell -p znc --command "znc --makepass"`.
             This is the password used to log in to the ZNC web admin interface.
@@ -361,7 +360,7 @@ in
       extraFlags = mkOption {
         default = [ ];
         example = [ "--debug" ];
-        type = types.listOf types.str;
+        type = types.listOf pkgs.lib.types.nonEmptyStr;
         description = ''
           Extra flags to use when executing znc command.
         '';

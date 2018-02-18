@@ -15,7 +15,7 @@ with lib;
   '';
 
   interface = mkOption {
-    type = types.str;
+    type = pkgs.lib.types.nonEmptyStr;
     default = "wg0";
     description = ''
       The WireGuard interface on which this WireGuard VPN will run, of
@@ -86,7 +86,7 @@ with lib;
       options = {
 
         name = mkOption {
-          type = types.string;
+          type = pkgs.lib.types.nonEmptyStr;
           default = "${name}";
           description = ''
             A short name for the peer. The name should be a valid
@@ -101,7 +101,7 @@ with lib;
 
         allowedIPs = mkOption {
           example = [ "10.192.122.3/32" "10.192.124.1/24" ];
-          type = types.listOf (types.either pkgs.lib.types.ipv4CIDR pkgs.lib.types.ipv6CIDR);
+          type = types.nonEmptyListOf (types.either pkgs.lib.types.ipv4CIDR pkgs.lib.types.ipv6CIDR);
           description = ''List of IP (v4 or v6) addresses, in CIDR format, from
           which this peer is allowed to send incoming traffic and to which
           outgoing traffic for this peer is directed. The catch-all 0.0.0.0/0 may

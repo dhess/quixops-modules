@@ -6,7 +6,7 @@ with lib;
   enable = mkEnableOption "Enable a full-tunnel StrongSwan VPN server.";
 
   remoteId = mkOption {
-    type = types.string;
+    type = pkgs.lib.types.nonEmptyStr;
     example = "vpn.example.org";
     description = ''
       The remote ID used by clients to describe the server

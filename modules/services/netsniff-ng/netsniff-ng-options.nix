@@ -1,11 +1,11 @@
-{ name, config, lib, outputDirPerms }:
+{ name, config, lib, pkgs, outputDirPerms }:
 
 with lib;
 rec {
   options = {
 
     name = mkOption {
-      type = types.string;
+      type = pkgs.lib.types.nonEmptyStr;
       default = "${name}";
       description = ''
         A short name for the netsniff-ng instance. The name should be
@@ -34,7 +34,7 @@ rec {
     };
 
     inputInterface = mkOption {
-      type = types.string;
+      type = pkgs.lib.types.nonEmptyStr;
       example = "eno1";
       description = ''
         The name of the input network device, from which packets will
@@ -50,7 +50,7 @@ rec {
     };
 
     interval = mkOption {
-      type = types.string;
+      type = types.str;
       default = "";
       example = "150MiB";
       description = ''
@@ -102,7 +102,7 @@ rec {
     };
 
     pcapMagic = mkOption {
-      type = types.string;
+      type = types.str;
       default = "";
       example = "0xa1b2cd34";
       description = ''
@@ -114,7 +114,7 @@ rec {
     };
 
     pcapPrefix = mkOption {
-      type = types.string;
+      type = types.str;
       default = "${name}-";
       example = "pcap-";
       description = ''
@@ -129,7 +129,7 @@ rec {
     };
 
     ringSize = mkOption {
-      type = types.string;
+      type = types.str;
       default = "";
       example = "64MiB";
       description = ''
@@ -145,7 +145,7 @@ rec {
     };
 
     serviceRequires = mkOption {
-      type = types.listOf types.string;
+      type = types.listOf pkgs.lib.types.nonEmptyStr;
       default = [];
       example = [ "pcap.mount" ];
       description = ''
@@ -161,7 +161,7 @@ rec {
     };
 
     extraOptions = mkOption {
-      type = types.string;
+      type = types.str;
       default = "";
       example = "--rfraw --notouch-irq";
       description = ''

@@ -46,7 +46,7 @@ in
       adminUser = {
 
         fullName = mkOption {
-          type = types.str;
+          type = pkgs.lib.types.nonEmptyStr;
           example = "Hydra Admin";
           description = ''
             The full name of the Hydra admin user.
@@ -54,7 +54,7 @@ in
         };
 
         userName = mkOption {
-          type = types.str;
+          type = pkgs.lib.types.nonEmptyStr;
           example = "admin";
           description = ''
             The username of the Hydra admin user in the Hydra web
@@ -63,7 +63,7 @@ in
         };
 
         email = mkOption {
-          type = types.str;
+          type = pkgs.lib.types.nonEmptyStr;
           example = "hydra@example.com";
           description = ''
             The email address of the Hydra admin user.

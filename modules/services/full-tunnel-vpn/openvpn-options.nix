@@ -10,7 +10,7 @@ rec {
   options = {
 
     name = mkOption {
-      type = types.string;
+      type = pkgs.lib.types.nonEmptyStr;
       default = "${name}";
       description = ''
         A short name for the OpenVPN instance. The name should be
@@ -42,7 +42,7 @@ rec {
     };
 
     dns = mkOption {
-      type = types.listOf types.string;
+      type = types.nonEmptyListOf (types.either pkgs.lib.types.ipv4NoCIDR pkgs.lib.types.ipv6NoCIDR);
       default = [ "8.8.8.8" "8.8.4.4" ];
       description = ''
         A list of DNS servers to be pushed to clients.
@@ -139,7 +139,7 @@ rec {
     };
 
     dhparamsSize  = mkOption {
-      type = types.int;
+      type = types.ints.unsigned;
       default = 2048;
       description = ''
         The size (in bits) of the dhparams that will be

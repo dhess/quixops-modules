@@ -19,19 +19,7 @@ with lib;
 let
 
   cfg = config.services.pcap-prep;
-
   interfacesList = mapAttrsToList (_: config: config) cfg.interfaces;
-
-  perInterfaceAssertions = c: [
-    {
-      assertion = c.rxRingEntries > 0;
-      message = "services.pcap-prep.interfaces.${c.name}.rxRingEntries must be > 0";
-    }
-    {
-      assertion = c.usecBetweenRxInterrupts >= 0;
-      message = "services.pcap-prep.interfaces.${c.name}.usecBetweenRxInterrupts must be >= 0";
-    }
-  ];
 
 in
 {
@@ -40,7 +28,7 @@ in
 
       interfaces = mkOption {
         type = types.attrsOf (types.submodule ({ name, ... }: (import ./interface-options.nix {
-          inherit name config lib;
+          inherit name config lib pkgs;
         })));
         default = {};
         example = literalExample ''
@@ -71,8 +59,6 @@ in
   };
 
   config = mkIf (cfg.interfaces != {}) {
-
-    assertions = flatten (map perInterfaceAssertions interfacesList);
 
     networking.interfaces = listToAttrs (filter (x: x.value != null) (
       (mapAttrsToList
