@@ -1,8 +1,9 @@
 # An opinionated unbound instance that uses blocklists and forwards
 # requests to Google DNS.
 #
-# Note that this service assigns a virtual IP to a dummy Ethernet
-# device.
+# Note that this service assigns one or more virtual IPs to the
+# loopback interface. You must ensure that those IPs are routed to the
+# host on which the service runs.
 #
 # Other notes:
 #
@@ -83,7 +84,7 @@ in {
       description = ''
         A list of virtual IPv4 addresses on which the service will
         listen for requests. These addresses are assigned to the
-        <literal>dummy0</literal> network device. Note that they are
+        <literal>lo</literal> network device. Note that they are
         each configured as a <literal>/32</literal> address
         (single-host network).
 
@@ -109,7 +110,7 @@ in {
       description = ''
         A list of virtual IPv6 addresses on which the service will
         listen for requests. These addresses are assigned to the
-        <literal>dummy0</literal> network device. Note that they are
+        <literal>lo</literal> network device. Note that they are
         each configured as a <literal>/128</literal> address
         (single-host network).
 
@@ -168,15 +169,9 @@ in {
     quixops.assertions.moduleHashes."services/networking/unbound.nix" =
       "ad744d5181b47c676510e1f4175e81b95117a877dc71f0c5d41d46a0c8a22666";
 
-    # Note: I would prefer to assign an alias to lo, but I can't get
-    # that to work. c.f.,
-    # https://github.com/NixOS/nixpkgs/issues/10909
-    # https://github.com/NixOS/nixpkgs/issues/7227
-
-    boot.kernelModules = [ "dummy" ];
-    networking.interfaces.dummy0.ip4 =
+    networking.interfaces.lo.ip4 =
       map (ip: { address = ip; prefixLength = 32; }) cfg.virtualServiceIpv4s;
-    networking.interfaces.dummy0.ip6 =
+    networking.interfaces.lo.ip6 =
       map (ip: { address = ip; prefixLength = 128; }) cfg.virtualServiceIpv6s;
 
     services.unbound = {
