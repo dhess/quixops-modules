@@ -34,7 +34,7 @@ with lib;
   };
 
   ipv4ClientCidr = mkOption {
-    type = pkgs.lib.types.ipv4Cidr;
+    type = pkgs.lib.types.ipv4CIDR;
     example = "10.0.1.0/24";
     description = ''
       The base of the IPv4 address range that will be assigned to
@@ -43,7 +43,7 @@ with lib;
   };
 
   ipv6ClientPrefix = mkOption {
-    type = pkgs.lib.types.ipv6Cidr;
+    type = pkgs.lib.types.ipv6CIDR;
     example = "2001:DB8::1:0/112";
     description = ''
       The IPv6 prefix from which IPv6 addresses will
@@ -101,7 +101,7 @@ with lib;
 
         allowedIPs = mkOption {
           example = [ "10.192.122.3/32" "10.192.124.1/24" ];
-          type = types.listOf (types.either pkgs.lib.types.ipv4Cidr pkgs.lib.types.ipv6Cidr);
+          type = types.listOf (types.either pkgs.lib.types.ipv4CIDR pkgs.lib.types.ipv6CIDR);
           description = ''List of IP (v4 or v6) addresses, in CIDR format, from
           which this peer is allowed to send incoming traffic and to which
           outgoing traffic for this peer is directed. The catch-all 0.0.0.0/0 may
@@ -112,7 +112,7 @@ with lib;
         natInternalIPs = mkOption {
           example = [ "10.192.122.3/32" "10.192.124.1/24" ];
           default = [];
-          type = types.listOf pkgs.lib.types.ipv4Cidr;
+          type = types.listOf pkgs.lib.types.ipv4CIDR;
           description = ''
             List of RFC1918 IPv4 addresses, in CIDR format. Traffic from these
             IPs is NATed by the WireGuard server, assuming the traffic from

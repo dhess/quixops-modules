@@ -16,7 +16,7 @@ with lib;
   };
 
   dns = mkOption {
-    type = types.listOf (types.either pkgs.lib.types.ipv4NoCidr pkgs.lib.types.ipv6NoCidr);
+    type = types.listOf (types.either pkgs.lib.types.ipv4NoCIDR pkgs.lib.types.ipv6NoCIDR);
     default = [ "8.8.8.8" "2001:4860:4860::8844" ];
     description = ''
       DNS servers to be pushed to StrongSwan clients.
@@ -24,7 +24,7 @@ with lib;
   };
 
   ipv4ClientCidr = mkOption {
-    type = pkgs.lib.types.ipv4Cidr;
+    type = pkgs.lib.types.ipv4CIDR;
     example = "10.0.1.0/24";
     description = ''
       The base of the IPv4 address range that will be used for
@@ -33,7 +33,7 @@ with lib;
   };
 
   ipv6ClientPrefix = mkOption {
-    type = pkgs.lib.types.ipv6Cidr;
+    type = pkgs.lib.types.ipv6CIDR;
     example = "2001:DB8::1:0/112";
     description = ''
       The IPv6 prefix from which IPv6 addresses will be assigned

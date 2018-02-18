@@ -49,7 +49,7 @@ in {
     allowedAccessIpv4 = mkOption {
       default = [ "127.0.0.0/8" ];
       example = [ "192.168.1.0/24" ];
-      type = types.listOf pkgs.lib.types.ipv4Cidr;
+      type = types.listOf pkgs.lib.types.ipv4CIDR;
       description = ''
         A list of IPv4 networks that can use the server as a resolver,
         in CIDR notation.
@@ -64,7 +64,7 @@ in {
     allowedAccessIpv6 = mkOption {
       default = [ "::1/128" ];
       example = [ "2001:db8::/32" ];
-      type = types.listOf pkgs.lib.types.ipv6Cidr;
+      type = types.listOf pkgs.lib.types.ipv6CIDR;
       description = ''
         A list of IPv6 networks that can use the server as a resolver,
         in CIDR notation.
@@ -79,7 +79,7 @@ in {
     virtualServiceIpv4s = mkOption {
       default = [ "10.8.8.8" ];
       example = [ "10.0.1.1" "10.1.1.1" ];
-      type = types.listOf pkgs.lib.types.ipv4NoCidr;
+      type = types.listOf pkgs.lib.types.ipv4NoCIDR;
       description = ''
         A list of virtual IPv4 addresses on which the service will
         listen for requests. These addresses are assigned to the
@@ -105,7 +105,7 @@ in {
     virtualServiceIpv6s = mkOption {
       default = [];
       example = [ "2001:db8::1" "2001:db8:3::1" ];
-      type = types.listOf pkgs.lib.types.ipv6NoCidr;
+      type = types.listOf pkgs.lib.types.ipv6NoCIDR;
       description = ''
         A list of virtual IPv6 addresses on which the service will
         listen for requests. These addresses are assigned to the
@@ -131,7 +131,7 @@ in {
     forwardAddresses = mkOption {
       default = [ "8.8.8.8" "8.8.4.4" "2001:4860:4860::8888" "2001:4860:4860::8844" ];
       example = [ "8.8.8.8" "2001:4860:4860::8888" ];
-      type = types.listOf (types.either pkgs.lib.types.ipv4NoCidr pkgs.lib.types.ipv6NoCidr);
+      type = types.listOf (types.either pkgs.lib.types.ipv4NoCIDR pkgs.lib.types.ipv6NoCIDR);
       description = ''
         The address(es) of forwarding servers for this Unbound
         service. Both IPv4 and IPv6 addresses are supported.

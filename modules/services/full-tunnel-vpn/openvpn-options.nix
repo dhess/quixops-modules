@@ -50,7 +50,7 @@ rec {
     };
 
     ipv4ClientBaseAddr = mkOption {
-      type = pkgs.lib.types.ipv4NoCidr;
+      type = pkgs.lib.types.ipv4NoCIDR;
       example = "10.0.1.0";
       description = ''
         The base of the IPv4 address range that will be used for
@@ -63,7 +63,7 @@ rec {
     };
 
     ipv6ClientPrefix = mkOption {
-      type = pkgs.lib.types.ipv6Cidr;
+      type = pkgs.lib.types.ipv6CIDR;
       example = "2001:db8::/32";
       description = ''
         The IPv6 prefix from which client IPv6 addresses will
