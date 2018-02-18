@@ -43,7 +43,7 @@ with lib;
   };
 
   ipv6ClientPrefix = mkOption {
-    type = types.string;
+    type = pkgs.lib.types.ipv6Cidr;
     example = "2001:DB8::1:0/112";
     description = ''
       The IPv6 prefix from which IPv6 addresses will
@@ -101,7 +101,7 @@ with lib;
 
         allowedIPs = mkOption {
           example = [ "10.192.122.3/32" "10.192.124.1/24" ];
-          type = with types; listOf str;
+          type = types.listOf (types.either pkgs.lib.types.ipv4Cidr pkgs.lib.types.ipv6Cidr);
           description = ''List of IP (v4 or v6) addresses, in CIDR format, from
           which this peer is allowed to send incoming traffic and to which
           outgoing traffic for this peer is directed. The catch-all 0.0.0.0/0 may

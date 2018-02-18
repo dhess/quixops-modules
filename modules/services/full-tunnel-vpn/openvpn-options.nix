@@ -63,7 +63,7 @@ rec {
     };
 
     ipv6ClientPrefix = mkOption {
-      type = types.string;
+      type = pkgs.lib.types.ipv6Cidr;
       example = "2001:db8::/32";
       description = ''
         The IPv6 prefix from which client IPv6 addresses will

@@ -16,7 +16,7 @@ with lib;
   };
 
   dns = mkOption {
-    type = types.listOf types.string;
+    type = types.listOf (types.either pkgs.lib.types.ipv4NoCidr pkgs.lib.types.ipv6NoCidr);
     default = [ "8.8.8.8" "2001:4860:4860::8844" ];
     description = ''
       DNS servers to be pushed to StrongSwan clients.
@@ -33,7 +33,7 @@ with lib;
   };
 
   ipv6ClientPrefix = mkOption {
-    type = types.string;
+    type = pkgs.lib.types.ipv6Cidr;
     example = "2001:DB8::1:0/112";
     description = ''
       The IPv6 prefix from which IPv6 addresses will be assigned
