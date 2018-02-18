@@ -112,7 +112,7 @@ with lib;
         natInternalIPs = mkOption {
           example = [ "10.192.122.3/32" "10.192.124.1/24" ];
           default = [];
-          type = types.listOf pkgs.lib.types.ipv4CIDR;
+          type = types.listOf pkgs.lib.types.ipv4RFC1918;
           description = ''
             List of RFC1918 IPv4 addresses, in CIDR format. Traffic from these
             IPs is NATed by the WireGuard server, assuming the traffic from
