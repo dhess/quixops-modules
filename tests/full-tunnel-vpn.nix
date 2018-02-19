@@ -82,8 +82,6 @@ let
       certKeyFile = vpn1-certKey;
       crlFile = crl;
       tlsAuthKey = vpn1-tlsAuthKey;
-      # Don't do this at home -- just for faster testing
-      dhparamsSize = 128;
     };
     vpn2 = {
       port = 443;
@@ -95,8 +93,6 @@ let
       certKeyFile = vpn2-certKey;
       crlFile = crl;
       tlsAuthKey = vpn2-tlsAuthKey;
-      # Don't do this at home -- just for faster testing
-      dhparamsSize = 128;
     };
   };
 

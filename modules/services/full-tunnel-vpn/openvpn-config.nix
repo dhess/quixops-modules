@@ -1,4 +1,4 @@
-{ config, lib, instances, ... }:
+{ config, lib, pkgs, instances, ... }:
 
 with lib;
 
@@ -17,7 +17,7 @@ let
     proto ${cfg.proto}
     dev tun
 
-    dh ${config.security.dhparams.path}/openvpn-${cfg.name}.pem
+    dh ${pkgs.lib.security.ffdhe3072Pem}
     ca ${cfg.caFile}
     cert ${cfg.certFile}
     key ${stateDir}/pki.key
@@ -36,8 +36,9 @@ let
 
     tls-auth ${stateDir}/tls-auth.key 0
 
-    tls-cipher TLS-DHE-RSA-WITH-AES-256-GCM-SHA384:TLS-DHE-RSA-WITH-AES-256-CBC-SHA256:TLS-DHE-RSA-WITH-AES-128-GCM-SHA256:TLS-DHE-RSA-WITH-AES-128-CBC-SHA256:TLS-DHE-RSA-WITH-AES-256-CBC-SHA:TLS-DHE-RSA-WITH-AES-128-CBC-SHA
-    cipher AES-256-CBC
+    tls-cipher TLS-ECDHE-ECDSA-WITH-AES-256-GCM-SHA384:TLS-DHE-RSA-WITH-AES-256-GCM-SHA384
+    cipher AES-128-GCM
+    ecdh-curve secp384r1
     comp-lzo
 
     user openvpn
@@ -81,21 +82,6 @@ mkIf (instances != {}) {
         (_: cfg: if (cfg.proto == "tcp" || cfg.proto == "tcp6") then cfg.port else null)
         instances
       );
-
-
-  # Note: it's not strictly necessary to use one dhparams per
-  # server, but the nice thing about doing it this way is the the
-  # dhparams-gen service will delay the start of our servers until
-  # it's ready. (There is no single "openvpn.service" doing just the
-  # one dhparams file for "openvpn" won't delay the start of the
-  # individual server instances.)
-
-  security.dhparams.enable = true;
-  security.dhparams.params = listToAttrs (filter (x: x.value != null) (
-    (mapAttrsToList
-      (_: serverCfg: nameValuePair "openvpn-${serverCfg.name}" serverCfg.dhparamsSize)
-      ) instances)
-    );
 
   services.openvpn.servers = listToAttrs (filter (x: x.value != null) (
     (mapAttrsToList

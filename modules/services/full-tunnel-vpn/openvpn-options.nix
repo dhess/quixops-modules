@@ -137,14 +137,5 @@ rec {
         persistent state directory.
       '';
     };
-
-    dhparamsSize  = mkOption {
-      type = types.ints.unsigned;
-      default = 2048;
-      description = ''
-        The size (in bits) of the dhparams that will be
-        generated for this OpenVPN instance.
-      '';
-    };
   };
 }
