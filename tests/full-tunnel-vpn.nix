@@ -13,20 +13,26 @@ let
   crl = pkgs.copyPathToStore ./testfiles/crls/acme.com.crl;
 
   vpn1-cert = pkgs.copyPathToStore ./testfiles/certs/vpn1.acme.com.crt;
-  vpn1-certKey = pkgs.copyPathToStore ./testfiles/keys/vpn1.acme.com.key;
-  vpn1-tlsAuthKey = pkgs.copyPathToStore ./testfiles/keys/vpn1.acme.com-tls-auth.key;
+  vpn1-certKey = ./testfiles/keys/vpn1.acme.com.key;
+  vpn1-certKeyInStore = pkgs.copyPathToStore vpn1-certKey;
+  vpn1-tlsAuthKey = ./testfiles/keys/vpn1.acme.com-tls-auth.key;
+  vpn1-tlsAuthKeyInStore = pkgs.copyPathToStore vpn1-tlsAuthKey;
   vpn2-cert = pkgs.copyPathToStore ./testfiles/certs/vpn2.acme.com.crt;
-  vpn2-certKey = pkgs.copyPathToStore ./testfiles/keys/vpn2.acme.com.key;
-  vpn2-tlsAuthKey = pkgs.copyPathToStore ./testfiles/keys/vpn2.acme.com-tls-auth.key;
+  vpn2-certKey = ./testfiles/keys/vpn2.acme.com.key;
+  vpn2-certKeyInStore = pkgs.copyPathToStore vpn2-certKey;
+  vpn2-tlsAuthKey = ./testfiles/keys/vpn2.acme.com-tls-auth.key;
+  vpn2-tlsAuthKeyInStore = pkgs.copyPathToStore vpn2-tlsAuthKey;
 
   bob-cert = pkgs.copyPathToStore ./testfiles/certs/bob-at-acme.com.crt;
   bob-certKey = pkgs.copyPathToStore ./testfiles/keys/bob-at-acme.com.key;
   alice-cert = pkgs.copyPathToStore ./testfiles/certs/alice-at-acme.com.crt;
   alice-certKey = pkgs.copyPathToStore ./testfiles/keys/alice-at-acme.com.key;
 
-  wg-server-key = pkgs.copyPathToStore ./testfiles/wg-server.key;
+  wg-server-key = ./testfiles/wg-server.key;
+  wg-server-keyInStore = pkgs.copyPathToStore wg-server-key;
   wg-client-key = pkgs.copyPathToStore ./testfiles/wg-client.key;
-  wg-psk = pkgs.copyPathToStore ./testfiles/wg-psk;
+  wg-psk = ./testfiles/wg-psk;
+  wg-pskInStore = pkgs.copyPathToStore wg-psk;
 
   wg-server-pub = ./testfiles/wg-server.pub;
   wg-client-pub = ./testfiles/wg-client.pub;
@@ -58,16 +64,16 @@ let
     ];
     networking.firewall.enable = false;
     environment.etc."openvpn-bob-vpn1.conf" = {
-      text = openvpnClientConfig "1194" "udp" bob-cert bob-certKey vpn1-tlsAuthKey;
+      text = openvpnClientConfig "1194" "udp" bob-cert bob-certKey vpn1-tlsAuthKeyInStore;
     };
     environment.etc."openvpn-alice-vpn1.conf" = {
-      text = openvpnClientConfig "1194" "udp" alice-cert alice-certKey vpn1-tlsAuthKey;
+      text = openvpnClientConfig "1194" "udp" alice-cert alice-certKey vpn1-tlsAuthKeyInStore;
     };
     environment.etc."openvpn-bob-vpn2.conf" = {
-      text = openvpnClientConfig "443" "tcp-client" bob-cert bob-certKey vpn2-tlsAuthKey;
+      text = openvpnClientConfig "443" "tcp-client" bob-cert bob-certKey vpn2-tlsAuthKeyInStore;
     };
     environment.etc."openvpn-alice-vpn2.conf" = {
-      text = openvpnClientConfig "443" "tcp-client" alice-cert alice-certKey vpn2-tlsAuthKey;
+      text = openvpnClientConfig "443" "tcp-client" alice-cert alice-certKey vpn2-tlsAuthKeyInStore;
     };
   };
 
@@ -79,9 +85,9 @@ let
       ipv6ClientPrefix = "fd00:1234:5678:9::/64";
       caFile = ca-cert;
       certFile = vpn1-cert;
-      certKeyFile = vpn1-certKey;
+      certKeyFile = toString vpn1-certKey;
       crlFile = crl;
-      tlsAuthKey = vpn1-tlsAuthKey;
+      tlsAuthKeyFile = toString vpn1-tlsAuthKey;
     };
     vpn2 = {
       port = 443;
@@ -90,9 +96,9 @@ let
       ipv6ClientPrefix = "fd00:1234:5678:a::/64";
       caFile = ca-cert;
       certFile = vpn2-cert;
-      certKeyFile = vpn2-certKey;
+      certKeyFile = toString vpn2-certKey;
       crlFile = crl;
-      tlsAuthKey = vpn2-tlsAuthKey;
+      tlsAuthKeyFile = toString vpn2-tlsAuthKey;
     };
   };
 
@@ -105,13 +111,14 @@ let
     ipv6ClientPrefix = "fd00:1234:5678:b::0/64";
     caFile = ca-cert;
     certFile = vpn1-cert;
-    certKeyFile = vpn1-certKey;
+    certKeyFile = toString vpn1-certKey;
     crlFile = crl;
   };
 
   server = openvpn: strongswan: wireguard: { config, ... }: {
     nixpkgs.system = system;
-    imports = (import pkgs.lib.quixops.modulesPath);
+    imports = (import pkgs.lib.quixops.modulesPath) ++
+      [ ./test-modules/deploy-keys.nix ];
     services.full-tunnel-vpn = {
       routedInterface = "eth1";
       inherit openvpn;
@@ -128,13 +135,13 @@ let
   wireguard-server = {
     ipv4ClientCidr = "10.150.3.1/24";
     ipv6ClientPrefix = "fd00:1234:5678:c::0/64";
-    privateKeyFile = wg-server-key;
+    privateKeyFile = toString wg-server-key;
     peers."client" = {
       # Test with a whole LAN behind the remote peer IP.
       allowedIPs = [ "10.150.3.2/32" "fd00:1234:5678:c::2/64" "10.0.44.0/24" ];
       natInternalIPs = [ "10.150.3.2/32" "10.0.44.0/24" ];
       publicKeyFile = wg-client-pub;
-      presharedKeyFile = wg-psk;
+      presharedKeyFile = toString wg-psk;
     };
   };
 
@@ -196,10 +203,10 @@ let
       };
 
       subtest "check-keys", sub {
-        $server->succeed("diff ${vpn1-certKey} /var/lib/openvpn/vpn1/pki.key");
-        $server->succeed("diff ${vpn1-tlsAuthKey} /var/lib/openvpn/vpn1/tls-auth.key");
-        $server->succeed("diff ${vpn2-certKey} /var/lib/openvpn/vpn2/pki.key");
-        $server->succeed("diff ${vpn2-tlsAuthKey} /var/lib/openvpn/vpn2/tls-auth.key");
+        $server->succeed("diff ${vpn1-certKeyInStore} /var/lib/openvpn/vpn1/pki.key");
+        $server->succeed("diff ${vpn1-tlsAuthKeyInStore} /var/lib/openvpn/vpn1/tls-auth.key");
+        $server->succeed("diff ${vpn2-certKeyInStore} /var/lib/openvpn/vpn2/pki.key");
+        $server->succeed("diff ${vpn2-tlsAuthKeyInStore} /var/lib/openvpn/vpn2/tls-auth.key");
       };
 
       sub testTunIPs {
@@ -275,7 +282,7 @@ let
       };
 
       subtest "check-keys", sub {
-        $server->succeed("diff ${vpn1-certKey} /var/lib/strongswan/key");
+        $server->succeed("diff ${vpn1-certKeyInStore} /var/lib/strongswan/key");
       };
 
       sub testConnection {
@@ -315,8 +322,8 @@ let
       };
 
       subtest "check-keys", sub {
-        $server->succeed("diff ${wg-psk} /var/lib/wireguard/client/psk");
-        $server->succeed("diff ${wg-server-key} /var/lib/wireguard/key");
+        $server->succeed("diff ${wg-pskInStore} /var/lib/wireguard/client/psk");
+        $server->succeed("diff ${wg-server-keyInStore} /var/lib/wireguard/key");
       };
 
       subtest "check-ips", sub {

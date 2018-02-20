@@ -57,21 +57,11 @@ with lib;
   };
 
   certKeyFile = mkOption {
-    type = types.path;
-    example = "/run/keys/strongswan-cert";
+    type = pkgs.lib.types.nonStorePath;
     description = ''
-      A path to the server's private key. Note that this file will not
-      be copied to the Nix store; the StrongSwan server will expect
-      the file to be at the given path when it starts, so it must be
-      deployed to the host out-of-band.
-
-      If you use NixOps and you deploy the key using NixOps's
-      <option>deployment.keys</option> option, the StrongSwan server
-      will automatically wait for that key to be present before it
-      runs.
-
-      Upon start-up, the service will copy the key to its persistent
-      state directory.
+      The server's private key. Note that this file will not be copied
+      to the Nix store. However, upon start-up, the service will copy
+      the key to its persistent state directory.
     '';
   };
 

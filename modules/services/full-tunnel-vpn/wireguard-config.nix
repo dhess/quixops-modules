@@ -1,4 +1,4 @@
-{ cfg, lib, ... }:
+{ cfg, lib, keys, ... }:
 
 with lib;
 
@@ -12,6 +12,17 @@ mkIf (cfg.peers != {}) {
 
   quixops.assertions.moduleHashes."services/networking/wireguard.nix" =
     "7a87274cc51773fcc2f62f0bafd48a27331f9b4aa926b5b26332a0e9550c6a0b";
+
+  quixops.keychain.keys = listToAttrs (filter (x: x.value != null) (
+    (mapAttrsToList
+      (_: peerCfg: nameValuePair "wireguard-${cfg.interface}-${peerCfg.name}-psk" ({
+        keyFile = peerCfg.presharedKeyFile;
+      })) cfg.peers) ++
+    (mapAttrsToList
+      (_: _: nameValuePair "wireguard-${cfg.interface}-key" ({
+        keyFile = cfg.privateKeyFile;
+      })) { dummy = "foo"; })
+  ));
 
   networking.wireguard.interfaces.${cfg.interface} = {
     ips = [ cfg.ipv4ClientCidr cfg.ipv6ClientPrefix ];
@@ -49,10 +60,11 @@ mkIf (cfg.peers != {}) {
           script =
           let
             dir = "${stateDir}/${peerCfg.name}";
+            deployedPSK = keys."wireguard-${cfg.interface}-${peerCfg.name}-psk".path;
           in
           ''
             install -m 0700 -o root -g root -d ${dir} > /dev/null 2>&1 || true
-            install -m 0400 -o root -g root ${peerCfg.presharedKeyFile} ${dir}/psk
+            install -m 0400 -o root -g root ${deployedPSK} ${dir}/psk
           '';
         })) cfg.peers) ++
     (mapAttrsToList
@@ -64,9 +76,12 @@ mkIf (cfg.peers != {}) {
           requiredBy = [ "wireguard-${cfg.interface}.service" ];
           before = [ "wireguard-${cfg.interface}.service" ];
           script =
+          let
+            deployedKey = keys."wireguard-${cfg.interface}-key".path;
+          in
           ''
             install -m 0700 -o root -g root -d ${stateDir} > /dev/null 2>&1 || true
-            install -m 0400 -o root -g root ${cfg.privateKeyFile} ${privateKeyFile}
+            install -m 0400 -o root -g root ${deployedKey} ${privateKeyFile}
           '';
       })) { dummy = "foo"; })
   ));

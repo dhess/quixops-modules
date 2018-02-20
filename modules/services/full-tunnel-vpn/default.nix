@@ -19,10 +19,12 @@ let
   strongswanCfg = import ./strongswan-config.nix {
     inherit pkgs lib;
     cfg = globalCfg.strongswan;
+    keys = config.quixops.keychain.keys;
   };
   wireguardCfg = import ./wireguard-config.nix {
     inherit pkgs lib;
     cfg = globalCfg.wireguard;
+    keys = config.quixops.keychain.keys;
   };
 
 in
@@ -52,9 +54,9 @@ in
           ipv6ClientPrefix = "2001:db8::/64";
           caFile = ./root.crt;
           certFile = ./vpn1.crt;
-          certKeyFile = "/run/keys/vpn1.key";
+          certKeyFile = (toString ./vpn1.key);
           crlFile = ./root.crl;
-          tlsAuthKey = "/run/keys/vpn1-tls-auth.key";
+          tlsAuthKeyFile = (toString ./vpn1-tls-auth.key);
         };
       '';
       description = ''

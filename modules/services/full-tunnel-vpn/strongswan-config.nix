@@ -1,4 +1,4 @@
-{ cfg, lib, ... }:
+{ cfg, lib, keys, ... }:
 
 with lib;
 
@@ -7,6 +7,8 @@ let
   inherit (builtins) toFile;
   ikev2Port = 500;
   ikev2NatTPort = 4500;
+
+  deployedCertKeyFile = keys.strongswan-cert-key.path;
 
   keyFile = "/var/lib/strongswan/key";
 
@@ -20,6 +22,8 @@ mkIf cfg.enable {
 
   quixops.assertions.moduleHashes."services/networking/strongswan.nix" =
         "55d1c76bcdb47d8c6ffe81bbcb9742b18e2c8d6aeb866f71959faed298ce7351";
+
+  quixops.keychain.keys.strongswan-cert-key.keyFile = cfg.certKeyFile;
 
   services.strongswan = {
     enable = true;
@@ -67,7 +71,7 @@ mkIf cfg.enable {
     script =
     ''
       install -m 0700 -o root -g root -d `dirname ${keyFile}` > /dev/null 2>&1 || true
-      install -m 0400 -o root -g root ${cfg.certKeyFile} ${keyFile}
+      install -m 0400 -o root -g root ${deployedCertKeyFile} ${keyFile}
     '';
   };
 

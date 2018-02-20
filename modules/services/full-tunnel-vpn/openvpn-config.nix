@@ -5,6 +5,7 @@ with lib;
 let
 
   stateDirBase = "/var/lib/openvpn";
+  keychain = config.quixops.keychain.keys;
 
   dns = cfg: concatMapStrings (x: "push \"dhcp-option DNS ${x}\"\n") cfg.dns;
 
@@ -62,6 +63,17 @@ mkIf (instances != {}) {
   quixops.assertions.moduleHashes."services/networking/openvpn.nix" =
     "1472c53fca590977bf0af94820eab36473ba5575519e752b825e295541e7ef8e";
 
+  quixops.keychain.keys = listToAttrs (filter (x: x.value != null) (
+    (mapAttrsToList
+      (_: serverCfg: nameValuePair "openvpn-${serverCfg.name}-cert-key" ({
+        keyFile = serverCfg.certKeyFile;
+      })) instances) ++
+    (mapAttrsToList
+      (_: serverCfg: nameValuePair "openvpn-${serverCfg.name}-tls-auth-key" ({
+        keyFile = serverCfg.tlsAuthKeyFile;
+      })) instances)
+  ));
+
   networking.nat.internalIPs =
     (mapAttrsToList
       (_: serverCfg: (
@@ -101,11 +113,13 @@ mkIf (instances != {}) {
           script =
           let
             stateDir = "${stateDirBase}/${serverCfg.name}";
+            deployedCertKey = keychain."openvpn-${serverCfg.name}-cert-key".path;
+            deployedTLSAuthKey = keychain."openvpn-${serverCfg.name}-tls-auth-key".path;
           in
           ''
             install -m 0750 -o openvpn -g openvpn -d ${stateDir} > /dev/null 2>&1 || true
-            install -m 0400 -o openvpn -g openvpn ${serverCfg.certKeyFile} ${stateDir}/pki.key
-            install -m 0400 -o openvpn -g openvpn ${serverCfg.tlsAuthKey} ${stateDir}/tls-auth.key
+            install -m 0400 -o openvpn -g openvpn ${deployedCertKey} ${stateDir}/pki.key
+            install -m 0400 -o openvpn -g openvpn ${deployedTLSAuthKey} ${stateDir}/tls-auth.key
           '';
         })) instances)
   ));

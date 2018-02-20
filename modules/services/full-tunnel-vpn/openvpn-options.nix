@@ -88,24 +88,11 @@ rec {
     };
 
     certKeyFile = mkOption {
-      type = types.path;
-      default = "/run/keys/openvpn-${name}-cert";
+      type = pkgs.lib.types.nonStorePath;
       description = ''
-        A path to the server's private key. Note that this
-        file will not be copied to the Nix store; the OpenVPN
-        server will expect the file to be at the given path
-        when it starts, so it must be deployed to the host
-        out-of-band.
-
-        The default value is
-        <literal>/run/keys/openvpn-<replaceable>name</replaceable>-certkey</literal>,
-        which is a NixOps <option>deployment.keys</option>
-        path. If you use NixOps and you deploy the key to this
-        default path, the OpenVPN server will automatically
-        wait for that key to be present before it runs.
-
-        Upon start-up, the service will copy the key to its
-        persistent state directory.
+        The server's private key file. Note that this file will not be
+        copied to the Nix store. However, upon start-up, the service
+        will copy the key file to its persistent state directory.
       '';
     };
 
@@ -116,25 +103,13 @@ rec {
       '';
     };
 
-    tlsAuthKey = mkOption {
-      type = types.path;
-      default = "/run/keys/openvpn-${name}-tls-auth";
+    tlsAuthKeyFile = mkOption {
+      type = pkgs.lib.types.nonStorePath;
       description = ''
-        A path to the server's TLS auth key. Note that this
-        file will not be copied to the Nix store; the OpenVPN
-        server will expect the file to be at the given path
-        when it starts, so it must be deployed to the host
-        out-of-band.
-
-        The default value is
-        <literal>/run/keys/openvpn-<replaceable>name</replaceable>-tls-auth</literal>,
-        which is a NixOps <option>deployment.keys</option>
-        path. If you use NixOps and you deploy the key to this
-        default path, the OpenVPN server will automatically
-        wait for that key to be present before it runs.
-
-        Upon start-up, the service will copy the key to its
-        persistent state directory.
+        A file containing the server's TLS auth key. Note that this
+        file will not be copied to the Nix store. However, upon
+        start-up, the service will copy the key file to its persistent
+        state directory.
       '';
     };
   };
