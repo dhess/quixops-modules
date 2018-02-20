@@ -2,6 +2,13 @@ self: super:
 
 let
 
+  callLibs = file: import file { pkgs = self; lib = self.lib; };
+
+
+  ## New types for NixOS modules.
+
+  localTypes = callLibs ./lib/types.nix;
+
 in
 {
 
@@ -11,10 +18,14 @@ in
       dhess-qx = "Drew Hess <dhess-src@quixoftic.com>";
     };
 
-
     ## quixops lib namespace.
 
     quixops = {
+
+      ## Provide access to the whole package, if needed.
+
+      path = ../.;
+
 
       ## A list of all the NixOS modules exported by this package.
       modulesPath = ../modules/module-list.nix;
@@ -27,6 +38,8 @@ in
       mkZncConfig = (import ../modules/services/znc/conf.nix);
 
     };
+
+    types = (super.lib.types or {}) // localTypes;
 
   };
 }

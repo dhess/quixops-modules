@@ -12,6 +12,7 @@
   ./config/hardware/mbr.nix
   ./config/hardware/uefi.nix
   ./config/overlays.nix
+  ./core/keychain
   ./core/module-hashes.nix
   ./dns/unbound-adblock
   ./networking/pcap-prep

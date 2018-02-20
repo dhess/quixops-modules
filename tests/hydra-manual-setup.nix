@@ -6,12 +6,11 @@
 
 let
 
-  # Don't do this in production -- it will put the secrets into the
-  # Nix store! This is just a convenience for the tests.
-
-  pw = pkgs.copyPathToStore ./testfiles/hydra-pw;
-  bcpubkey = pkgs.copyPathToStore ./testfiles/hydra-1/public;
+  # Don't do this in production -- it will put the secret into the Nix
+  # store! This is just a convenience for the tests.
   bckey = pkgs.copyPathToStore ./testfiles/hydra-1/secret;
+
+  bcpubkey = pkgs.copyPathToStore ./testfiles/hydra-1/public;
   bcKeyDir = "/etc/nix/hydra-1";
 
 in makeTest rec {
@@ -29,7 +28,9 @@ in makeTest rec {
 
     hydra = { config, ... }: {
       nixpkgs.system = system;
-      imports = (import pkgs.lib.quixops.modulesPath);
+      imports =
+        (import pkgs.lib.quixops.modulesPath) ++
+        [ ./test-modules/deploy-keys.nix ];
 
       services.hydra-manual-setup = {
         enable = true;
@@ -37,11 +38,11 @@ in makeTest rec {
           fullName = "Hydra Admin";
           userName = "hydra";
           email = "hydra@example.com";
-          initialPassword = "${pw}";
+          initialPassword = (toString ./testfiles/hydra-pw);
         };
         binaryCacheKey = {
           public = ./testfiles/hydra-1/public;
-          private = "${bckey}";
+          private = (toString ./testfiles/hydra-1/secret);
           directory = "${bcKeyDir}";
         };
       };

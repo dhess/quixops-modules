@@ -4,6 +4,9 @@ with lib;
 
 let
 
+  deployed-pw = config.quixops.keychain.keys.hydra-manual-setup-initial-pw.path;
+  deployed-bckey = config.quixops.keychain.keys.hydra-manual-setup-bckey.path;
+
   cfg = config.services.hydra-manual-setup;
 
   publicKeyFile = pkgs.writeText "public" (builtins.readFile cfg.binaryCache.publicKey);
@@ -71,26 +74,15 @@ in
         };
 
         initialPassword = mkOption {
-          type = types.path;
-          default = "/run/keys/${defaultPasswordKeyName}";
+          type = pkgs.lib.types.nonStorePath;
           description = ''
             The Hydra admin user's initial password. Note that this
-            file will not copied to the Nix store; the service will
-            expect the file to be at the given path when the service
-            starts, so it must be deployed to the Hydra server
-            out-of-band.
+            secret will not copied to the Nix store.
 
-            The default value specifies a NixOps
-            <option>deployment.keys</option> path. If you use NixOps
-            and you deploy the key to this path, the
-            <literal>hydra-manual-setup</literal> service will
-            automatically wait for that key to be present before it
-            runs.
-
-            The <command>hydra-create-user</command> command used to
-            create this user only takes passwords as strings on the
-            command line, so there is a small chance that an attacker
-            who is on the Hydra master system could see the
+            Note that the <command>hydra-create-user</command> command
+            used to create this user only takes passwords as strings
+            on the command line, so there is a small chance that an
+            attacker who is on the Hydra master system could see the
             <command>hydra-create-user</command> command as it runs
             using a process tool such as <command>ps</command>, and
             therefore also see the initial admin user password
@@ -102,7 +94,8 @@ in
             <command>hydra-create-user</command>. In any case, to be
             truly safe, you should change this initial password by
             logging into the Hydra web console and changing it there.
-          ''; };
+          '';
+        };
 
       };
 
@@ -128,24 +121,14 @@ in
         };
 
         private = mkOption {
-          type = types.path;
-          default = "/run/keys/${defaultBinaryCacheKeyName}";
+          type = pkgs.lib.types.nonStorePath;
           description = ''
             The Hydra server's binary cache private key. Note that
-            this file will not be copied to the Nix store; the service
-            will expect the file to be at the given path when the
-            service starts, so it must be deployed to the Hydra server
-            out-of-band.
+            this secret will not be copied to the Nix store.
 
-            The default value specifies a NixOps
-            <option>deployment.keys</option> path. If you use NixOps
-            and you deploy the key to this default path, the
-            <literal>hydra-manual-setup</literal> service will
-            automatically wait for that key to be present before it
-            runs.
-
-            The service will copy the key to the file
-            <literal>${binaryCacheDir}/secret</literal>.
+            However, the service will copy the deployed secret to the
+            file <literal>${binaryCacheDir}/secret</literal> so that
+            it is available after reboots.
           '';
         };
 
@@ -167,6 +150,15 @@ in
 
   config = mkIf (cfg.enable && config.services.hydra.enable) {
 
+    quixops.keychain.keys = {
+      hydra-manual-setup-initial-pw = {
+        keyFile = cfg.adminUser.initialPassword;
+      };
+      hydra-manual-setup-bckey = {
+        keyFile = cfg.binaryCacheKey.private;
+      };
+    };
+
     systemd.services.hydra-manual-setup = rec {
 
       description = "Automate Hydra's initial manual setup";
@@ -180,11 +172,11 @@ in
       let bcKeyDir = cfg.binaryCacheKey.directory;
       in ''
         if [ ! -e ~hydra/.manual-setup-is-complete-v1 ]; then
-          HYDRA_PW=$(cat "${toString cfg.adminUser.initialPassword}")
+          HYDRA_PW=$(cat "${deployed-pw}")
           "${pkgs.hydra}"/bin/hydra-create-user ${cfg.adminUser.userName} --full-name "${cfg.adminUser.fullName}" --email-address ${cfg.adminUser.email} --role admin --password $HYDRA_PW
 
           install -d -m 551 "${bcKeyDir}"
-          cp "${toString cfg.binaryCacheKey.private}" "${bcKeyDir}/secret"
+          cp "${deployed-bckey}" "${bcKeyDir}/secret"
           chmod 0440 "${bcKeyDir}/secret"
           cp "${cfg.binaryCacheKey.public}" "${bcKeyDir}/public"
           chmod 0444 "${bcKeyDir}/public"
