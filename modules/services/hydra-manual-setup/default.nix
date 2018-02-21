@@ -6,14 +6,7 @@ let
 
   deployed-pw = config.quixops.keychain.keys.hydra-manual-setup-initial-pw.path;
   deployed-bckey = config.quixops.keychain.keys.hydra-manual-setup-bckey.path;
-
   cfg = config.services.hydra-manual-setup;
-
-  publicKeyFile = pkgs.writeText "public" (builtins.readFile cfg.binaryCache.publicKey);
-
-  defaultPasswordKeyName = "hydra-admin-pw";
-
-  defaultBinaryCacheKeyName = "hydra-binary-cache";
 
 in
 {
@@ -73,11 +66,14 @@ in
           '';
         };
 
-        initialPassword = mkOption {
-          type = pkgs.lib.types.nonStorePath;
+        initialPasswordFile = mkOption {
+          type = types.nullOr pkgs.lib.types.nonStorePath;
+          default = null;
+          example = literalExample toString ./hydra-password.nix;
           description = ''
-            The Hydra admin user's initial password. Note that this
-            secret will not copied to the Nix store.
+            A path to a file that contains the Hydra admin user's
+            initial password. Note that this secret will not copied to
+            the Nix store.
 
             Note that the <command>hydra-create-user</command> command
             used to create this user only takes passwords as strings
@@ -94,6 +90,41 @@ in
             <command>hydra-create-user</command>. In any case, to be
             truly safe, you should change this initial password by
             logging into the Hydra web console and changing it there.
+
+            Note: either <option>initialPasswordFile</option> or
+            <option>initialPassword</option> must be non-null, but not
+            both.
+          '';
+        };
+
+        initialPasswordLiteral = mkOption {
+          type = types.nullOr pkgs.lib.types.nonEmptyStr;
+          default = null;
+          example = literalExample "passw0rd";
+          description = ''
+            The Hydra admin user's initial password, as a string
+            literal. Note that this secret will not copied to the Nix
+            store.
+
+            Note that the <command>hydra-create-user</command> command
+            used to create this user only takes passwords as strings
+            on the command line, so there is a small chance that an
+            attacker who is on the Hydra master system could see the
+            <command>hydra-create-user</command> command as it runs
+            using a process tool such as <command>ps</command>, and
+            therefore also see the initial admin user password
+            command-line argument.
+
+            To be fair, the exact same scenario applies if you run the
+            <command>hydra-create-user</command> command by hand, so
+            this risk is not unique to this service and is inherent to
+            <command>hydra-create-user</command>. In any case, to be
+            truly safe, you should change this initial password by
+            logging into the Hydra web console and changing it there.
+
+            Note: either <option>initialPasswordFile</option> or
+            <option>initialPassword</option> must be non-null, but not
+            both.
           '';
         };
 
@@ -101,34 +132,57 @@ in
 
       binaryCacheKey = {
 
-        public = mkOption {
+        publicKeyFile = mkOption {
           type = types.path;
           example = ./hydra-bc.public;
           description = ''
-            The Hydra server's binary cache public key.
+            A path to a file that contains the Hydra server's binary
+            cache public key.
 
             You can create the public/private keypair with the command:
 
             <command>nix-store --generate-binary-cache-key hydra.example.com-1 hydra-example.com-1/secret hydra-example.com-1/public</command>
-
-            Because it is public, this key will automatically be
-            copied to the Hydra server via the Nix store. You do not
-            need to arrange for it to be copied out-of-band.
 
             The service will copy the key to the file
             <literal>${binaryCacheDir}/public</literal>.
           '';
         };
 
-        private = mkOption {
-          type = pkgs.lib.types.nonStorePath;
+        privateKeyFile = mkOption {
+          type = types.nullOr pkgs.lib.types.nonStorePath;
+          default = null;
+          example = literalExample toString ./binary-cache-key.nix;
           description = ''
-            The Hydra server's binary cache private key. Note that
-            this secret will not be copied to the Nix store.
+            A path to a file that contains the Hydra server's binary
+            cache private key. Note that this secret will not copied
+            to the Nix store.
 
             However, the service will copy the deployed secret to the
             file <literal>${binaryCacheDir}/secret</literal> so that
             it is available after reboots.
+
+            Note: either <option>privateKeyFile</option> or
+            <option>privateKeyLiteral</option> must be non-null, but
+            not both.
+          '';
+        };
+
+        privateKeyLiteral = mkOption {
+          type = types.nullOr pkgs.lib.types.nonEmptyStr;
+          default = null;
+          example = literalExample "<bckey>";
+          description = ''
+            The Hydra server's binary cache private key, as a string
+            literal. Note that this secret will not copied to the Nix
+            store.
+
+            However, the service will copy the deployed secret to the
+            file <literal>${binaryCacheDir}/secret</literal> so that
+            it is available after reboots.
+
+            Note: either <option>privateKeyFile</option> or
+            <option>privateKeyLiteral</option> must be non-null, but
+            not both.
           '';
         };
 
@@ -150,12 +204,23 @@ in
 
   config = mkIf (cfg.enable && config.services.hydra.enable) {
 
+    assertions = [
+      { assertion = pkgs.lib.exclusiveOr (cfg.adminUser.initialPasswordFile == null) (cfg.adminUser.initialPasswordLiteral == null);
+        message = "Either adminUser.initialPasswordFile or adminUser.initialPasswordLiteral must be specified (but not both)";
+      }
+      { assertion = pkgs.lib.exclusiveOr (cfg.binaryCacheKey.privateKeyFile == null) (cfg.binaryCacheKey.privateKeyLiteral == null);
+        message = "Either binaryCacheKey.privateKeyFile or binaryCacheKey.privateKeyLiteral must be specified (but not both)";
+      }
+    ];
+
     quixops.keychain.keys = {
       hydra-manual-setup-initial-pw = {
-        keyFile = cfg.adminUser.initialPassword;
+        keyFile = cfg.adminUser.initialPasswordFile;
+        text = cfg.adminUser.initialPasswordLiteral;
       };
       hydra-manual-setup-bckey = {
-        keyFile = cfg.binaryCacheKey.private;
+        keyFile = cfg.binaryCacheKey.privateKeyFile;
+        text = cfg.binaryCacheKey.privateKeyLiteral;
       };
     };
 
@@ -178,7 +243,7 @@ in
           install -d -m 551 "${bcKeyDir}"
           cp "${deployed-bckey}" "${bcKeyDir}/secret"
           chmod 0440 "${bcKeyDir}/secret"
-          cp "${cfg.binaryCacheKey.public}" "${bcKeyDir}/public"
+          cp "${cfg.binaryCacheKey.publicKeyFile}" "${bcKeyDir}/public"
           chmod 0444 "${bcKeyDir}/public"
           chown -R hydra:hydra "${bcKeyDir}"
 

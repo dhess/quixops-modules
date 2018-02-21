@@ -38,11 +38,11 @@ in makeTest rec {
           fullName = "Hydra Admin";
           userName = "hydra";
           email = "hydra@example.com";
-          initialPassword = (toString ./testfiles/hydra-pw);
+          initialPasswordLiteral = pkgs.lib.fileContents ./testfiles/hydra-pw;
         };
         binaryCacheKey = {
-          public = ./testfiles/hydra-1/public;
-          private = (toString ./testfiles/hydra-1/secret);
+          publicKeyFile = ./testfiles/hydra-1/public;
+          privateKeyLiteral = pkgs.lib.fileContents ./testfiles/hydra-1/secret;
           directory = "${bcKeyDir}";
         };
       };
