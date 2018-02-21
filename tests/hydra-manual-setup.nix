@@ -30,7 +30,10 @@ in makeTest rec {
       nixpkgs.system = system;
       imports =
         (import pkgs.lib.quixops.modulesPath) ++
-        [ ./test-modules/deploy-keys.nix ];
+        (import pkgs.lib.quixops.testModulesPath);
+
+      # Use the test key deployment system.
+      deployment.reallyReallyEnable = true;
 
       services.hydra-manual-setup = {
         enable = true;

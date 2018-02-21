@@ -31,6 +31,13 @@ in
       modulesPath = ../modules/module-list.nix;
 
 
+      ## A list of all the NixOS test modules exported by this package.
+      ##
+      ## NOTE: do NOT use these in production. They will do bad
+      ## things, like writing secrets to your Nix store. Use them ONLY
+      ## for testing. You have been warned!
+      testModulesPath = ../test-modules/module-list.nix;
+
       ## Helper functions for the modules.
 
       # Create the text of a znc config file, so that it can be securely

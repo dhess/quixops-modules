@@ -117,8 +117,13 @@ let
 
   server = openvpn: strongswan: wireguard: { config, ... }: {
     nixpkgs.system = system;
-    imports = (import pkgs.lib.quixops.modulesPath) ++
-      [ ./test-modules/deploy-keys.nix ];
+    imports =
+      (import pkgs.lib.quixops.modulesPath) ++
+      (import pkgs.lib.quixops.testModulesPath);
+
+    # Use the test key deployment system.
+    deployment.reallyReallyEnable = true;
+
     services.full-tunnel-vpn = {
       routedInterface = "eth1";
       inherit openvpn;
