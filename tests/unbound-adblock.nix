@@ -41,10 +41,10 @@ in makeTest rec {
 
     nsd = { config, ... }: {
       nixpkgs.system = system;
-      networking.interfaces.eth1.ip4 = [
+      networking.interfaces.eth1.ipv4.addresses = [
         { address = "192.168.1.250"; prefixLength = 24; }
       ];
-      networking.interfaces.eth1.ip6 = [
+      networking.interfaces.eth1.ipv6.addresses = [
         { address = "fd00:1234:5678::ffff"; prefixLength = 64; }
       ];
       networking.firewall.allowedUDPPorts = [ 53 ];
@@ -69,10 +69,10 @@ in makeTest rec {
         virtualServiceIpv6s = [ serverIpv6_1 serverIpv6_2 ];
         forwardAddresses = [ "192.168.1.250" ];
       };
-      networking.interfaces.eth1.ip4 = [
+      networking.interfaces.eth1.ipv4.addresses = [
         { address = "192.168.1.1"; prefixLength = 24; }
       ];
-      networking.interfaces.eth1.ip6 = [
+      networking.interfaces.eth1.ipv6.addresses = [
         { address = "fd00:1234:5678::1000"; prefixLength = 64; }
       ];
     };
@@ -80,10 +80,10 @@ in makeTest rec {
     client = { config, ... }: {
       nixpkgs.system = system;
       networking.useDHCP = false;
-      networking.interfaces.eth1.ip4 = [
+      networking.interfaces.eth1.ipv4.addresses = [
         { address = "192.168.1.2"; prefixLength = 24; }
       ];
-      networking.interfaces.eth1.ip6 = [
+      networking.interfaces.eth1.ipv6.addresses = [
         { address = "fd00:1234:5678::2000"; prefixLength = 64; }
       ];
     };
@@ -91,10 +91,10 @@ in makeTest rec {
     badclient = { config, ... }: {
       nixpkgs.system = system;
       networking.useDHCP = false;
-      networking.interfaces.eth1.ip4 = [
+      networking.interfaces.eth1.ipv4.addresses = [
         { address = "192.168.1.3"; prefixLength = 24; }
       ];
-      networking.interfaces.eth1.ip6 = [
+      networking.interfaces.eth1.ipv6.addresses = [
         { address = "fd00:1234:5678::3000"; prefixLength = 64; }
       ];
     };

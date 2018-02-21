@@ -163,9 +163,9 @@ in {
     quixops.assertions.moduleHashes."services/networking/unbound.nix" =
       "ad744d5181b47c676510e1f4175e81b95117a877dc71f0c5d41d46a0c8a22666";
 
-    networking.interfaces.lo.ip4 =
+    networking.interfaces.lo.ipv4.addresses =
       map (ip: { address = ip; prefixLength = 32; }) cfg.virtualServiceIpv4s;
-    networking.interfaces.lo.ip6 =
+    networking.interfaces.lo.ipv6.addresses =
       map (ip: { address = ip; prefixLength = 128; }) cfg.virtualServiceIpv6s;
 
     services.unbound = {

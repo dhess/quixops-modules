@@ -19,7 +19,7 @@ in makeTest rec {
       nixpkgs.system = system;
       imports = (import pkgs.lib.quixops.modulesPath);
       networking = {
-        interfaces.eth0.ip6 = pkgs.lib.mkOverride 0
+        interfaces.eth0.ipv6.addresses = pkgs.lib.mkOverride 0
           [ { address = fd00:1234:5678:9::2; prefixLength = 64; } ];
       };
       services.ndppd = {
@@ -38,7 +38,7 @@ in makeTest rec {
     pinger = { config, ... }: {
       nixpkgs.system = system;
       networking = {
-        interfaces.eth0.ip6 = pkgs.lib.mkOverride 0
+        interfaces.eth0.ipv6.addresses = pkgs.lib.mkOverride 0
           [ { address = fd00:1234:5678:9::1; prefixLength = 64; } ];
       };
     };

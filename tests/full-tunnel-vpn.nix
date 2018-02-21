@@ -59,7 +59,7 @@ let
 
   client = { config, ... }: {
     nixpkgs.system = system;
-    networking.interfaces.eth1.ip6 = [
+    networking.interfaces.eth1.ipv6.addresses = [
       { address = "fd00:1234:5678::2000"; prefixLength = 64; }
     ];
     networking.firewall.enable = false;
@@ -125,7 +125,7 @@ let
       inherit strongswan;
       inherit wireguard;
     };
-    networking.interfaces.eth1.ip6 = [
+    networking.interfaces.eth1.ipv6.addresses = [
       { address = "fd00:1234:5678::1000"; prefixLength = 64; }
     ];
   };
