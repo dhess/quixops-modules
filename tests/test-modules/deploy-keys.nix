@@ -31,7 +31,7 @@ let
                              mkdir -p ${destDir} -m 0750
                              chown ${value.user}:${value.group} ${destDir}
                          fi
-                         ln -sfn ${keyFile} ${destDir}/${name}
+                         install -m ${value.permissions} -o ${value.user} -g ${value.group} ${keyFile} ${destDir}/${name}
                     '')
      cfg.keys));
 
