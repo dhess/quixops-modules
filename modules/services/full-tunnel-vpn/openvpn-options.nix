@@ -88,11 +88,34 @@ rec {
     };
 
     certKeyFile = mkOption {
-      type = pkgs.lib.types.nonStorePath;
+      type = types.nullOr pkgs.lib.types.nonStorePath;
+      default = null;
+      example = literalExample toString ./vpn-cert.key;
       description = ''
-        The server's private key file. Note that this file will not be
-        copied to the Nix store. However, upon start-up, the service
-        will copy the key file to its persistent state directory.
+        A path to a file that contains the server's private key file.
+        Note that this file will not be copied to the Nix store.
+        However, upon start-up, the service will copy the key file to
+        its persistent state directory.
+
+        Note: either <option>certKeyFile</option> or
+        <option>certKeyLiteral</option> must be non-null, but not
+        both.
+      '';
+    };
+
+    certKeyLiteral = mkOption {
+      type = types.nullOr pkgs.lib.types.nonEmptyStr;
+      default = null;
+      example = "<key>";
+      description = ''
+        The server's private key file, as a string literal. Note that
+        this secret will not be copied to the Nix store. However, upon
+        start-up, the service will copy a file containing the key to
+        its persistent state directory.
+
+        Note: either <option>certKeyFile</option> or
+        <option>certKeyLiteral</option> must be non-null, but not
+        both.
       '';
     };
 
@@ -104,12 +127,34 @@ rec {
     };
 
     tlsAuthKeyFile = mkOption {
-      type = pkgs.lib.types.nonStorePath;
+      type = types.nullOr pkgs.lib.types.nonStorePath;
+      default = null;
+      example = literalExample toString ./vpn-tls-auth.key;
       description = ''
-        A file containing the server's TLS auth key. Note that this
-        file will not be copied to the Nix store. However, upon
-        start-up, the service will copy the key file to its persistent
-        state directory.
+        A path to a file containing the server's TLS auth key. Note
+        that this file will not be copied to the Nix store. However,
+        upon start-up, the service will copy the key file to its
+        persistent state directory.
+
+        Note: either <option>tlsAuthKeyFile</option> or
+        <option>tlsAuthKeyLiteral</option> must be non-null, but not
+        both.
+      '';
+    };
+
+    tlsAuthKeyLiteral = mkOption {
+      type = types.nullOr pkgs.lib.types.nonEmptyStr;
+      default = null;
+      example = "<key>";
+      description = ''
+        The server's TLS auth key, as a string literal. Note that this
+        secret will not be copied to the Nix store. However, upon
+        start-up, the service will copy a file containing the key to
+        its persistent state directory.
+
+        Note: either <option>tlsAuthKeyFile</option> or
+        <option>tlsAuthKeyLiteral</option> must be non-null, but not
+        both.
       '';
     };
   };

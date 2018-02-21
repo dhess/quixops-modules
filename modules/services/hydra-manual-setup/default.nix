@@ -206,10 +206,10 @@ in
 
     assertions = [
       { assertion = pkgs.lib.exclusiveOr (cfg.adminUser.initialPasswordFile == null) (cfg.adminUser.initialPasswordLiteral == null);
-        message = "Either adminUser.initialPasswordFile or adminUser.initialPasswordLiteral must be specified (but not both)";
+        message = "In services.hydra-manual-setup, either adminUser.initialPasswordFile or adminUser.initialPasswordLiteral must be specified (but not both)";
       }
       { assertion = pkgs.lib.exclusiveOr (cfg.binaryCacheKey.privateKeyFile == null) (cfg.binaryCacheKey.privateKeyLiteral == null);
-        message = "Either binaryCacheKey.privateKeyFile or binaryCacheKey.privateKeyLiteral must be specified (but not both)";
+        message = "In services.hydra-manual-setup, either binaryCacheKey.privateKeyFile or binaryCacheKey.privateKeyLiteral must be specified (but not both)";
       }
     ];
 

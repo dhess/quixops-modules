@@ -85,9 +85,9 @@ let
       ipv6ClientPrefix = "fd00:1234:5678:9::/64";
       caFile = ca-cert;
       certFile = vpn1-cert;
-      certKeyFile = toString vpn1-certKey;
+      certKeyLiteral = builtins.readFile vpn1-certKey;
       crlFile = crl;
-      tlsAuthKeyFile = toString vpn1-tlsAuthKey;
+      tlsAuthKeyLiteral = builtins.readFile vpn1-tlsAuthKey;
     };
     vpn2 = {
       port = 443;
@@ -96,9 +96,9 @@ let
       ipv6ClientPrefix = "fd00:1234:5678:a::/64";
       caFile = ca-cert;
       certFile = vpn2-cert;
-      certKeyFile = toString vpn2-certKey;
+      certKeyLiteral = builtins.readFile vpn2-certKey;
       crlFile = crl;
-      tlsAuthKeyFile = toString vpn2-tlsAuthKey;
+      tlsAuthKeyLiteral = builtins.readFile vpn2-tlsAuthKey;
     };
   };
 
@@ -111,7 +111,7 @@ let
     ipv6ClientPrefix = "fd00:1234:5678:b::0/64";
     caFile = ca-cert;
     certFile = vpn1-cert;
-    certKeyFile = toString vpn1-certKey;
+    certKeyLiteral = builtins.readFile vpn1-certKey;
     crlFile = crl;
   };
 
@@ -135,13 +135,13 @@ let
   wireguard-server = {
     ipv4ClientCidr = "10.150.3.1/24";
     ipv6ClientPrefix = "fd00:1234:5678:c::0/64";
-    privateKeyFile = toString wg-server-key;
+    privateKeyLiteral = builtins.readFile wg-server-key;
     peers."client" = {
       # Test with a whole LAN behind the remote peer IP.
       allowedIPs = [ "10.150.3.2/32" "fd00:1234:5678:c::2/64" "10.0.44.0/24" ];
       natInternalIPs = [ "10.150.3.2/32" "10.0.44.0/24" ];
       publicKeyFile = wg-client-pub;
-      presharedKeyFile = toString wg-psk;
+      presharedKeyLiteral = builtins.readFile wg-psk;
     };
   };
 
