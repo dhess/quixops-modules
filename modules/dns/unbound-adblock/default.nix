@@ -211,7 +211,8 @@ in {
         else
           echo "An unbound-adblock block lists already exists; skipping"
         fi
-        chown -R unbound ${blockListDir}
+        chown -R unbound:nogroup ${blockListDir}
+        find ${blockListDir} -type f -exec chmod 0644 {} \;
       '';
       restartIfChanged = true;
 

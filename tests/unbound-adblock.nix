@@ -161,5 +161,9 @@ in makeTest rec {
       #$badclient->fail("${pkgs.dnsutils}/bin/dig \@${serverIpv6_2} A doubleclick.com +time=2");
     };
 
+    subtest "check-permissions", sub {
+      $server->succeed("stat -c %a /var/lib/unbound/blocklists/blocklist-someonewhocares.conf | grep 644");
+    };
+
   '';
 }
