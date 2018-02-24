@@ -60,32 +60,16 @@ let
 in
 mkIf (instances != {}) {
 
-  assertions =
-    (mapAttrsToList
-      (_: serverCfg: {
-        assertion = pkgs.lib.exclusiveOr (serverCfg.certKeyFile == null) (serverCfg.certKeyLiteral == null);
-        message = "In services.full-tunnel-vpn.openvpn.${serverCfg.name}, either certKeyFile or certKeyLiteral must be specified (but not both)";
-      })
-    instances) ++
-    (mapAttrsToList
-      (_: serverCfg: {
-        assertion = pkgs.lib.exclusiveOr (serverCfg.tlsAuthKeyFile == null) (serverCfg.tlsAuthKeyLiteral == null);
-        message = "In services.full-tunnel-vpn.openvpn.${serverCfg.name}, either tlsAuthKeyFile or tlsAuthKeyLiteral must be specified (but not both)";
-      })
-    instances);
-
   quixops.assertions.moduleHashes."services/networking/openvpn.nix" =
     "1472c53fca590977bf0af94820eab36473ba5575519e752b825e295541e7ef8e";
 
   quixops.keychain.keys = listToAttrs (filter (x: x.value != null) (
     (mapAttrsToList
       (_: serverCfg: nameValuePair "openvpn-${serverCfg.name}-cert-key" ({
-        keyFile = serverCfg.certKeyFile;
         text = serverCfg.certKeyLiteral;
       })) instances) ++
     (mapAttrsToList
       (_: serverCfg: nameValuePair "openvpn-${serverCfg.name}-tls-auth-key" ({
-        keyFile = serverCfg.tlsAuthKeyFile;
         text = serverCfg.tlsAuthKeyLiteral;
       })) instances)
   ));

@@ -56,23 +56,8 @@ with lib;
     '';
   };
 
-  certKeyFile = mkOption {
-    type = types.nullOr pkgs.lib.types.nonStorePath;
-    default = null;
-    example = literalExample toString ./vpn-cert.key;
-    description = ''
-      A path to a file containing the server's private key. Note that
-      this file will not be copied to the Nix store. However, upon
-      start-up, the service will copy the key to its persistent state
-      directory.
-
-      Note: either <option>certKeyFile</option> or
-      <option>certKeyLiteral</option> must be non-null, but not both.
-    '';
-  };
-
   certKeyLiteral = mkOption {
-    type = types.nullOr pkgs.lib.types.nonEmptyStr;
+    type = pkgs.lib.types.nonEmptyStr;
     default = null;
     example = "<key>";
     description = ''
@@ -80,9 +65,6 @@ with lib;
       secret will not be copied to the Nix store. However, upon
       start-up, the service will copy a file containing the key to its
       persistent state directory.
-
-      Note: either <option>certKeyFile</option> or
-      <option>certKeyLiteral</option> must be non-null, but not both.
     '';
   };
 

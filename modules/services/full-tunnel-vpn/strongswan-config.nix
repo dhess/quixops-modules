@@ -20,17 +20,10 @@ let
 in
 mkIf cfg.enable {
 
-  assertions = [
-    { assertion = pkgs.lib.exclusiveOr (cfg.certKeyFile == null) (cfg.certKeyLiteral == null);
-      message = "In services.full-tunnel-vpn.strongswan, either certKeyFile or certKeyLiteral must be specified (but not both)";
-    }
-  ];
-
   quixops.assertions.moduleHashes."services/networking/strongswan.nix" =
         "55d1c76bcdb47d8c6ffe81bbcb9742b18e2c8d6aeb866f71959faed298ce7351";
 
   quixops.keychain.keys.strongswan-cert-key = {
-    keyFile = cfg.certKeyFile;
     text = cfg.certKeyLiteral;
   };
 

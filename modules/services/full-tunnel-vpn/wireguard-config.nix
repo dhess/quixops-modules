@@ -10,30 +10,16 @@ let
 in
 mkIf (cfg.peers != {}) {
 
-  assertions = [
-    { assertion = pkgs.lib.exclusiveOr (cfg.privateKeyFile == null) (cfg.privateKeyLiteral == null);
-      message = "In services.full-tunnel-vpn.wireguard, either privateKeyFile or privateKeyLiteral must be specified (but not both)";
-    }
-  ] ++
-  (mapAttrsToList
-    (_: peerCfg: {
-      assertion = pkgs.lib.exclusiveOr (peerCfg.presharedKeyFile == null) (peerCfg.presharedKeyLiteral == null);
-      message = "In services.full-tunnel-vpn.wireguard.${peerCfg.name}, either presharedKeyFile or presharedKeyLiteral must be specified (but not both)";
-    })
-    cfg.peers);
-
   quixops.assertions.moduleHashes."services/networking/wireguard.nix" =
     "7a87274cc51773fcc2f62f0bafd48a27331f9b4aa926b5b26332a0e9550c6a0b";
 
   quixops.keychain.keys = listToAttrs (filter (x: x.value != null) (
     (mapAttrsToList
       (_: peerCfg: nameValuePair "wireguard-${cfg.interface}-${peerCfg.name}-psk" ({
-        keyFile = peerCfg.presharedKeyFile;
         text = peerCfg.presharedKeyLiteral;
       })) cfg.peers) ++
     (mapAttrsToList
       (_: _: nameValuePair "wireguard-${cfg.interface}-key" ({
-        keyFile = cfg.privateKeyFile;
         text = cfg.privateKeyLiteral;
       })) { dummy = "foo"; })
   ));

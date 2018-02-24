@@ -26,10 +26,7 @@ let
   deployKeys =
     (concatStrings (mapAttrsToList
       (name: value: let
-                      keyFile = pkgs.writeText name
-                                (if !isNull value.keyFile
-                                 then builtins.readFile value.keyFile
-                                 else value.text);
+                      keyFile = pkgs.writeText name value.text;
                       destDir = toString value.destDir;
                     in
                     ''
@@ -87,13 +84,6 @@ in
 
     deployment.keys = keychain.keys;
 
-    assertions = flip mapAttrsToList cfg.keys (key: opts: {
-      assertion = (opts.text == null && opts.keyFile != null) ||
-                  (opts.text != null && opts.keyFile == null);
-      message = "Deployment key '${key}' must have either a 'text' or a 'keyFile' specified.";
-    });
-
-    
     # Emulate NixOps.
     system.activationScripts.nixops-keys = stringAfter [ "users" "groups" ]
       ''

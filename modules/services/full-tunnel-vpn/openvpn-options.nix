@@ -87,24 +87,8 @@ rec {
       '';
     };
 
-    certKeyFile = mkOption {
-      type = types.nullOr pkgs.lib.types.nonStorePath;
-      default = null;
-      example = literalExample toString ./vpn-cert.key;
-      description = ''
-        A path to a file that contains the server's private key file.
-        Note that this file will not be copied to the Nix store.
-        However, upon start-up, the service will copy the key file to
-        its persistent state directory.
-
-        Note: either <option>certKeyFile</option> or
-        <option>certKeyLiteral</option> must be non-null, but not
-        both.
-      '';
-    };
-
     certKeyLiteral = mkOption {
-      type = types.nullOr pkgs.lib.types.nonEmptyStr;
+      type = pkgs.lib.types.nonEmptyStr;
       default = null;
       example = "<key>";
       description = ''
@@ -112,10 +96,6 @@ rec {
         this secret will not be copied to the Nix store. However, upon
         start-up, the service will copy a file containing the key to
         its persistent state directory.
-
-        Note: either <option>certKeyFile</option> or
-        <option>certKeyLiteral</option> must be non-null, but not
-        both.
       '';
     };
 
@@ -126,24 +106,8 @@ rec {
       '';
     };
 
-    tlsAuthKeyFile = mkOption {
-      type = types.nullOr pkgs.lib.types.nonStorePath;
-      default = null;
-      example = literalExample toString ./vpn-tls-auth.key;
-      description = ''
-        A path to a file containing the server's TLS auth key. Note
-        that this file will not be copied to the Nix store. However,
-        upon start-up, the service will copy the key file to its
-        persistent state directory.
-
-        Note: either <option>tlsAuthKeyFile</option> or
-        <option>tlsAuthKeyLiteral</option> must be non-null, but not
-        both.
-      '';
-    };
-
     tlsAuthKeyLiteral = mkOption {
-      type = types.nullOr pkgs.lib.types.nonEmptyStr;
+      type = pkgs.lib.types.nonEmptyStr;
       default = null;
       example = "<key>";
       description = ''
@@ -151,10 +115,6 @@ rec {
         secret will not be copied to the Nix store. However, upon
         start-up, the service will copy a file containing the key to
         its persistent state directory.
-
-        Note: either <option>tlsAuthKeyFile</option> or
-        <option>tlsAuthKeyLiteral</option> must be non-null, but not
-        both.
       '';
     };
   };

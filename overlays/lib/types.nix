@@ -24,36 +24,13 @@ with lib;
     options.text = mkOption {
       example = "super secret stuff";
       default = null;
-      type = types.nullOr types.str;
+      type = pkgs.lib.types.nonEmptyStr;
       description = ''
         When non-null, this designates the text that the key should contain. So if
         the key name is <replaceable>password</replaceable> and
         <literal>foobar</literal> is set here, the contents of the file
         <filename><replaceable>destDir</replaceable>/<replaceable>password</replaceable></filename>
         will be <literal>foobar</literal>.
-
-        NOTE: Either <literal>text</literal> or <literal>keyFile</literal> have
-        to be set.
-      '';
-    };
-
-    options.keyFile = mkOption {
-      default = null;
-      type = types.nullOr pkgs.lib.types.nonStorePath;
-      description = ''
-        When non-null, contents of the specified file will be deployed to the
-        specified key on the target machine.  If the key name is
-        <replaceable>password</replaceable> and <literal>/foo/bar</literal> is set
-        here, the contents of the file
-        <filename><replaceable>destDir</replaceable>/<replaceable>password</replaceable></filename>
-        deployed will be the same as local file <literal>/foo/bar</literal>.
-
-        Since no serialization/deserialization of key contents is involved, there
-        are no limits on that content: null bytes, invalid Unicode,
-        <literal>/dev/random</literal> output -- anything goes.
-
-        NOTE: Either <literal>text</literal> or <literal>keyFile</literal> have
-        to be set.
       '';
     };
 
