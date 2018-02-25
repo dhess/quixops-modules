@@ -67,6 +67,7 @@ let
     ## Configuration.
 
     environment = callSubTests ../tests/environment.nix {};
+    fail2ban = callTest ../tests/fail2ban.nix {};
     networking = callSubTests ../tests/networking.nix {};
     security = callSubTests ../tests/security.nix {};
     sudo = callSubTests ../tests/sudo.nix {};

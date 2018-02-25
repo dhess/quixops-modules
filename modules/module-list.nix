@@ -9,6 +9,7 @@
   ./config/defaults/sudo.nix
   ./config/defaults/system.nix
   ./config/defaults/users.nix
+  ./config/services/fail2ban.nix
   ./config/hardware/mbr.nix
   ./config/hardware/uefi.nix
   ./config/overlays.nix
