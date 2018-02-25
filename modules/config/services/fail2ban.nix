@@ -71,6 +71,9 @@ in
 
   config = mkIf fail2ban-enabled {
 
+    quixops.assertions.moduleHashes."services/security/fail2ban.nix" =
+      "7f20f660b11caa365813f287a0dc1ddfc6410a2d9c5184d6787c1764d0ed20aa";
+
     services.fail2ban.jails.DEFAULT = mkForce ''
       ignoreip = ${ignoreip}
       bantime = ${toString cfg.bantime}
