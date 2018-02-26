@@ -39,6 +39,8 @@ let
                   ${net.extraConf}
               </Network>
               '') confOpts.networks) }
+
+            ${confOpts.extraUserConf}
     </User>
     ${confOpts.extraZncConf}
   '';

@@ -337,6 +337,14 @@ in
           '';
         };
 
+        extraUserConf = mkOption {
+          default = "";
+          type = types.lines;
+          description = ''
+            Extra user config to `znc.conf` file.
+          '';
+        };
+
         extraZncConf = mkOption {
           default = "";
           type = types.lines;
