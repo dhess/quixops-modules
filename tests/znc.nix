@@ -19,13 +19,21 @@ let
         localhostServer = { config, ... }:
         {
           nixpkgs.system = system;
-          imports = (import pkgs.lib.quixops.modulesPath);
+          imports =
+            (import pkgs.lib.quixops.modulesPath) ++
+            (import pkgs.lib.quixops.testModulesPath);
+
+          # Use the test key deployment system.
+          deployment.reallyReallyEnable = true;
 
           services.znc = {
             enable = true;
             mutable = false;
             openFirewall = true;
-            configFile = "/var/run/znc.conf";
+            configLiteral = pkgs.lib.quixops.mkZncConfig {
+              inherit pkgs;
+              zncServiceConfig = config.services.znc;
+            };
             confOptions = {
               host = "localhost";
               userName = "bob-znc";
@@ -44,13 +52,21 @@ let
         server = { config, ... }:
         {
           nixpkgs.system = system;
-          imports = (import pkgs.lib.quixops.modulesPath);
+          imports =
+            (import pkgs.lib.quixops.modulesPath) ++
+            (import pkgs.lib.quixops.testModulesPath);
+
+          # Use the test key deployment system.
+          deployment.reallyReallyEnable = true;
 
           services.znc = {
             enable = true;
             mutable = false;
             openFirewall = true;
-            configFile = "/var/run/znc.conf";
+            configLiteral = pkgs.lib.quixops.mkZncConfig {
+              inherit pkgs;
+              zncServiceConfig = config.services.znc;
+            };
             confOptions = {
               userName = "bob-znc";
               nick = "bob";
@@ -73,24 +89,9 @@ let
       } // machineAttrs;
 
       testScript = { nodes, ... }:
-      let
-        serverZncConf = pkgs.writeText "znc.conf" (pkgs.lib.quixops.mkZncConfig {
-          inherit pkgs;
-          zncServiceConfig = nodes.server.config.services.znc;
-        });
-        localhostServerZncConf = pkgs.writeText "znc.conf" (pkgs.lib.quixops.mkZncConfig {
-          inherit pkgs;
-          zncServiceConfig = nodes.localhostServer.config.services.znc;
-        });
-      in
       ''
         startAll;
 
-        # Don't have a good way to synchronize this without NixOps, so
-        # we just restart the znc service after the config file has
-        # been copied to the server.
-        $server->copyFileFromHost("${serverZncConf}", "${nodes.server.config.services.znc.configFile}");
-        $localhostServer->copyFileFromHost("${localhostServerZncConf}", "${nodes.localhostServer.config.services.znc.configFile}");
         $server->waitForUnit("znc.service");
         $localhostServer->waitForUnit("znc.service");
 

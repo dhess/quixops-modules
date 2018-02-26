@@ -1,4 +1,9 @@
-# Note: requires NixOps for key management.
+## A znc module that, unlike the upstream module, does not write IRC
+## secrets to the Nix store. It does this by treating the entire ZNC
+## config file, which contains cleartext passwords, as a secret.
+##
+## This means the ZNC config file must be copied to the host machine
+## out-of-band, e.g., via NixOps.
 
 { config, lib, pkgs, ...}:
 
@@ -6,6 +11,8 @@ with lib;
 
 let
   cfg = config.services.znc;
+
+  deployed-config = config.quixops.keychain.keys.znc-config.path;
 
   defaultUser = "znc"; # Default user to own process.
 
@@ -137,11 +144,16 @@ in
     services.znc = {
       enable = mkEnableOption "Enable a ZNC service for a user.";
 
-      configFile = mkOption {
-        type = types.path;
+      configLiteral = mkOption {
+        type = pkgs.lib.types.nonEmptyStr;
         description = ''
           The path to the ZNC configuration file on the target
-          machine.
+          machine. You can create this file from the ZNC module
+          configuration by passing the configuration to the
+          <literal>mkZncConf</literal> function.
+
+          As this configuration contains passwords, it will be treated
+          as a secret and not copied to the Nix store.
         '';
       };
 
@@ -376,6 +388,10 @@ in
     quixops.assertions.moduleHashes."services/networking/znc.nix" =
       "69d993848c9da0b95725070a94acf3d5efb954104cde7b447dcfa32e49f1e7fc";
 
+    quixops.keychain.keys.znc-config = {
+      text = cfg.configLiteral;
+    };
+
     networking.firewall = mkIf cfg.openFirewall {
       allowedTCPPorts = [ cfg.confOptions.port ];
     };
@@ -383,14 +399,8 @@ in
     systemd.services.znc = {
       description = "ZNC Server";
       wantedBy = [ "multi-user.target" ];
+      wants = [ "keys.target" ];
       after = [ "network.service" "keys.target" ];
-
-      # XXX dhess - don't require keys.target because I want to be
-      # able to test this derivation without having to fake the NixOps
-      # key service. (Maybe I can override this attribute during
-      # testing?)
-
-      #requires = [ "keys.target" ];
 
       serviceConfig = {
         PermissionsStartOnly = true;
@@ -414,11 +424,11 @@ in
         # Ensure essential files exist.
         if [[ ! -e ${cfg.dataDir}/configs/znc.conf ]]; then
             ${pkgs.coreutils}/bin/echo "No znc.conf file found in ${cfg.dataDir}. Creating one now."
-            while [[ ! -e ${cfg.configFile} ]]; do
+            while [[ ! -e ${deployed-config} ]]; do
               echo "Waiting for config file."
               sleep 10
             done
-            ${pkgs.coreutils}/bin/cp --no-clobber ${cfg.configFile} ${cfg.dataDir}/configs/znc.conf
+            ${pkgs.coreutils}/bin/cp --no-clobber ${deployed-config} ${cfg.dataDir}/configs/znc.conf
             ${pkgs.coreutils}/bin/chmod 0640 ${cfg.dataDir}/configs/znc.conf
             ${pkgs.coreutils}/bin/chown ${cfg.user}:${cfg.group} ${cfg.dataDir}/configs/znc.conf
         fi
