@@ -89,7 +89,6 @@ rec {
 
     certKeyLiteral = mkOption {
       type = pkgs.lib.types.nonEmptyStr;
-      default = null;
       example = "<key>";
       description = ''
         The server's private key file, as a string literal. Note that
@@ -108,7 +107,6 @@ rec {
 
     tlsAuthKeyLiteral = mkOption {
       type = pkgs.lib.types.nonEmptyStr;
-      default = null;
       example = "<key>";
       description = ''
         The server's TLS auth key, as a string literal. Note that this

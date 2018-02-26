@@ -68,7 +68,6 @@ in
 
         initialPasswordLiteral = mkOption {
           type = pkgs.lib.types.nonEmptyStr;
-          default = null;
           example = literalExample "passw0rd";
           description = ''
             The Hydra admin user's initial password, as a string
@@ -115,7 +114,6 @@ in
 
         privateKeyLiteral = mkOption {
           type = pkgs.lib.types.nonEmptyStr;
-          default = null;
           example = literalExample "<bckey>";
           description = ''
             The Hydra server's binary cache private key, as a string

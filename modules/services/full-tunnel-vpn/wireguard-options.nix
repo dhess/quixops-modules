@@ -53,7 +53,6 @@ with lib;
 
   privateKeyLiteral = mkOption {
     type = pkgs.lib.types.nonEmptyStr;
-    default = null;
     example = "<key>";
     description = ''
       The WireGuard server's private key, as a string literal, as
@@ -130,7 +129,6 @@ with lib;
 
         presharedKeyLiteral = mkOption {
           type = pkgs.lib.types.nonEmptyStr;
-          default = null;
           example = "<key>";
           description = ''
             The WireGuard pre-shared key for this peer, as a string

@@ -23,12 +23,12 @@ with lib;
   key = types.submodule ({ config, name, ... }: {
     options.text = mkOption {
       example = "super secret stuff";
-      default = null;
       type = pkgs.lib.types.nonEmptyStr;
       description = ''
-        When non-null, this designates the text that the key should contain. So if
+        This designates the text that the key should contain. So if
         the key name is <replaceable>password</replaceable> and
-        <literal>foobar</literal> is set here, the contents of the file
+        <literal>foobar</literal> is set here, the contents of the
+        file
         <filename><replaceable>destDir</replaceable>/<replaceable>password</replaceable></filename>
         will be <literal>foobar</literal>.
       '';

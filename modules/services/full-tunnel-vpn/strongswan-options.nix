@@ -58,7 +58,6 @@ with lib;
 
   certKeyLiteral = mkOption {
     type = pkgs.lib.types.nonEmptyStr;
-    default = null;
     example = "<key>";
     description = ''
       The server's private key, as a string literal. Note that this
