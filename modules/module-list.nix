@@ -10,6 +10,14 @@
   ./config/defaults/system.nix
   ./config/defaults/users.nix
   ./config/services/fail2ban.nix
+  ./config/hardware/intel/broadwell-de.nix
+  ./config/hardware/intel/centerton.nix
+  ./config/hardware/intel/haswell.nix
+  ./config/hardware/intel/kaby-lake.nix
+  ./config/hardware/supermicro/sys-5017a-ef.nix
+  ./config/hardware/supermicro/sys-5018d-fn4t.nix
+  ./config/hardware/supermicro/sys-5018d-mtln4f.nix
+  ./config/hardware/supermicro/mb-x10.nix
   ./config/hardware/beaglebone.nix
   ./config/hardware/hwutils.nix
   ./config/hardware/jetson-tk1.nix
