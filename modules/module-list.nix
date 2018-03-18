@@ -11,6 +11,7 @@
   ./config/defaults/users.nix
   ./config/services/fail2ban.nix
   ./config/hardware/beaglebone.nix
+  ./config/hardware/hwutils.nix
   ./config/hardware/jetson-tk1.nix
   ./config/hardware/jetson-tx1.nix
   ./config/hardware/mbr.nix
