@@ -14,6 +14,10 @@
   ./config/hardware/intel/centerton.nix
   ./config/hardware/intel/haswell.nix
   ./config/hardware/intel/kaby-lake.nix
+  ./config/hardware/smartd/1x-non-removable.nix
+  ./config/hardware/smartd/2x-non-removable.nix
+  ./config/hardware/smartd/36x-hotswap.nix
+  ./config/hardware/smartd/4x-hotswap.nix
   ./config/hardware/supermicro/sys-5017a-ef.nix
   ./config/hardware/supermicro/sys-5018d-fn4t.nix
   ./config/hardware/supermicro/sys-5018d-mtln4f.nix
