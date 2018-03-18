@@ -10,6 +10,9 @@
   ./config/defaults/system.nix
   ./config/defaults/users.nix
   ./config/services/fail2ban.nix
+  ./config/hardware/beaglebone.nix
+  ./config/hardware/jetson-tk1.nix
+  ./config/hardware/jetson-tx1.nix
   ./config/hardware/mbr.nix
   ./config/hardware/uefi.nix
   ./config/overlays.nix
