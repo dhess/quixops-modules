@@ -6,7 +6,7 @@ with lib;
 
 let
 
-  localLib = import ../../lib.nix;
+  localLib = import ../../../lib.nix;
   cfg = config.quixops.hardware.beaglebone;
   enabled = cfg.enable;
 
