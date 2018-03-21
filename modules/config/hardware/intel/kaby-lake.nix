@@ -17,6 +17,7 @@ in
   };
 
   config = mkIf enabled ({
-    boot.initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" ];
+    boot.initrd.availableKernelModules = [ "xhci_pci" "usbhid" "usb_storage" "sd_mod" ];
+    boot.initrd.kernelModules = [ "ahci" "nvme" ];
   } // intelConfig);
 }
