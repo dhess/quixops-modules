@@ -61,6 +61,7 @@ let
     full-tunnel-vpn = callSubTests ../tests/full-tunnel-vpn.nix {};
     ndppd = callTest ../tests/ndppd.nix {};
     netsniff-ng = callSubTests ../tests/netsniff-ng.nix {};
+    postfix-null-client = callTest ../tests/postfix-null-client.nix {};
     unbound-adblock = callTest ../tests/unbound-adblock.nix {};
     znc = callSubTests ../tests/znc.nix {};
 
