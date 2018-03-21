@@ -2,18 +2,32 @@
 
 { config, lib, pkgs, ... }:
 
+with lib;
+
+let
+
+  cfg = config.quixops.hardware.intel.common;
+  enabled = cfg.enable;
+
+in
 {
-  nixpkgs.system = "x86_64-linux";
+  options.quixops.hardware.intel.common = {
+    enable = mkEnableOption "Enable Intel hardware configuration common to modern Intel platforms.";
+  };
 
-  boot.kernelModules = [ "kvm-intel" ];
-  boot.extraModulePackages = [ ];
+  config = mkIf enabled {
+    nixpkgs.system = "x86_64-linux";
 
-  hardware.cpu.intel.updateMicrocode = true;
+    boot.kernelModules = [ "kvm-intel" ];
+    boot.extraModulePackages = [ ];
 
-  powerManagement.cpuFreqGovernor = "powersave";
+    hardware.cpu.intel.updateMicrocode = true;
 
-  # irqbalance is still recommended for general-purpose computing.
-  # Enable it by default.
-  # ref: https://serverfault.com/questions/513807/is-there-still-a-use-for-irqbalance-on-modern-hardware
-  services.irqbalance.enable = true;
+    powerManagement.cpuFreqGovernor = "powersave";
+
+    # irqbalance is still recommended for general-purpose computing.
+    # Enable it by default.
+    # ref: https://serverfault.com/questions/513807/is-there-still-a-use-for-irqbalance-on-modern-hardware
+    services.irqbalance.enable = true;
+  };
 }

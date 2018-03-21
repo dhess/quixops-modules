@@ -8,7 +8,6 @@ let
 
   cfg = config.quixops.hardware.intel.haswell;
   enabled = cfg.enable;
-  intelConfig = import ./common.nix { inherit config lib pkgs; };
 
 in
 {
@@ -16,8 +15,8 @@ in
     enable = mkEnableOption "Enable Intel Haswell hardware configuration.";
   };
 
-  config = mkIf enabled ({
-    boot.initrd.availableKernelModules = [ "xhci_pci" "ehci_pci" "usbhid" "usb_storage" "sd_mod" ];
-    boot.initrd.kernelModules = [ "ahci" ];
-  } // intelConfig);
+  config = mkIf enabled {
+    quixops.hardware.intel.common.enable = true;
+    boot.initrd.availableKernelModules = [ "xhci_pci" "ehci_pci" "ahci" "usbhid" "usb_storage" "sd_mod" ];
+  };
 }

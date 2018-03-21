@@ -9,7 +9,6 @@ let
 
   cfg = config.quixops.hardware.intel.centerton;
   enabled = cfg.enable;
-  intelConfig = import ./common.nix { inherit config lib pkgs; };
 
 in
 {
@@ -17,8 +16,8 @@ in
     enable = mkEnableOption "Enable Intel Centerton hardware configuration.";
   };
 
-  config = mkIf enabled ({
-    boot.initrd.availableKernelModules = [ "xhci_pci" "usbhid" "usb_storage" "sd_mod" ];
-    boot.initrd.kernelModules = [ "ahci" ];
-  } // intelConfig);
+  config = mkIf enabled {
+    quixops.hardware.intel.common.enable = true;
+    boot.initrd.availableKernelModules = [ "ahci" "xhci_pci" "usbhid" "usb_storage" "sd_mod" ];
+  };
 }

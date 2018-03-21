@@ -9,7 +9,6 @@ let
 
   cfg = config.quixops.hardware.intel.broadwell-de;
   enabled = cfg.enable;
-  intelConfig = import ./common.nix { inherit config lib pkgs; };
 
 in
 {
@@ -17,8 +16,8 @@ in
     enable = mkEnableOption "Enable Intel Broadwell DE hardware configuration.";
   };
 
-  config = mkIf enabled ({
-    boot.initrd.availableKernelModules = [ "xhci_pci" "ehci_pci" "usbhid" "usb_storage" "sd_mod" ];
-    boot.initrd.kernelModules = [ "ahci" "nvme" ];
-  } // intelConfig);
+  config = mkIf enabled {
+    quixops.hardware.intel.common.enable = true;
+    boot.initrd.availableKernelModules = [ "xhci_pci" "ehci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" ];
+  };
 }

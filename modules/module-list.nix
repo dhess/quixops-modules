@@ -12,6 +12,7 @@
   ./config/services/fail2ban.nix
   ./config/hardware/intel/broadwell-de.nix
   ./config/hardware/intel/centerton.nix
+  ./config/hardware/intel/common.nix
   ./config/hardware/intel/haswell.nix
   ./config/hardware/intel/kaby-lake.nix
   ./config/hardware/smartd/1x-non-removable.nix
