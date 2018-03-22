@@ -33,6 +33,7 @@
   ./core/keychain
   ./core/module-hashes.nix
   ./dns/unbound-adblock
+  ./email/service-status-email
   ./email/null-client
   ./networking/pcap-prep
   ./networking/ndppd
