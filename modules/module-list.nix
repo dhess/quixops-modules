@@ -41,6 +41,7 @@
   ./services/hydra-manual-setup
   ./services/mellon/auto-unlock.nix
   ./services/netsniff-ng
+  ./services/pinpon/server.nix
   ./services/systemd-digitalocean
   ./services/tarsnapper
   ./services/znc
