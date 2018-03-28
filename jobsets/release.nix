@@ -59,6 +59,7 @@ let
     ## Modules.
     hydra-manual-setup = callTest ../tests/hydra-manual-setup.nix { system = "x86_64-linux"; };
     full-tunnel-vpn = callSubTests ../tests/full-tunnel-vpn.nix {};
+    mellon-auto-unlock = callTest ../tests/mellon-auto-unlock.nix {};
     ndppd = callTest ../tests/ndppd.nix {};
     netsniff-ng = callSubTests ../tests/netsniff-ng.nix {};
     postfix-null-client = callTest ../tests/postfix-null-client.nix {};

@@ -39,6 +39,7 @@
   ./networking/ndppd
   ./services/full-tunnel-vpn
   ./services/hydra-manual-setup
+  ./services/mellon/auto-unlock.nix
   ./services/netsniff-ng
   ./services/systemd-digitalocean
   ./services/tarsnapper
