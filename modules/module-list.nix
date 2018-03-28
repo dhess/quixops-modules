@@ -39,7 +39,8 @@
   ./networking/ndppd
   ./services/full-tunnel-vpn
   ./services/hydra-manual-setup
-  ./services/systemd-digitalocean
   ./services/netsniff-ng
+  ./services/systemd-digitalocean
+  ./services/tarsnapper
   ./services/znc
 ]
