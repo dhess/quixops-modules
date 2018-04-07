@@ -42,6 +42,10 @@ let
         subtest "wget-is-in-path", sub {
           $machine->succeed("wget --version") =~ /GNU Wget/;
         };
+
+        subtest "emacs-is-in-path", sub {
+          $machine->succeed("emacs --version") =~ /GNU Emacs/;
+        };
       '';
     };
 

@@ -16,6 +16,7 @@ in
   config = mkIf enabled {
 
     environment.systemPackages = with pkgs; [
+      emacs25-nox
       git
       wget
     ];
