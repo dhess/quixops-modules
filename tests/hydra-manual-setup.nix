@@ -27,6 +27,7 @@ in makeTest rec {
     };
 
     hydra = { config, ... }: {
+      virtualisation.memorySize = 2048;
       nixpkgs.system = system;
       imports =
         (import pkgs.lib.quixops.modulesPath) ++
