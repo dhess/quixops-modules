@@ -186,12 +186,12 @@ let
       nodes = {
 
         client = { config, ... }: {
-          nixpkgs.system = system;
+          nixpkgs.localSystem.system = system;
           imports = (import pkgs.lib.quixops.modulesPath);
         } // clientAttrs;
 
         server1 = { config, ... }: {
-          nixpkgs.system = system;
+          nixpkgs.localSystem.system = system;
           networking.firewall.allowedTCPPorts = [ 443 ];
           services.nginx = {
             enable = true;
@@ -208,7 +208,7 @@ let
         };
 
         server2 = { config, ... }: {
-          nixpkgs.system = system;
+          nixpkgs.localSystem.system = system;
           networking.firewall.allowedTCPPorts = [ 443 ];
           services.nginx = {
             enable = true;

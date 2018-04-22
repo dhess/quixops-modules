@@ -18,7 +18,7 @@ let
     nodes = {
 
       sniffer = { config, ... }: {
-        nixpkgs.system = system;
+        nixpkgs.localSystem.system = system;
         imports = (import pkgs.lib.quixops.modulesPath);
 
         services.netsniff-ng.instances.test = {
@@ -29,7 +29,7 @@ let
       } // machineAttrs;
 
       pinger = { config, ... }: {
-        nixpkgs.system = system;
+        nixpkgs.localSystem.system = system;
       };
 
     };

@@ -14,11 +14,11 @@ makeTest {
   nodes = {
 
     client = { config, ... }: {
-      nixpkgs.system = system;
+      nixpkgs.localSystem.system = system;
     };
 
     server = { config, ... }: {
-      nixpkgs.system = system;
+      nixpkgs.localSystem.system = system;
       imports = (import pkgs.lib.quixops.modulesPath);
 
       quixops.services.fail2ban = {

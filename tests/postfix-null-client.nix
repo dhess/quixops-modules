@@ -23,7 +23,7 @@ in makeTest rec {
 
   nodes = {
     client = { config, ... }: {
-      nixpkgs.system = system;
+      nixpkgs.localSystem.system = system;
       imports =
         (import pkgs.lib.quixops.modulesPath) ++
         (import pkgs.lib.quixops.testModulesPath);

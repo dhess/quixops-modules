@@ -16,7 +16,7 @@ in makeTest rec {
   nodes = {
 
     proxy = { config, ... }: {
-      nixpkgs.system = system;
+      nixpkgs.localSystem.system = system;
       imports = (import pkgs.lib.quixops.modulesPath);
       networking = {
         interfaces.eth0.ipv6.addresses = pkgs.lib.mkOverride 0
@@ -36,7 +36,7 @@ in makeTest rec {
     };
 
     pinger = { config, ... }: {
-      nixpkgs.system = system;
+      nixpkgs.localSystem.system = system;
       networking = {
         interfaces.eth0.ipv6.addresses = pkgs.lib.mkOverride 0
           [ { address = fd00:1234:5678:9::1; prefixLength = 64; } ];

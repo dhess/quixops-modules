@@ -16,7 +16,7 @@ in
   };
 
   config = mkIf enabled {
-    nixpkgs.system = "x86_64-linux";
+    nixpkgs.localSystem.system = "x86_64-linux";
 
     boot.kernelModules = [ "kvm-intel" ];
     boot.extraModulePackages = [ ];

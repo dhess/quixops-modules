@@ -34,7 +34,7 @@ let
       nodes = {
 
         server = { config, ... }: {
-          nixpkgs.system = system;
+          nixpkgs.localSystem.system = system;
           networking.firewall.allowedTCPPorts = [ 80 443 ];
           services.nginx = {
             enable = true;
@@ -48,7 +48,7 @@ let
         };
 
         client = { config, ... }: {
-          nixpkgs.system = system;
+          nixpkgs.localSystem.system = system;
           imports = (import pkgs.lib.quixops.modulesPath);
         } // clientAttrs;
 

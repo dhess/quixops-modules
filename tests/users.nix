@@ -17,7 +17,7 @@ let
       };
 
       machine = { config, ... }: {
-        nixpkgs.system = system;
+        nixpkgs.localSystem.system = system;
         imports = [
           ./common/users.nix
         ] ++ (import pkgs.lib.quixops.modulesPath);

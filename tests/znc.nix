@@ -18,7 +18,7 @@ let
 
         localhostServer = { config, ... }:
         {
-          nixpkgs.system = system;
+          nixpkgs.localSystem.system = system;
           imports =
             (import pkgs.lib.quixops.modulesPath) ++
             (import pkgs.lib.quixops.testModulesPath);
@@ -51,7 +51,7 @@ let
 
         server = { config, ... }:
         {
-          nixpkgs.system = system;
+          nixpkgs.localSystem.system = system;
           imports =
             (import pkgs.lib.quixops.modulesPath) ++
             (import pkgs.lib.quixops.testModulesPath);
@@ -83,7 +83,7 @@ let
 
         client = { config, ... }:
         {
-          nixpkgs.system = system;
+          nixpkgs.localSystem.system = system;
         };
 
       } // machineAttrs;

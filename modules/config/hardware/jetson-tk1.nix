@@ -16,7 +16,7 @@ in
   };
 
   config = mkIf enabled {
-    nixpkgs.system = "armv7l-linux";
+    nixpkgs.localSystem.system = "armv7l-linux";
 
     hardware.enableAllFirmware = true;
 

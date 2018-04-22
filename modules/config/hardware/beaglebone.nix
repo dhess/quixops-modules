@@ -17,7 +17,7 @@ in
   };
 
   config = mkIf enabled {
-    nixpkgs.system = "armv7l-linux";
+    nixpkgs.localSystem.system = "armv7l-linux";
 
     boot.loader.grub.enable = false;
     boot.loader.generic-extlinux-compatible.enable = true;

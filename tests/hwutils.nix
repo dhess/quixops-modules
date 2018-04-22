@@ -14,7 +14,7 @@ in makeTest rec {
   };
 
   machine = { config, ... }: {
-    nixpkgs.system = system;
+    nixpkgs.localSystem.system = system;
     imports = (import pkgs.lib.quixops.modulesPath);
     quixops.hardware.hwutils.enable = true;
   };

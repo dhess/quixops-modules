@@ -18,12 +18,12 @@ let
     nodes = {
 
       server = { config, ... }: {
-        nixpkgs.system = system;
+        nixpkgs.localSystem.system = system;
         imports = (import pkgs.lib.quixops.modulesPath);
       } // machineAttrs;
 
       client = { ... }: {
-        nixpkgs.system = system;
+        nixpkgs.localSystem.system = system;
       };
 
     };

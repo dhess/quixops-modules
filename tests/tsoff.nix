@@ -14,7 +14,7 @@ let
         maintainers = [ dhess-qx ];
       };
       machine = { config, ... }: {
-        nixpkgs.system = system;
+        nixpkgs.localSystem.system = system;
         imports = (import pkgs.lib.quixops.modulesPath);
       } // machineAttrs;
       testScript = { nodes, ... }:

@@ -16,7 +16,7 @@ in
   };
 
   config = mkIf enabled {
-    nixpkgs.system = "aarch64-linux";
+    nixpkgs.localSystem.system = "aarch64-linux";
 
     hardware.enableAllFirmware = true;
 

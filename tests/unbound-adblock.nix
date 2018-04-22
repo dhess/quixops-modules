@@ -40,7 +40,7 @@ in makeTest rec {
   nodes = {
 
     nsd = { config, ... }: {
-      nixpkgs.system = system;
+      nixpkgs.localSystem.system = system;
       networking.interfaces.eth1.ipv4.addresses = [
         { address = "192.168.1.250"; prefixLength = 24; }
       ];
@@ -58,7 +58,7 @@ in makeTest rec {
     };
 
     server = { config, ... }: {
-      nixpkgs.system = system;
+      nixpkgs.localSystem.system = system;
       imports = (import pkgs.lib.quixops.modulesPath);
       networking.useDHCP = false;
       services.unbound-adblock = {
@@ -78,7 +78,7 @@ in makeTest rec {
     };
 
     client = { config, ... }: {
-      nixpkgs.system = system;
+      nixpkgs.localSystem.system = system;
       networking.useDHCP = false;
       networking.interfaces.eth1.ipv4.addresses = [
         { address = "192.168.1.2"; prefixLength = 24; }
@@ -89,7 +89,7 @@ in makeTest rec {
     };
 
     badclient = { config, ... }: {
-      nixpkgs.system = system;
+      nixpkgs.localSystem.system = system;
       networking.useDHCP = false;
       networking.interfaces.eth1.ipv4.addresses = [
         { address = "192.168.1.3"; prefixLength = 24; }
