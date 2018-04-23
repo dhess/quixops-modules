@@ -161,7 +161,7 @@ in
       requires = [ "hydra-init.service" ];
       after = [ "hydra-init.service" ] ++ wants;
 
-      environment = config.systemd.services.hydra-init.environment;
+      environment = mkForce config.systemd.services.hydra-init.environment;
       script =
       let bcKeyDir = cfg.binaryCacheKey.directory;
       in ''
