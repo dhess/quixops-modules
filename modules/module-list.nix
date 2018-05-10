@@ -36,7 +36,6 @@
   ./email/service-status-email
   ./email/null-client
   ./networking/pcap-prep
-  ./networking/ndppd
   ./services/full-tunnel-vpn
   ./services/hydra-manual-setup
   ./services/mellon/auto-unlock.nix
