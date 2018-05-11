@@ -71,7 +71,7 @@ in
     
     systemd.services.bird2-setup = {
       description = "BIRD Internet Routing Daemon (v2) setup script";
-      requiredBy = [ "bird2.service" ];
+      wantedBy = [ "bird2.service" ];
       restartTriggers = [ "bird2-config-key.service" ];
       before = [ "bird2.service" ];
       partOf = [ "bird2.service" ];
@@ -93,6 +93,8 @@ in
       serviceConfig = {
         Type = "forking";
         Restart = "on-failure";
+        RestartSec = 3;
+        StartLimitIntervalSec = 0;
         ExecStart = "${pkgs.bird2}/bin/bird -c ${configFile} -u bird -g bird";
         ExecReload = "${pkgs.bird2}/bin/birdc configure";
         ExecStop = "${pkgs.bird2}/bin/birdc down";
