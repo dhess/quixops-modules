@@ -27,14 +27,18 @@ in
     config = mkOption {
       type = types.lines;
       example = literalExample ''
+        log syslog all;
         router id 10.10.10.10;
-        protocol kernel {
-            export all;
+        protocol device {
         }
-        protocol ospf {
-            import all;
-            area 0 {
-              interface "eth0";
+        protocol kernel kernel4 {
+            ipv4 {
+                export all;
+            };
+        }
+        protocol kernel kernel6 {
+            ipv6 {
+                export all;
             };
         }
       '';

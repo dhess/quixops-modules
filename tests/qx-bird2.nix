@@ -26,16 +26,18 @@ makeTest {
         enable = true;
         config = ''
           log syslog all;
-
           router id 10.10.10.10;
-
           protocol device {
-                  scan time 10;
           }
-
-          protocol kernel {
+          protocol kernel kernel4 {
+              ipv4 {
                   export all;
-                  scan time 15;
+              };
+          }
+          protocol kernel kernel6 {
+              ipv6 {
+                  export all;
+              };
           }
         '';
       };
