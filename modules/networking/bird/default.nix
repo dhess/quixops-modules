@@ -73,6 +73,7 @@ in
       description = "BIRD Internet Routing Daemon (v2) setup script";
       requiredBy = [ "bird2.service" ];
       before = [ "bird2.service" ];
+      partOf = [ "bird2.service" ];
       wants = [ "keys.target" ];
       after = [ "keys.target" ];
       script = ''
@@ -85,7 +86,7 @@ in
       };
     };
 
-    systemd.services.bird2 = lib.mkForce {
+    systemd.services.bird2 = {
       description = "BIRD Internet Routing Daemon (v2)";
       wantedBy = [ "multi-user.target" ];
       serviceConfig = {
