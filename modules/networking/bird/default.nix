@@ -94,7 +94,7 @@ in
         Type = "forking";
         Restart = "on-failure";
         RestartSec = 3;
-        StartLimitIntervalSec = 0;
+        StartLimitInterval = "0 sec";
         ExecStart = "${pkgs.bird2}/bin/bird -c ${configFile} -u bird -g bird";
         ExecReload = "${pkgs.bird2}/bin/birdc configure";
         ExecStop = "${pkgs.bird2}/bin/birdc down";
