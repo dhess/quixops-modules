@@ -35,6 +35,7 @@
   ./dns/unbound-adblock
   ./email/service-status-email
   ./email/null-client
+  ./networking/bird
   ./networking/pcap-prep
   ./services/full-tunnel-vpn
   ./services/hydra-manual-setup
