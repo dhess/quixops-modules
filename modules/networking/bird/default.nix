@@ -72,6 +72,7 @@ in
     systemd.services.bird2-setup = {
       description = "BIRD Internet Routing Daemon (v2) setup script";
       requiredBy = [ "bird2.service" ];
+      restartTriggers = [ "bird2-config-key.service" ];
       before = [ "bird2.service" ];
       partOf = [ "bird2.service" ];
       wants = [ "keys.target" ];
