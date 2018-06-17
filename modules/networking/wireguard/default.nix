@@ -15,9 +15,9 @@ let
     options = {
 
       ips = mkOption {
-        example = [ "192.168.2.1/24" ];
+        example = [ "192.168.2.1/24" "2001:DB8::1:0/112" ];
         default = [];
-        type = with types; listOf str;
+        type = types.listOf (types.either pkgs.lib.types.ipv4CIDR pkgs.lib.types.ipv6CIDR);
         description = "The IP addresses of the interface.";
       };
 
@@ -44,10 +44,10 @@ let
 
       listenPort = mkOption {
         default = null;
-        type = with types; nullOr int;
+        type = with types; nullOr pkgs.lib.types.port;
         example = 51820;
         description = ''
-          16-bit port for listening. Optional; if not specified,
+          UDP port for listening. Optional; if not specified,
           automatically generated based on interface name.
         '';
       };
@@ -81,7 +81,7 @@ let
 
       table = mkOption {
         default = "main";
-        type = types.str;
+        type = pkgs.lib.types.nonEmptyStr;
         description = ''The kernel routing table to add this interface's
         associated routes to. Setting this is useful for e.g. policy routing
         ("ip rule") or virtual routing and forwarding ("ip vrf"). Both numeric
@@ -115,7 +115,7 @@ let
 
       publicKey = mkOption {
         example = "xTIBA5rboUvnH4htodjb6e697QjLERt1NAB4mZqp8Dg=";
-        type = types.str;
+        type = pkgs.lib.types.nonEmptyStr;
         description = "The base64 public key the peer.";
       };
 
@@ -148,7 +148,7 @@ let
 
       allowedIPs = mkOption {
         example = [ "10.192.122.3/32" "10.192.124.1/24" ];
-        type = with types; listOf str;
+        type = types.listOf (types.either pkgs.lib.types.ipv4CIDR pkgs.lib.types.ipv6CIDR);
         description = ''List of IP (v4 or v6) addresses with CIDR masks from
         which this peer is allowed to send incoming traffic and to which
         outgoing traffic for this peer is directed. The catch-all 0.0.0.0/0 may
