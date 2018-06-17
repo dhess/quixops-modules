@@ -10,9 +10,6 @@ let
 in
 mkIf (cfg.peers != {}) {
 
-  quixops.assertions.moduleHashes."services/networking/wireguard.nix" =
-    "b68e64e5e67eebe19fcb50476a2f6d44ef516f3abdd99a5920fa5f80244bca86";
-
   quixops.keychain.keys = listToAttrs (filter (x: x.value != null) (
     (mapAttrsToList
       (_: peerCfg: nameValuePair "wireguard-${cfg.interface}-${peerCfg.name}-psk" ({

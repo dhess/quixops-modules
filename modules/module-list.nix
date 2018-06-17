@@ -37,6 +37,7 @@
   ./email/null-client
   ./networking/bird
   ./networking/pcap-prep
+  ./networking/wireguard
   ./services/full-tunnel-vpn
   ./services/hydra-manual-setup
   ./services/mellon/auto-unlock.nix
