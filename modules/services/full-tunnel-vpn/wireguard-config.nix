@@ -11,7 +11,7 @@ in
 mkIf (cfg.peers != {}) {
 
   quixops.assertions.moduleHashes."services/networking/wireguard.nix" =
-    "2cab968eeefd4010160235fc780add00cc98dda499aa1c156188e23baa11a89c";
+    "b68e64e5e67eebe19fcb50476a2f6d44ef516f3abdd99a5920fa5f80244bca86";
 
   quixops.keychain.keys = listToAttrs (filter (x: x.value != null) (
     (mapAttrsToList

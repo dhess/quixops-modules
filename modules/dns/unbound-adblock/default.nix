@@ -161,7 +161,7 @@ in {
     ];
 
     quixops.assertions.moduleHashes."services/networking/unbound.nix" =
-      "48f9ce182fdefb4488f46ba04dfc47f9bb462dbd75964e603dcb9dccbcdd8074";
+      "3147dfa48cc93e48d6b28a1106f793f7fb5d9fdbb8ce13f080d009796fa12659";
 
     # Note: I would prefer to assign an alias to lo, but, although
     # doing so does work, it causes network service timeouts during
