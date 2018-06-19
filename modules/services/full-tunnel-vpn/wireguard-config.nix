@@ -12,7 +12,7 @@ mkIf (cfg.peers != {}) {
 
   quixops.keychain.keys = listToAttrs (filter (x: x.value != null) (
     (mapAttrsToList
-      (_: peerCfg: nameValuePair "wireguard-${cfg.interface}-${peerCfg.name}-psk" ({
+      (peerName: peerCfg: nameValuePair "wireguard-${cfg.interface}-${peerName}-psk" ({
         text = peerCfg.presharedKeyLiteral;
       })) cfg.peers) ++
     (mapAttrsToList
@@ -26,12 +26,12 @@ mkIf (cfg.peers != {}) {
     inherit privateKeyFile;
     listenPort = cfg.listenPort;
     peers =
-      (mapAttrsToList
-        (_: peerCfg: (
+      (mapAttrs
+        (peerName: peerCfg: (
           {
             publicKey = pkgs.lib.fileContents peerCfg.publicKeyFile;
             allowedIPs = peerCfg.allowedIPs;
-            presharedKeyFile = "${stateDir}/${peerCfg.name}/psk";
+            presharedKeyFile = "${stateDir}/${peerName}/psk";
             persistentKeepalive = 30;
           }
         )) cfg.peers);
@@ -47,8 +47,8 @@ mkIf (cfg.peers != {}) {
 
   systemd.services = listToAttrs (filter (x: x.value != null) (
     (mapAttrsToList
-      (_: peerCfg: nameValuePair "wireguard-${cfg.interface}-${peerCfg.name}-setup" ({
-          description = "wireguard-${cfg.interface} setup script for peer ${peerCfg.name}";
+      (peerName: peerCfg: nameValuePair "wireguard-${cfg.interface}-${peerName}-setup" ({
+          description = "wireguard-${cfg.interface} setup script for peer ${peerName}";
           wantedBy = [ "multi-user.target" ];
           wants = [ "keys.target" ];
           after = [ "keys.target" ];
@@ -56,8 +56,8 @@ mkIf (cfg.peers != {}) {
           before = [ "wireguard-${cfg.interface}.service" ];
           script =
           let
-            dir = "${stateDir}/${peerCfg.name}";
-            deployedPSK = keys."wireguard-${cfg.interface}-${peerCfg.name}-psk".path;
+            dir = "${stateDir}/${peerName}";
+            deployedPSK = keys."wireguard-${cfg.interface}-${peerName}-psk".path;
           in
           ''
             install -m 0700 -o root -g root -d ${dir} > /dev/null 2>&1 || true

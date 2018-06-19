@@ -90,9 +90,9 @@ let
       };
 
       peers = mkOption {
-        default = [];
+        default = {};
         description = "Peers linked to the interface.";
-        type = with types; listOf (submodule peerOpts);
+        type = with types; attrsOf (submodule peerOpts);
       };
 
       allowedIPsAsRoutes = mkOption {
@@ -109,7 +109,7 @@ let
 
   # peer options
 
-  peerOpts = {
+  peerOpts = { name, ... }: {
 
     options = {
 
@@ -223,7 +223,7 @@ let
               optionalString (peer.endpoint != null) " endpoint ${peer.endpoint}" +
               optionalString (peer.persistentKeepalive != null) " persistent-keepalive ${toString peer.persistentKeepalive}" +
               optionalString (peer.allowedIPs != []) " allowed-ips ${concatStringsSep "," peer.allowedIPs}"
-            ) values.peers}
+            ) (mapAttrsToList (_: peer: peer) values.peers)}
 
           ip link set up dev ${name}
 
@@ -231,7 +231,7 @@ let
               (map (allowedIP:
                 "ip route replace ${allowedIP} dev ${name} table ${values.table}"
               ) peer.allowedIPs)
-            ) values.peers))}
+            ) (mapAttrsToList (_: peer: peer) values.peers)))}
 
           ${values.postSetup}
         '';
@@ -261,11 +261,10 @@ in
           wg0 = {
             ips = [ "192.168.20.4/24" ];
             privateKey = "yAnz5TF+lXXJte14tji3zlMNq+hd2rYUIgJBgB3fBmk=";
-            peers = [
+            peers.demo =
               { allowedIPs = [ "192.168.20.1/32" ];
                 publicKey  = "xTIBA5rboUvnH4htodjb6e697QjLERt1NAB4mZqp8Dg=";
-                endpoint   = "demo.wireguard.io:12913"; }
-            ];
+                endpoint   = "demo.wireguard.io:12913"; };
           };
         };
         type = with types; attrsOf (submodule interfaceOpts);
