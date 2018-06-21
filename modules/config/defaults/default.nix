@@ -34,6 +34,7 @@ in
       ssh.enable = true;
       sudo.enable = true;
       system.enable = true;
+      tmux.enable = true;
       users.enable = true;
 
     };
