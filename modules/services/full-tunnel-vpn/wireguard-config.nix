@@ -5,7 +5,6 @@ with lib;
 let
 
   stateDir = "/var/lib/wireguard";
-  privateKeyFile = "${stateDir}/key";
 
 in
 mkIf (cfg.peers != {}) {
@@ -14,16 +13,12 @@ mkIf (cfg.peers != {}) {
     (mapAttrsToList
       (peerName: peerCfg: nameValuePair "wireguard-${cfg.interface}-${peerName}-psk" ({
         text = peerCfg.presharedKeyLiteral;
-      })) cfg.peers) ++
-    (mapAttrsToList
-      (_: _: nameValuePair "wireguard-${cfg.interface}-key" ({
-        text = cfg.privateKeyLiteral;
-      })) { dummy = "foo"; })
-  ));
+      })) cfg.peers)
+    ));
 
   networking.wireguard.interfaces.${cfg.interface} = {
     ips = [ cfg.ipv4ClientCidr cfg.ipv6ClientPrefix ];
-    inherit privateKeyFile;
+    privateKeyLiteral = cfg.privateKeyLiteral;
     listenPort = cfg.listenPort;
     peers =
       (mapAttrs
@@ -63,24 +58,7 @@ mkIf (cfg.peers != {}) {
             install -m 0700 -o root -g root -d ${dir} > /dev/null 2>&1 || true
             install -m 0400 -o root -g root ${deployedPSK} ${dir}/psk
           '';
-        })) cfg.peers) ++
-    (mapAttrsToList
-      (_: _: nameValuePair "wireguard-${cfg.interface}-setup" ({
-          description = "wireguard-${cfg.interface} setup script";
-          wantedBy = [ "multi-user.target" ];
-          wants = [ "keys.target" ];
-          after = [ "keys.target" ];
-          requiredBy = [ "wireguard-${cfg.interface}.service" ];
-          before = [ "wireguard-${cfg.interface}.service" ];
-          script =
-          let
-            deployedKey = keys."wireguard-${cfg.interface}-key".path;
-          in
-          ''
-            install -m 0700 -o root -g root -d ${stateDir} > /dev/null 2>&1 || true
-            install -m 0400 -o root -g root ${deployedKey} ${privateKeyFile}
-          '';
-      })) { dummy = "foo"; })
-  ));
+        })) cfg.peers)
+    ));
 
 }

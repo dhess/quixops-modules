@@ -328,7 +328,7 @@ let
 
       subtest "check-keys", sub {
         $server->succeed("diff ${wg-pskInStore} /var/lib/wireguard/client/psk");
-        $server->succeed("diff ${wg-server-keyInStore} /var/lib/wireguard/key");
+        $server->succeed("diff ${wg-server-keyInStore} /var/lib/wireguard/wg0/key");
       };
 
       subtest "check-ips", sub {
