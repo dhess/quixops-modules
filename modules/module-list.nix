@@ -8,6 +8,7 @@
   ./config/defaults/ssh.nix
   ./config/defaults/sudo.nix
   ./config/defaults/system.nix
+  ./config/defaults/tmux.nix
   ./config/defaults/users.nix
   ./config/services/fail2ban.nix
   ./config/hardware/intel/broadwell-de.nix
