@@ -20,8 +20,6 @@ mkIf (cfg.peers != {}) {
         )) cfg.peers);
   };
 
-  networking.firewall.allowedUDPPorts = [ cfg.listenPort ];
-
   networking.nat.internalIPs = lib.flatten
     (mapAttrsToList
       (_: peerCfg: (

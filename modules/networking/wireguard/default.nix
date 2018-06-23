@@ -316,6 +316,12 @@ in
     systemd.services = (mapAttrs' generateUnit cfg.interfaces) //
       (mapAttrs' installKeys cfg.interfaces);
 
+    networking.firewall.allowedUDPPorts = lib.flatten
+      (mapAttrsToList
+        (_: ifCfg: (
+          ifCfg.listenPort
+        )) cfg.interfaces);
+
     quixops.keychain.keys = listToAttrs (filter (x: x.value != null) (
       (mapAttrsToList
         (ifname: values: nameValuePair (deployedKeyName ifname) ({
