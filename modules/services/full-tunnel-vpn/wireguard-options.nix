@@ -67,10 +67,6 @@ with lib;
     default = {};
     description = ''
       Peers linked to the WireGuard interface.
-
-      Note that the peers here are considered to be roaming peers;
-      i.e., peers are permitted from any IP address and are not bound
-      to a particular WireGaurd endpoint.
     '';
     type = types.attrsOf (types.submodule (
     { config, options, name, ... }:
@@ -117,6 +113,14 @@ with lib;
             you want traffic from any of those address ranges not to be
             NATed and routed to the public Internet.
           '';
+        };
+
+        endpoint = mkOption {
+          default = null;
+          example = "demo.wireguard.io:12913";
+          type = with types; nullOr str;
+          description = ''Endpoint IP or hostname of the peer, followed by a colon,
+          and then a port number of the peer.'';
         };
 
         publicKeyFile = mkOption {

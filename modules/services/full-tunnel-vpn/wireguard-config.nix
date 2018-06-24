@@ -14,6 +14,7 @@ mkIf (cfg.peers != {}) {
           {
             publicKey = pkgs.lib.fileContents peerCfg.publicKeyFile;
             allowedIPs = peerCfg.allowedIPs;
+            endpoint = peerCfg.endpoint;
             presharedKeyLiteral = peerCfg.presharedKeyLiteral;
             persistentKeepalive = 30;
           }
