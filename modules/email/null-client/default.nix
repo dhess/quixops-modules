@@ -109,7 +109,7 @@ in
   config = mkIf enabled {
 
     quixops.assertions.moduleHashes."services/mail/postfix.nix" =
-      "886290c4f7f4ce69e8a10edc79c5317561e34f650dca08ec4f95de566afad378";
+      "4bd84b1e40118e4f1822376945b3405797d9c41fc1ca8d12373daa737130af32";
 
     quixops.keychain.keys.postfix-null-client-cert-key = {
       text = cfg.smtpTlsKeyLiteral;

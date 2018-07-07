@@ -57,7 +57,7 @@ in
   config = mkIf enabled {
 
     quixops.assertions.moduleHashes."services/networking/bird.nix" =
-      "e27600d2ff6640e16ed4b5354c44c316710ee2730c1152c94ca06c66196d837b";
+      "3697cf6f0f96a6a52131ca77bd65c9d820e009aed899f36b9e7f9362b1af8701";
 
     quixops.keychain.keys.bird2-config = {
       text = cfg.config;

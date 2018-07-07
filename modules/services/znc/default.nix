@@ -394,7 +394,7 @@ in
   config = mkIf cfg.enable {
 
     quixops.assertions.moduleHashes."services/networking/znc.nix" =
-      "69d993848c9da0b95725070a94acf3d5efb954104cde7b447dcfa32e49f1e7fc";
+      "1c0c295595dda8539be4615f650701d7bffb49b76035bdcd99e328e569e48595";
 
     quixops.keychain.keys.znc-config = {
       text = cfg.configLiteral;
