@@ -15,6 +15,14 @@ let
   configFile = pkgs.writeText "ntp.conf" ''
     driftfile ${stateDir}/ntp.drift
 
+    ${optionalString (cfg.listenIPs != []) ''
+      interface ignore wildcard
+      interface listen 127.0.0.1
+      interface listen ::1
+    ''}
+
+    ${toString (map (ip: "interface listen ${ip}\n") cfg.listenIPs)}
+
     restrict -4 default kod notrap nomodify nopeer noquery limited
     restrict -6 default kod notrap nomodify nopeer noquery limited
 
@@ -34,6 +42,28 @@ in {
       type = types.nonEmptyListOf pkgs.lib.types.nonEmptyStr;
       description = ''
         A list of one or more upstream NTP servers (preferably between 4 and 7).
+      '';
+    };
+
+    listenIPs = mkOption {
+      type = types.listOf (types.either pkgs.lib.types.ipv4 pkgs.lib.types.ipv6);
+      default = [];
+      description = ''
+        An optional list of IPs (both v4 and v6 are supported) on
+        which <literal>ntpd</literal> will listen for client
+        connections, <strong>and<strong> from which
+        <literal>ntpd<literal> will connect to remote time servers. If
+        you specify one or more addresses here, make sure that at
+        least one of them can connect to the public Internet.
+
+        If the list is empty (the default), then
+        <literal>ntpd<literal> will listen on all addresses that are
+        configured by the system.
+
+        Note that this module will configure <literal>ntpd</literal>
+        so that it always listens on <literal>127.0.0.1</literal> and
+        <literal>::1</literal>, so there is no need to specify those
+        addresses here.
       '';
     };
 
