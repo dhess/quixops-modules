@@ -63,7 +63,7 @@ let
     netsniff-ng = callSubTests ../tests/netsniff-ng.nix {};
     pinpon = callTest ../tests/pinpon.nix {};
     postfix-null-client = callTest ../tests/postfix-null-client.nix {};
-    unbound-adblock = callTest ../tests/unbound-adblock.nix {};
+    unbound-adblock = callSubTests ../tests/unbound-adblock.nix {};
     service-status-email = callTest ../tests/service-status-email.nix {};
     tarsnapper = callTest ../tests/tarsnapper.nix {};
     znc = callSubTests ../tests/znc.nix {};

@@ -1,5 +1,5 @@
-# An opinionated unbound instance that uses blocklists and forwards
-# requests to Google DNS.
+# An opinionated unbound instance that forwards requests to Google DNS
+# and, optionally, uses blocklists to block unwanted domains.
 #
 # Note that this service assigns one or more virtual IPs to a dummy
 # network interface. You must ensure that those IPs are routed to the
@@ -12,8 +12,6 @@
 #   added to firewall rules.
 #
 # TODO:
-#
-# - IPv6 service address.
 #
 # - Reload the block list when it is updated. Note -- this will
 #   require unbound-control functionality, which is not currently
@@ -28,10 +26,12 @@ let
   seedBlockList = ./blocklist-someonewhocares.conf;
 
   cfg = config.services.unbound-adblock;
+  enable = cfg.enable;
 
   # Note -- must match the definition in Nixpkgs unbound.nix!
   unboundStateDir = "/var/lib/unbound";
 
+  blockListEnabled = cfg.blockList.enable;
   blockListDir = "${unboundStateDir}/blocklists";
   blockListName = "blocklist-someonewhocares.conf";
   blockListFile = "${blockListDir}/${blockListName}";
@@ -45,7 +45,32 @@ in {
 
   options.services.unbound-adblock = {
 
-    enable = mkEnableOption "An ad-blocking Unbound service";
+    enable = mkEnableOption "An opinionated Unbound service";
+
+    blockList = {
+
+      enable = mkOption {
+        type = types.bool;
+        default = true;
+        description = ''
+          If true, the Unbound instance will use a blocklist to block
+          unwanted domains; these domains will return an address of
+          <literal>127.0.0.1</literal> or <literal>::1</literal>.
+        '';
+      };
+
+      updateFrequency = mkOption {
+        default = "daily";
+        example = "hourly";
+        type = pkgs.lib.types.nonEmptyStr;
+        description = ''
+          How often to update the block list. This value should be
+          specified as a valid <literal>systemd.timers</literal>
+          <literal>OnCalendar</literal> value.
+        '';
+      };
+
+    };
 
     allowedAccessIpv4 = mkOption {
       default = [ "127.0.0.0/8" ];
@@ -139,16 +164,6 @@ in {
       '';
     };
 
-    updateFrequency = mkOption {
-      default = "daily";
-      example = "hourly";
-      type = pkgs.lib.types.nonEmptyStr;
-      description = ''
-        How often to update the block list. This value should be
-        specified as a valid <literal>systemd.timers</literal>
-        <literal>OnCalendar</literal> value.
-      '';
-    };
   };
 
   config = mkIf cfg.enable {
@@ -200,14 +215,16 @@ in {
         private-address: fd00::/8
         private-address: fe80::/10
 
-        include: "${blockListFile}"
+        ${optionalString blockListEnabled ''
+          include: "${blockListFile}"
+        ''}
       '';
     };
 
     systemd.services.pre-seed-unbound-adblock = {
       description = "Pre-seed Unbound's block list";
       before = [ "unbound.service" ];
-      requiredBy = [ "unbound.service" ];
+      requiredBy = if blockListEnabled then [ "unbound.service" ] else [];
       script = ''
         mkdir -p -m 0755 ${blockListDir} > /dev/null 2>&1 || true
         if ! [ -e ${blockListFile} ] ; then
@@ -230,7 +247,7 @@ in {
     systemd.services.update-unbound-block-hosts = {
       description = "Update Unbound's block list";
       after = [ "unbound.service" ];
-      wantedBy = [ "unbound.service" ];
+      wantedBy = if blockListEnabled then [ "unbound.service" ] else [];
       script = ''
         until ${pkgs.unbound-block-hosts}/bin/unbound-block-hosts \
           --file ${blockListFile}.latest
@@ -257,9 +274,9 @@ in {
     };
 
     systemd.timers.update-unbound-block-hosts = {
-      wantedBy = [ "timers.target" ];
+      wantedBy = if blockListEnabled then [ "timers.target" ] else [];
       timerConfig = {
-        OnCalendar = cfg.updateFrequency;
+        OnCalendar = cfg.blockList.updateFrequency;
         Persistent = "yes";
       };
     };
@@ -271,8 +288,8 @@ in {
       ${ipt6udp}
     '';
 
-    meta = {
-      maintainers = [ "Drew Hess <src@drewhess.com>" ];
-    };
   };
+
+  meta.maintainers = lib.maintainers.dhess-qx;
+
 }
