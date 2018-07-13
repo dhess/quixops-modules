@@ -164,6 +164,12 @@ in {
       '';
     };
 
+    extraConfig = mkOption {
+      default = "";
+      type = types.lines;
+      description = "Extra unbound config.";
+    };
+
   };
 
   config = mkIf cfg.enable {
@@ -218,7 +224,7 @@ in {
         ${optionalString blockListEnabled ''
           include: "${blockListFile}"
         ''}
-      '';
+      '' + cfg.extraConfig;
     };
 
     systemd.services.pre-seed-unbound-adblock = {
