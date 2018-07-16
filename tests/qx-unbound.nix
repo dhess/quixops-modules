@@ -66,7 +66,7 @@ let
         nixpkgs.localSystem.system = system;
         imports = (import pkgs.lib.quixops.modulesPath);
         networking.useDHCP = false;
-        services.unbound-adblock = {
+        services.qx-unbound = {
           enable = true;
           blockList.enable = blockListEnable;
           allowedAccessIpv4 = [ "192.168.1.2/32" ];
@@ -109,7 +109,7 @@ let
 
     testScript = { nodes, ... }:
     let
-      adblock = nodes.server.config.services.unbound-adblock.blockList.enable;
+      blocklist = nodes.server.config.services.qx-unbound.blockList.enable;
     in
     ''
       startAll;
@@ -160,7 +160,7 @@ let
       }
 
       subtest "doubleclick", sub {
-        if ("${toString adblock}" eq "true") {
+        if ("${toString blocklist}" eq "true") {
           testDoubleclickBlocked $client, "${serverIpv4_1}", "";
           testDoubleclickBlocked $client, "${serverIpv4_2}", "";
           #testDoubleclickBlocked $client, "${serverIpv6_1}", "-6";
@@ -186,7 +186,7 @@ let
       };
 
       subtest "check-permissions", sub {
-        if ("${toString adblock}" eq "true") {
+        if ("${toString blocklist}" eq "true") {
           $server->succeed("stat -c %a /var/lib/unbound/blocklists/blocklist-someonewhocares.conf | grep 644");
         }
       };
@@ -196,6 +196,6 @@ let
 
 in
 {
-  unboundBlockList = makeUnboundTest "unbound-adblock-enabled" true;
-  unboundNoBlockList = makeUnboundTest "unbound-adblock-disabled" false;
+  unboundBlockList = makeUnboundTest "qx-unbound-blocklist-enabled" true;
+  unboundNoBlockList = makeUnboundTest "qx-unbound-blocklist-disabled" false;
 }

@@ -1,5 +1,4 @@
-# An opinionated unbound instance that forwards requests to Google DNS
-# and, optionally, uses blocklists to block unwanted domains.
+# An opinionated unbound instance.
 #
 # Note that this service assigns one or more virtual IPs to a dummy
 # network interface. You must ensure that those IPs are routed to the
@@ -25,7 +24,7 @@ let
 
   seedBlockList = ./blocklist-someonewhocares.conf;
 
-  cfg = config.services.unbound-adblock;
+  cfg = config.services.qx-unbound;
   enable = cfg.enable;
 
   # Note -- must match the definition in Nixpkgs unbound.nix!
@@ -43,7 +42,7 @@ let
 
 in {
 
-  options.services.unbound-adblock = {
+  options.services.qx-unbound = {
 
     enable = mkEnableOption "An opinionated Unbound service";
 
@@ -227,17 +226,17 @@ in {
       '' + cfg.extraConfig;
     };
 
-    systemd.services.pre-seed-unbound-adblock = {
+    systemd.services.pre-seed-unbound-blocklist = {
       description = "Pre-seed Unbound's block list";
       before = [ "unbound.service" ];
       requiredBy = if blockListEnabled then [ "unbound.service" ] else [];
       script = ''
         mkdir -p -m 0755 ${blockListDir} > /dev/null 2>&1 || true
         if ! [ -e ${blockListFile} ] ; then
-          echo "Pre-seeding unbound-adblock block list"
+          echo "Pre-seeding qx-unbound block list"
           cp ${seedBlockList} ${blockListFile}
         else
-          echo "An unbound-adblock block lists already exists; skipping"
+          echo "A qx-unbound block lists already exists; skipping"
         fi
         chown -R unbound:nogroup ${blockListDir}
         find ${blockListDir} -type f -exec chmod 0644 {} \;

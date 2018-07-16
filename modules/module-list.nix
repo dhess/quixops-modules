@@ -33,7 +33,7 @@
   ./config/overlays.nix
   ./core/keychain
   ./core/module-hashes.nix
-  ./dns/unbound-adblock
+  ./dns/qx-unbound
   ./email/service-status-email
   ./email/null-client
   ./networking/pcap-prep
