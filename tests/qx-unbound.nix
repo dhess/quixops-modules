@@ -68,6 +68,7 @@ let
         networking.useDHCP = false;
         services.qx-unbound = {
           enable = true;
+          enableRootTrustAnchor = false; # required for testing.
           blockList.enable = blockListEnable;
           allowedAccessIpv4 = [ "192.168.1.2/32" ];
           allowedAccessIpv6 = [ ipv6_prefix ];
@@ -114,7 +115,7 @@ let
     ''
       startAll;
 
-      $server->waitForUnit("unbound.service");
+      $server->waitForUnit("qx-unbound.service");
       $nsd->waitForUnit("nsd.service");
       $client->waitForUnit("multi-user.target");
       $badclient->waitForUnit("multi-user.target");

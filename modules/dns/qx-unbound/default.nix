@@ -22,18 +22,75 @@ with lib;
 
 let
 
-  seedBlockList = ./blocklist-someonewhocares.conf;
-
   cfg = config.services.qx-unbound;
   enable = cfg.enable;
 
-  # Note -- must match the definition in Nixpkgs unbound.nix!
-  unboundStateDir = "/var/lib/unbound";
 
+  stateDir = "/var/lib/unbound";
   blockListEnabled = cfg.blockList.enable;
-  blockListDir = "${unboundStateDir}/blocklists";
+  blockListDir = "${stateDir}/blocklists";
   blockListName = "blocklist-someonewhocares.conf";
   blockListFile = "${blockListDir}/${blockListName}";
+  seedBlockList = ./blocklist-someonewhocares.conf;
+
+  accessV4 = concatMapStringsSep "\n  " (x: "access-control: ${x} allow") cfg.allowedAccessIpv4;
+  accessV6 = concatMapStringsSep "\n  " (x: "access-control: ${x} allow") cfg.allowedAccessIpv6;
+
+  interfacesV4 = concatMapStringsSep "\n  " (x: "interface: ${x}") cfg.virtualServiceIpv4s;
+  interfacesV6 = concatMapStringsSep "\n  " (x: "interface: ${x}") cfg.virtualServiceIpv6s;
+
+  isLocalAddress = x: substring 0 3 x == "::1" || substring 0 9 x == "127.0.0.1";
+
+  forward =
+    optionalString (any isLocalAddress cfg.forwardAddresses) ''
+      do-not-query-localhost: no
+    '' +
+    optionalString (cfg.forwardAddresses != []) ''
+      forward-zone:
+        name: .
+    '' +
+    concatMapStringsSep "\n" (x: "    forward-addr: ${x}") cfg.forwardAddresses;
+
+  rootTrustAnchorFile = "${stateDir}/root.key";
+
+  trustAnchor = optionalString cfg.enableRootTrustAnchor
+    "auto-trust-anchor-file: ${rootTrustAnchorFile}";
+
+  blockList = optionalString blockListEnabled
+    "include: ${blockListFile}";
+
+  confFile = pkgs.writeText "unbound.conf" ''
+    server:
+      directory: "${stateDir}"
+      username: unbound
+      chroot: "${stateDir}"
+      pidfile: ""
+      ${interfacesV4}
+      ${interfacesV6}
+      ${accessV4}
+      ${accessV6}
+      ${trustAnchor}
+
+    unwanted-reply-threshold: 10000000
+
+    verbosity: 3
+    prefetch: yes
+    prefetch-key: yes
+
+    hide-version: yes
+    hide-identity: yes
+
+    private-address: 10.0.0.0/8
+    private-address: 172.16.0.0/12
+    private-address: 192.168.0.0/16
+    private-address: 169.254.0.0/16
+    private-address: fd00::/8
+    private-address: fe80::/10
+
+    ${blockList}
+    ${cfg.extraConfig}
+    ${forward}
+  '';
 
   ipt4tcp = concatMapStringsSep "\n" (x: "iptables -A nixos-fw -p tcp -s ${x} --dport 53 -j nixos-fw-accept") cfg.allowedAccessIpv4;
   ipt4udp = concatMapStringsSep "\n" (x: "iptables -A nixos-fw -p udp -s ${x} --dport 53 -j nixos-fw-accept") cfg.allowedAccessIpv4;
@@ -163,6 +220,12 @@ in {
       '';
     };
 
+    enableRootTrustAnchor = mkOption {
+      default = true;
+      type = types.bool;
+      description = "Use and update root trust anchor for DNSSEC validation.";
+    };
+
     extraConfig = mkOption {
       default = "";
       type = types.lines;
@@ -174,18 +237,26 @@ in {
   config = mkIf cfg.enable {
 
     assertions = [
+
+      { assertion = pkgs.lib.exclusiveOr cfg.enable config.services.unbound.enable;
+        message = "Only one of `services.unbound` and `services.qx-unbound` can be enabled";
+      }
+
       { assertion = (cfg.virtualServiceIpv4s == [] -> cfg.virtualServieIpv6s != []) &&
                     (cfg.virtualServiceIpv6s == [] -> cfg.virtualServiceIpv4s != []);
         message = "Both virtualServiceIpv4s and virtualServiceIpv6s cannot be the empty list";
       }
     ];
 
+    # Track changes in upstream service, in case we need to reproduce
+    # them here.
+
     quixops.assertions.moduleHashes."services/networking/unbound.nix" =
       "28324ab792c2eea96bce39599b49c3de29f678029342dc57ffcac186eee22f7b";
 
-    # Note: I would prefer to assign an alias to lo, but, although
-    # doing so does work, it causes network service timeouts during
-    # deployments.
+    # Note: prefer dummy devices to loopback devices, as it's
+    # conceivable there are all kinds of weird workarounds and special
+    # cases for loopback devices.
 
     boot.kernelModules = [ "dummy" ];
     networking.interfaces.dummy0.ipv4.addresses =
@@ -193,50 +264,54 @@ in {
     networking.interfaces.dummy0.ipv6.addresses =
       map (ip: { address = ip; prefixLength = 128; }) cfg.virtualServiceIpv6s;
 
-    services.unbound = {
-      enable = true;
-      allowedAccess = cfg.allowedAccessIpv4 ++ cfg.allowedAccessIpv6;
-      interfaces = cfg.virtualServiceIpv4s ++ cfg.virtualServiceIpv6s;
-      forwardAddresses = cfg.forwardAddresses;
+    environment.systemPackages = [ pkgs.unbound ];
 
-      # Don't want DNSSEC, have had issues with it in the past where
-      # failed DNSSEC causes very odd and hard-to-debug issues.
-      enableRootTrustAnchor = false;
+    users.users.unbound = {
+      description = "unbound daemon user";
+      isSystemUser = true;
+    };
 
-      extraConfig = ''
-        unwanted-reply-threshold: 10000000
+    systemd.services.qx-unbound = {
+      description = "Unbound recursive name server (Quixoftic version)";
+      after = [ "network.target" ];
+      before = [ "nss-lookup.target" ];
+      wants = [ "nss-lookup.target" ];
+      wantedBy = [ "multi-user.target" ];
 
-        verbosity: 3
-        prefetch: yes
-        prefetch-key: yes
-
-        hide-version: yes
-        hide-identity: yes
-
-        private-address: 10.0.0.0/8
-        private-address: 172.16.0.0/12
-        private-address: 192.168.0.0/16
-        private-address: 169.254.0.0/16
-        private-address: fd00::/8
-        private-address: fe80::/10
-
-        ${optionalString blockListEnabled ''
-          include: "${blockListFile}"
+      preStart = ''
+        mkdir -m 0755 -p ${stateDir}/dev/
+        cp ${confFile} ${stateDir}/unbound.conf
+        ${optionalString cfg.enableRootTrustAnchor ''
+          ${pkgs.unbound}/bin/unbound-anchor -a ${rootTrustAnchorFile} || echo "Root anchor updated!"
+          chown unbound ${stateDir} ${rootTrustAnchorFile}
         ''}
-      '' + cfg.extraConfig;
+        touch ${stateDir}/dev/random
+        ${pkgs.utillinux}/bin/mount --bind -n /dev/urandom ${stateDir}/dev/random
+      '';
+
+      serviceConfig = {
+        ExecStart = "${pkgs.unbound}/bin/unbound -d -c ${stateDir}/unbound.conf";
+        ExecStopPost="${pkgs.utillinux}/bin/umount ${stateDir}/dev/random";
+
+        ProtectSystem = true;
+        ProtectHome = true;
+        PrivateDevices = true;
+        Restart = "always";
+        RestartSec = "5s";
+      };
     };
 
     systemd.services.pre-seed-unbound-blocklist = {
       description = "Pre-seed Unbound's block list";
-      before = [ "unbound.service" ];
-      requiredBy = if blockListEnabled then [ "unbound.service" ] else [];
+      before = [ "qx-unbound.service" ];
+      requiredBy = if blockListEnabled then [ "qx-unbound.service" ] else [];
       script = ''
         mkdir -p -m 0755 ${blockListDir} > /dev/null 2>&1 || true
         if ! [ -e ${blockListFile} ] ; then
           echo "Pre-seeding qx-unbound block list"
           cp ${seedBlockList} ${blockListFile}
         else
-          echo "A qx-unbound block lists already exists; skipping"
+          echo "A qx-unbound block list already exists; skipping"
         fi
         chown -R unbound:nogroup ${blockListDir}
         find ${blockListDir} -type f -exec chmod 0644 {} \;
@@ -251,8 +326,8 @@ in {
 
     systemd.services.update-unbound-block-hosts = {
       description = "Update Unbound's block list";
-      after = [ "unbound.service" ];
-      wantedBy = if blockListEnabled then [ "unbound.service" ] else [];
+      after = [ "qx-unbound.service" ];
+      wantedBy = if blockListEnabled then [ "qx-unbound.service" ] else [];
       script = ''
         until ${pkgs.unbound-block-hosts}/bin/unbound-block-hosts \
           --file ${blockListFile}.latest
@@ -266,7 +341,7 @@ in {
         cp ${blockListFile}.latest ${blockListFile}
 
         # Not yet working, need to run unbound-control-setup.
-        # ${pkgs.unbound}/bin/unbound-control -c ${unboundStateDir}/unbound.conf reload
+        # ${pkgs.unbound}/bin/unbound-control -c ${stateDir}/unbound.conf reload
       '';
       restartIfChanged = true;
 
