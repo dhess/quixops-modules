@@ -1,8 +1,4 @@
-# An opinionated unbound instance.
-#
-# Note that this service assigns one or more virtual IPs to a dummy
-# network interface. You must ensure that those IPs are routed to the
-# host on which the service runs.
+# An opinionated anycast unbound instance.
 #
 # Other notes:
 #
@@ -36,8 +32,8 @@ let
   accessV4 = concatMapStringsSep "\n  " (x: "access-control: ${x} allow") cfg.allowedAccessIpv4;
   accessV6 = concatMapStringsSep "\n  " (x: "access-control: ${x} allow") cfg.allowedAccessIpv6;
 
-  interfacesV4 = concatMapStringsSep "\n  " (x: "interface: ${x}") cfg.virtualServiceIpv4s;
-  interfacesV6 = concatMapStringsSep "\n  " (x: "interface: ${x}") cfg.virtualServiceIpv6s;
+  interfacesV4 = concatMapStringsSep "\n  " (x: "interface: ${x.address}") cfg.anycast.v4s;
+  interfacesV6 = concatMapStringsSep "\n  " (x: "interface: ${x.address}") cfg.anycast.v6s;
 
   isLocalAddress = x: substring 0 3 x == "::1" || substring 0 9 x == "127.0.0.1";
 
@@ -158,56 +154,88 @@ in {
       '';
     };
 
-    virtualServiceIpv4s = mkOption {
-      default = [ "10.8.8.8" ];
-      example = [ "10.0.1.1" "10.1.1.1" ];
-      type = types.listOf pkgs.lib.types.ipv4NoCIDR;
-      description = ''
-        A list of virtual IPv4 addresses on which the service will
-        listen for requests. These addresses are assigned to the
-        <literal>dummy0</literal> network device. Note that they are
-        each configured as a <literal>/32</literal> address
-        (single-host network).
+    anycast = {
+      v4s = mkOption {
+        type = types.listOf (types.submodule {
+          options = {
+            ifnum = mkOption {
+              type = types.unsigned;
+              default = 0;
+              description = ''
+                All anycast addresses are assigned to a Linux
+                <literal>dummy</literal> virtual interface. By default,
+                this is <literal>dummy0</literal>, but you can specify a
+                different index by setting it here.
+              '';
+            };
 
-        Use one of these addresses as your resolver address for
-        clients, and make sure these addresses are routed to the host
-        where the Unbound ad-block service is running.
+            address = mkOption {
+              type = pkgs.lib.types.ipv4NoCIDR;
+              example = "10.8.8.8";
+              description = ''
+                The IPv4 anycast address (with no CIDR suffix).
+              '';
+            };
 
-        These addresses should not be used elsewhere in your network,
-        except perhaps for other Unbound instances on other hosts,
-        where you are using some sort of failover/load-balancing
-        routing of virtual service IPs.
+            prefixLength = mkOption {
+              type = types.ints.between 1 32;
+              default = 32;
+              example = 24;
+              description = ''
+                The IPv4 anycast address subnet prefix length. The default
+                is <literal>32</literal>.
+              '';
+            };
+          };
+        });
+        default = [];
+        example = [ { ifnum = 0; address = "10.8.8.8"; prefixLength = 32; } ];
+        description = ''
+          A list of IPv4 anycast addresses to be configured.
+        '';
+      };
 
-        Note: either this list or the
-        <literal>virtualServiceIpv6s</literal> list can be the empty
-        list (<literal>[]</literal>), but not both.
-      '';
-    };
+      v6s = mkOption {
+        type = types.listOf (types.submodule {
+          options = {
 
-    virtualServiceIpv6s = mkOption {
-      default = [];
-      example = [ "2001:db8::1" "2001:db8:3::1" ];
-      type = types.listOf pkgs.lib.types.ipv6NoCIDR;
-      description = ''
-        A list of virtual IPv6 addresses on which the service will
-        listen for requests. These addresses are assigned to the
-        <literal>dummy0</literal> network device. Note that they are
-        each configured as a <literal>/128</literal> address
-        (single-host network).
+            ifnum = mkOption {
+              type = types.unsigned;
+              default = 0;
+              description = ''
+                All anycast addresses are assigned to a Linux
+                <literal>dummy</literal> virtual interface. By default,
+                this is <literal>dummy0</literal>, but you can specify a
+                different index by setting it here.
+              '';
+            };
 
-        Use one of these addresses as your resolver address for
-        clients, and make sure these addresses are routed to the host
-        where the Unbound ad-block service is running.
+            address = mkOption {
+              type = pkgs.lib.types.ipv6NoCIDR;
+              example = "2001:db8::1";
+              description = ''
+                The IPv6 anycast address (with no CIDR suffix).
+              '';
+            };
 
-        These addresses should not be used elsewhere in your network,
-        except perhaps for other Unbound instances on other hosts,
-        where you are using some sort of failover/load-balancing
-        routing of virtual service IPs.
+            prefixLength = mkOption {
+              type = types.ints.between 1 128;
+              default = 128;
+              example = 64;
+              description = ''
+                The IPv6 anycast address subnet prefix length. The default
+                is <literal>128</literal>.
+              '';
+            };
 
-        Note: either this list or the
-        <literal>virtualServiceIpv4s</literal> list can be the empty
-        list (<literal>[]</literal>), but not both.
-      '';
+          };
+        });
+        default = [];
+        example = [ { ifnum = 0; address = "2001:db8::1"; prefixLength = 128; } ];
+        description = ''
+          A list of IPv6 anycast addresses to be configured.
+        '';
+      };
     };
 
     forwardAddresses = mkOption {
@@ -242,9 +270,9 @@ in {
         message = "Only one of `services.unbound` and `services.qx-unbound` can be enabled";
       }
 
-      { assertion = (cfg.virtualServiceIpv4s == [] -> cfg.virtualServieIpv6s != []) &&
-                    (cfg.virtualServiceIpv6s == [] -> cfg.virtualServiceIpv4s != []);
-        message = "Both virtualServiceIpv4s and virtualServiceIpv6s cannot be the empty list";
+      { assertion = (cfg.anycast.v4s == [] -> cfg.anycast.v6s != []) &&
+                    (cfg.anycast.v6s == [] -> cfg.anycast.v4s != []);
+        message = "At least one anycast address must be set in `services.qx-unbound`";
       }
     ];
 
@@ -254,15 +282,7 @@ in {
     quixops.assertions.moduleHashes."services/networking/unbound.nix" =
       "28324ab792c2eea96bce39599b49c3de29f678029342dc57ffcac186eee22f7b";
 
-    # Note: prefer dummy devices to loopback devices, as it's
-    # conceivable there are all kinds of weird workarounds and special
-    # cases for loopback devices.
-
-    boot.kernelModules = [ "dummy" ];
-    networking.interfaces.dummy0.ipv4.addresses =
-      map (ip: { address = ip; prefixLength = 32; }) cfg.virtualServiceIpv4s;
-    networking.interfaces.dummy0.ipv6.addresses =
-      map (ip: { address = ip; prefixLength = 128; }) cfg.virtualServiceIpv6s;
+    networking.anycast = cfg.anycast;
 
     environment.systemPackages = [ pkgs.unbound ];
 

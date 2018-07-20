@@ -72,8 +72,16 @@ let
           blockList.enable = blockListEnable;
           allowedAccessIpv4 = [ "192.168.1.2/32" ];
           allowedAccessIpv6 = [ ipv6_prefix ];
-          virtualServiceIpv4s = [ serverIpv4_1 serverIpv4_2 ];
-          virtualServiceIpv6s = [ serverIpv6_1 serverIpv6_2 ];
+          anycast = {
+            v4s = [
+              { address = serverIpv4_1; }
+              { address = serverIpv4_2; }
+            ];
+            v6s = [
+              { address = serverIpv6_1; }
+              { address = serverIpv6_2; }
+            ];
+          };
           forwardAddresses = [ "192.168.1.250" ];
         };
         networking.interfaces.eth1.ipv4.addresses = [

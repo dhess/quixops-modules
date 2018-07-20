@@ -36,6 +36,7 @@
   ./dns/qx-unbound
   ./email/service-status-email
   ./email/null-client
+  ./networking/anycast
   ./networking/pcap-prep
   ./networking/wireguard
   ./services/full-tunnel-vpn
