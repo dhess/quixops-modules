@@ -32,8 +32,8 @@ let
   accessV4 = concatMapStringsSep "\n  " (x: "access-control: ${x} allow") cfg.allowedAccessIpv4;
   accessV6 = concatMapStringsSep "\n  " (x: "access-control: ${x} allow") cfg.allowedAccessIpv6;
 
-  interfacesV4 = concatMapStringsSep "\n  " (x: "interface: ${x.address}") cfg.anycast.v4s;
-  interfacesV6 = concatMapStringsSep "\n  " (x: "interface: ${x.address}") cfg.anycast.v6s;
+  interfacesV4 = concatMapStringsSep "\n  " (x: "interface: ${x.addrOpts.address}") cfg.anycast.v4s;
+  interfacesV6 = concatMapStringsSep "\n  " (x: "interface: ${x.addrOpts.address}") cfg.anycast.v6s;
 
   isLocalAddress = x: substring 0 3 x == "::1" || substring 0 9 x == "127.0.0.1";
 
@@ -169,27 +169,17 @@ in {
               '';
             };
 
-            address = mkOption {
-              type = pkgs.lib.types.ipv4NoCIDR;
-              example = "10.8.8.8";
+            addrOpts = mkOption {
+              type = pkgs.lib.types.addrOptsV4;
+              example = { address = "10.8.8.8"; prefixLength = 32; };
               description = ''
-                The IPv4 anycast address (with no CIDR suffix).
-              '';
-            };
-
-            prefixLength = mkOption {
-              type = types.ints.between 1 32;
-              default = 32;
-              example = 24;
-              description = ''
-                The IPv4 anycast address subnet prefix length. The default
-                is <literal>32</literal>.
+                The IPv4 anycast address (no CIDR suffix) and prefix.
               '';
             };
           };
         });
         default = [];
-        example = [ { ifnum = 0; address = "10.8.8.8"; prefixLength = 32; } ];
+        example = [ { ifnum = 0; addrOpts = { address = "10.8.8.8"; prefixLength = 32; }; } ];
         description = ''
           A list of IPv4 anycast addresses to be configured.
         '';
@@ -210,28 +200,18 @@ in {
               '';
             };
 
-            address = mkOption {
-              type = pkgs.lib.types.ipv6NoCIDR;
-              example = "2001:db8::1";
+            addrOpts = mkOption {
+              type = pkgs.lib.types.addrOptsV6;
+              example = { address = "2001:db8::1"; prefixLength = 128; };
               description = ''
-                The IPv6 anycast address (with no CIDR suffix).
-              '';
-            };
-
-            prefixLength = mkOption {
-              type = types.ints.between 1 128;
-              default = 128;
-              example = 64;
-              description = ''
-                The IPv6 anycast address subnet prefix length. The default
-                is <literal>128</literal>.
+                The IPv6 anycast address (no CIDR suffix) and prefix.
               '';
             };
 
           };
         });
         default = [];
-        example = [ { ifnum = 0; address = "2001:db8::1"; prefixLength = 128; } ];
+        example = [ { ifnum = 0; addrOpts = { address = "2001:db8::1"; prefixLength = 128; }; } ];
         description = ''
           A list of IPv6 anycast addresses to be configured.
         '';

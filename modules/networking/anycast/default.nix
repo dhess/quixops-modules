@@ -42,30 +42,21 @@ in
             '';
           };
 
-          address = mkOption {
-            type = pkgs.lib.types.ipv4NoCIDR;
-            example = "10.8.8.8";
+          addrOpts = mkOption {
+            type = pkgs.lib.types.addrOptsV4;
+            example = { address = "10.0.0.1"; prefixLength = 32; };
             description = ''
-              The IPv4 anycast address (with no CIDR suffix).
-            '';
-          };
-
-          prefixLength = mkOption {
-            type = types.ints.between 1 32;
-            default = 32;
-            example = 24;
-            description = ''
-              The IPv4 anycast address subnet prefix length. The default
-              is <literal>32</literal>.
+              The IPv4 anycast address (no CIDR suffix) and prefix.
             '';
           };
 
         };
       });
       default = [];
-      example = [ { ifnum = 0; address = "10.8.8.8"; prefixLength = 32; } ];
+      example = [ { ifnum = 0; addrOpts = { address = "10.8.8.8"; prefixLength = 32; }; } ];
       description = ''
-        A list of IPv4 anycast addresses to be configured.
+        A list of IPv4 anycast addresses and their
+        <literal>dummy</literal> interface index.
       '';
     };
 
@@ -84,30 +75,21 @@ in
             '';
           };
 
-          address = mkOption {
-            type = pkgs.lib.types.ipv6NoCIDR;
-            example = "2001:db8::1";
+          addrOpts = mkOption {
+            type = pkgs.lib.types.addrOptsV6;
+            example = { address = "2001:db8::1"; prefixLength = 128; };
             description = ''
-              The IPv6 anycast address (with no CIDR suffix).
-            '';
-          };
-
-          prefixLength = mkOption {
-            type = types.ints.between 1 128;
-            default = 128;
-            example = 64;
-            description = ''
-              The IPv6 anycast address subnet prefix length. The default
-              is <literal>128</literal>.
+              The IPv6 anycast address (no CIDR suffix) and prefix.
             '';
           };
 
         };
       });
       default = [];
-      example = [ { ifnum = 0; address = "2001:db8::1"; prefixLength = 128; } ];
+      example = [ { ifnum = 0; addrOpts = { address = "2001:db8::1"; prefixLength = 128; }; } ];
       description = ''
-        A list of IPv6 anycast addresses to be configured.
+        A list of IPv6 anycast addresses and their
+        <literal>dummy</literal> interface index.
       '';
     };
 
@@ -124,9 +106,9 @@ in
     
     boot.kernelModules = [ "dummy" ];
     networking.interfaces.dummy0.ipv4.addresses =
-      map (ip: { address = ip.address; prefixLength = ip.prefixLength; }) cfg.v4s;
+      map (ip: with ip.addrOpts; { inherit address prefixLength; }) cfg.v4s;
     networking.interfaces.dummy0.ipv6.addresses =
-      map (ip: { address = ip.address; prefixLength = ip.prefixLength; }) cfg.v6s;
+      map (ip: with ip.addrOpts; { inherit address prefixLength; }) cfg.v6s;
     
   };
 
