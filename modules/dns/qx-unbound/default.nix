@@ -175,7 +175,7 @@ in {
     };
 
     forwardAddresses = mkOption {
-      default = [ "8.8.8.8" "8.8.4.4" "2001:4860:4860::8888" "2001:4860:4860::8844" ];
+      default = pkgs.lib.dns.googleDNS;
       example = [ "8.8.8.8" "2001:4860:4860::8888" ];
       type = types.nonEmptyListOf (types.either pkgs.lib.types.ipv4NoCIDR pkgs.lib.types.ipv6NoCIDR);
       description = ''
