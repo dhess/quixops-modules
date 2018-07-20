@@ -86,4 +86,58 @@ with lib;
       '';
     };
   });
+
+
+  ## Anycast IP address "descriptors."
+
+  anycastV4 = types.submodule {
+    options = {
+
+      ifnum = mkOption {
+        type = types.unsigned;
+        default = 0;
+        description = ''
+          All anycast addresses are assigned to a Linux
+          <literal>dummy</literal> virtual interface. By default,
+          this is <literal>dummy0</literal>, but you can specify a
+          different index by setting it here.
+        '';
+      };
+
+      addrOpts = mkOption {
+        type = pkgs.lib.types.addrOptsV4;
+        example = { address = "10.0.0.1"; prefixLength = 32; };
+        description = ''
+          The IPv4 anycast address (no CIDR suffix) and prefix.
+        '';
+      };
+
+    };
+  };
+
+  anycastV6 = types.submodule {
+    options = {
+
+      ifnum = mkOption {
+        type = types.unsigned;
+        default = 0;
+        description = ''
+          All anycast addresses are assigned to a Linux
+          <literal>dummy</literal> virtual interface. By default,
+          this is <literal>dummy0</literal>, but you can specify a
+          different index by setting it here.
+        '';
+      };
+
+      addrOpts = mkOption {
+        type = pkgs.lib.types.addrOptsV6;
+        example = { address = "2001:db8::1"; prefixLength = 128; };
+        description = ''
+          The IPv6 anycast address (no CIDR suffix) and prefix.
+        '';
+      };
+
+    };
+  };
+
 }
