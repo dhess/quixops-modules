@@ -11,7 +11,7 @@
 
 with lib;
 
-{
+rec {
   ## A key type for configuring secrets that are stored in the
   ## filesystem. The option names and types here are compatible with
   ## NixOps's `keyType`, so they can be mechanically mapped to
@@ -134,6 +134,30 @@ with lib;
         example = { address = "2001:db8::1"; prefixLength = 128; };
         description = ''
           The IPv6 anycast address (no CIDR suffix) and prefix.
+        '';
+      };
+
+    };
+  };
+
+  anycastAddrs = types.submodule {
+    options = {
+
+      v4 = mkOption {
+        type = types.listOf anycastV4;
+        default = [];
+        example = [ { ifnum = 0; addrOpts = { address = "10.8.8.8"; prefixLength = 32; }; } ];
+        description = ''
+          A list of IPv4 anycast addresses.
+        '';
+      };
+
+      v6 = mkOption {
+        type = types.listOf anycastV6;
+        default = [];
+        example = [ { ifnum = 0; addrOpts = { address = "2001:db8::1"; prefixLength = 128; }; } ];
+        description = ''
+          A list of IPv6 anycast addresses.
         '';
       };
 

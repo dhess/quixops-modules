@@ -72,12 +72,12 @@ let
           blockList.enable = blockListEnable;
           allowedAccessIpv4 = [ "192.168.1.2/32" ];
           allowedAccessIpv6 = [ ipv6_prefix ];
-          anycast = {
-            v4s = [
+          anycastAddrs = {
+            v4 = [
               { addrOpts = { address = serverIpv4_1; prefixLength = 32; }; }
               { addrOpts = { address = serverIpv4_2; prefixLength = 32; }; }
             ];
-            v6s = [
+            v6 = [
               { addrOpts = { address = serverIpv6_1; prefixLength = 128; }; }
               { addrOpts = { address = serverIpv6_2; prefixLength = 128; }; }
             ];

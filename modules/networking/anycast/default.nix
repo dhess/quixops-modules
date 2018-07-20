@@ -19,34 +19,22 @@ with lib;
 
 let
 
-  cfg = config.networking.anycast;
-  enable = cfg.v4s != [] || cfg.v6s != [];
+  cfg = config.networking.anycastAddrs;
+  enable = cfg.v4 != [] || cfg.v6 != [];
 
 in
 
 {
-  options.networking.anycast = {
-
-    v4s = mkOption {
-      type = types.listOf pkgs.lib.types.anycastV4;
-      default = [];
-      example = [ { ifnum = 0; addrOpts = { address = "10.8.8.8"; prefixLength = 32; }; } ];
-      description = ''
-        A list of IPv4 anycast addresses and their
-        <literal>dummy</literal> interface index.
-      '';
+  options.networking.anycastAddrs = mkOption {
+    type = pkgs.lib.types.anycastAddrs;
+    default = { v4 = []; v6 = []; };
+    example = {
+      v4 = [ { ifnum = 0; addrOpts = { address = "10.0.0.1"; prefixLength = 32; }; } ];
+      v6 = [ { ifnum = 0; addrOpts = { address = "2001:db8::1"; prefixLength = 128; }; } ];
     };
-
-    v6s = mkOption {
-      type = types.listOf pkgs.lib.types.anycastV6;
-      default = [];
-      example = [ { ifnum = 0; addrOpts = { address = "2001:db8::1"; prefixLength = 128; }; } ];
-      description = ''
-        A list of IPv6 anycast addresses and their
-        <literal>dummy</literal> interface index.
-      '';
-    };
-
+    description = ''
+      A set of IPv4 and IPv6 anycast addresses to configure.
+    '';
   };
 
   config = mkIf enable {
@@ -60,9 +48,9 @@ in
     
     boot.kernelModules = [ "dummy" ];
     networking.interfaces.dummy0.ipv4.addresses =
-      map (ip: with ip.addrOpts; { inherit address prefixLength; }) cfg.v4s;
+      map (ip: with ip.addrOpts; { inherit address prefixLength; }) cfg.v4;
     networking.interfaces.dummy0.ipv6.addresses =
-      map (ip: with ip.addrOpts; { inherit address prefixLength; }) cfg.v6s;
+      map (ip: with ip.addrOpts; { inherit address prefixLength; }) cfg.v6;
     
   };
 

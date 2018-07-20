@@ -32,8 +32,8 @@ let
   accessV4 = concatMapStringsSep "\n  " (x: "access-control: ${x} allow") cfg.allowedAccessIpv4;
   accessV6 = concatMapStringsSep "\n  " (x: "access-control: ${x} allow") cfg.allowedAccessIpv6;
 
-  interfacesV4 = concatMapStringsSep "\n  " (x: "interface: ${x.addrOpts.address}") cfg.anycast.v4s;
-  interfacesV6 = concatMapStringsSep "\n  " (x: "interface: ${x.addrOpts.address}") cfg.anycast.v6s;
+  interfacesV4 = concatMapStringsSep "\n  " (x: "interface: ${x.addrOpts.address}") cfg.anycastAddrs.v4;
+  interfacesV6 = concatMapStringsSep "\n  " (x: "interface: ${x.addrOpts.address}") cfg.anycastAddrs.v6;
 
   isLocalAddress = x: substring 0 3 x == "::1" || substring 0 9 x == "127.0.0.1";
 
@@ -154,24 +154,17 @@ in {
       '';
     };
 
-    anycast = {
-      v4s = mkOption {
-        type = types.listOf pkgs.lib.types.anycastV4;
-        default = [];
-        example = [ { ifnum = 0; addrOpts = { address = "10.8.8.8"; prefixLength = 32; }; } ];
-        description = ''
-          A list of IPv4 anycast addresses to be configured.
-        '';
+    anycastAddrs = mkOption {
+      type = pkgs.lib.types.anycastAddrs;
+      default = { v4 = []; v6 = []; };
+      example = {
+        v4 = [ { ifnum = 0; addrOpts = { address = "10.8.8.8"; prefixLength = 32; }; } ];
+        v6 = [ { ifnum = 0; addrOpts = { address = "2001:db8::1"; prefixLength = 128; }; } ];
       };
-
-      v6s = mkOption {
-        type = types.listOf pkgs.lib.types.anycastV6;
-        default = [];
-        example = [ { ifnum = 0; addrOpts = { address = "2001:db8::1"; prefixLength = 128; }; } ];
-        description = ''
-          A list of IPv6 anycast addresses to be configured.
-        '';
-      };
+      description = ''
+        A set of IPv4 and IPv6 anycast addresses on which the Unbound
+        service will listen.
+      '';
     };
 
     forwardAddresses = mkOption {
@@ -206,8 +199,8 @@ in {
         message = "Only one of `services.unbound` and `services.qx-unbound` can be enabled";
       }
 
-      { assertion = (cfg.anycast.v4s == [] -> cfg.anycast.v6s != []) &&
-                    (cfg.anycast.v6s == [] -> cfg.anycast.v4s != []);
+      { assertion = (cfg.anycastAddrs.v4 == [] -> cfg.anycastAddrs.v6 != []) &&
+                    (cfg.anycastAddrs.v6 == [] -> cfg.anycastAddrs.v4 != []);
         message = "At least one anycast address must be set in `services.qx-unbound`";
       }
     ];
@@ -218,7 +211,7 @@ in {
     quixops.assertions.moduleHashes."services/networking/unbound.nix" =
       "28324ab792c2eea96bce39599b49c3de29f678029342dc57ffcac186eee22f7b";
 
-    networking.anycast = cfg.anycast;
+    networking.anycastAddrs = cfg.anycastAddrs;
 
     environment.systemPackages = [ pkgs.unbound ];
 
