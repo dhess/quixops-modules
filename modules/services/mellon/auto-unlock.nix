@@ -23,7 +23,7 @@ in {
           options = {
 
             description = mkOption {
-              type = types.string;
+              type = types.str;
               example = "Front door daily auto-unlock";
               description = ''
                 A short description of the service.
