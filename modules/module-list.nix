@@ -30,6 +30,7 @@
   ./config/hardware/jetson-tx1.nix
   ./config/hardware/mbr.nix
   ./config/hardware/uefi.nix
+  ./config/networking/tcp-bbr
   ./config/overlays.nix
   ./core/keychain
   ./core/module-hashes.nix
