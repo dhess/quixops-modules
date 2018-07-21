@@ -33,7 +33,7 @@
   ./config/overlays.nix
   ./core/keychain
   ./core/module-hashes.nix
-  ./dns/qx-unbound
+  ./dns/unbound-anycast
   ./email/service-status-email
   ./email/null-client
   ./networking/allowed-ips

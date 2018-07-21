@@ -65,9 +65,9 @@ let
     netsniff-ng = callSubTests ../tests/netsniff-ng.nix {};
     pinpon = callTest ../tests/pinpon.nix {};
     postfix-null-client = callTest ../tests/postfix-null-client.nix {};
-    qx-unbound = callSubTests ../tests/qx-unbound.nix {};
     service-status-email = callTest ../tests/service-status-email.nix {};
     tarsnapper = callTest ../tests/tarsnapper.nix {};
+    unbound-anycast = callSubTests ../tests/unbound-anycast.nix {};
     znc = callSubTests ../tests/znc.nix {};
 
     ## Configuration.

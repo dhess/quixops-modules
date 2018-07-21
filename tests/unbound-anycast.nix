@@ -66,7 +66,7 @@ let
         nixpkgs.localSystem.system = system;
         imports = (import pkgs.lib.quixops.modulesPath);
         networking.useDHCP = false;
-        services.qx-unbound = {
+        services.unbound-anycast = {
           enable = true;
           enableRootTrustAnchor = false; # required for testing.
           blockList.enable = blockListEnable;
@@ -118,12 +118,12 @@ let
 
     testScript = { nodes, ... }:
     let
-      blocklist = nodes.server.config.services.qx-unbound.blockList.enable;
+      blocklist = nodes.server.config.services.unbound-anycast.blockList.enable;
     in
     ''
       startAll;
 
-      $server->waitForUnit("qx-unbound.service");
+      $server->waitForUnit("unbound-anycast.service");
       $nsd->waitForUnit("nsd.service");
       $client->waitForUnit("multi-user.target");
       $badclient->waitForUnit("multi-user.target");
@@ -205,6 +205,6 @@ let
 
 in
 {
-  unboundBlockList = makeUnboundTest "qx-unbound-blocklist-enabled" true;
-  unboundNoBlockList = makeUnboundTest "qx-unbound-blocklist-disabled" false;
+  unboundBlockList = makeUnboundTest "unbound-anycast-blocklist-enabled" true;
+  unboundNoBlockList = makeUnboundTest "unbound-anycast-blocklist-disabled" false;
 }

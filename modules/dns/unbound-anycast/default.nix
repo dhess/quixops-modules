@@ -18,7 +18,7 @@ with lib;
 
 let
 
-  cfg = config.services.qx-unbound;
+  cfg = config.services.unbound-anycast;
   enable = cfg.enable;
 
 
@@ -90,7 +90,7 @@ let
 
 in {
 
-  options.services.qx-unbound = {
+  options.services.unbound-anycast = {
 
     enable = mkEnableOption "An opinionated Unbound service";
 
@@ -191,12 +191,12 @@ in {
     assertions = [
 
       { assertion = pkgs.lib.exclusiveOr cfg.enable config.services.unbound.enable;
-        message = "Only one of `services.unbound` and `services.qx-unbound` can be enabled";
+        message = "Only one of `services.unbound` and `services.unbound-anycast` can be enabled";
       }
 
       { assertion = (cfg.anycastAddrs.v4 == [] -> cfg.anycastAddrs.v6 != []) &&
                     (cfg.anycastAddrs.v6 == [] -> cfg.anycastAddrs.v4 != []);
-        message = "At least one anycast address must be set in `services.qx-unbound`";
+        message = "At least one anycast address must be set in `services.unbound-anycast`";
       }
     ];
 
@@ -215,8 +215,8 @@ in {
       isSystemUser = true;
     };
 
-    systemd.services.qx-unbound = {
-      description = "Unbound recursive name server (Quixoftic version)";
+    systemd.services.unbound-anycast = {
+      description = "Unbound recursive name server (anycast)";
       after = [ "network.target" ];
       before = [ "nss-lookup.target" ];
       wants = [ "nss-lookup.target" ];
@@ -247,15 +247,15 @@ in {
 
     systemd.services.pre-seed-unbound-blocklist = {
       description = "Pre-seed Unbound's block list";
-      before = [ "qx-unbound.service" ];
-      requiredBy = if blockListEnabled then [ "qx-unbound.service" ] else [];
+      before = [ "unbound-anycast.service" ];
+      requiredBy = if blockListEnabled then [ "unbound-anycast.service" ] else [];
       script = ''
         mkdir -p -m 0755 ${blockListDir} > /dev/null 2>&1 || true
         if ! [ -e ${blockListFile} ] ; then
-          echo "Pre-seeding qx-unbound block list"
+          echo "Pre-seeding unbound-anycast block list"
           cp ${seedBlockList} ${blockListFile}
         else
-          echo "A qx-unbound block list already exists; skipping"
+          echo "A unbound-anycast block list already exists; skipping"
         fi
         chown -R unbound:nogroup ${blockListDir}
         find ${blockListDir} -type f -exec chmod 0644 {} \;
@@ -270,8 +270,8 @@ in {
 
     systemd.services.update-unbound-block-hosts = {
       description = "Update Unbound's block list";
-      after = [ "qx-unbound.service" ];
-      wantedBy = if blockListEnabled then [ "qx-unbound.service" ] else [];
+      after = [ "unbound-anycast.service" ];
+      wantedBy = if blockListEnabled then [ "unbound-anycast.service" ] else [];
       script = ''
         until ${pkgs.unbound-block-hosts}/bin/unbound-block-hosts \
           --file ${blockListFile}.latest
