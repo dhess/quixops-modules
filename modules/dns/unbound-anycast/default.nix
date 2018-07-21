@@ -29,51 +29,79 @@ let
   blockListFile = "${blockListDir}/${blockListName}";
   seedBlockList = ./blocklist-someonewhocares.conf;
 
-  rootTrustAnchorFile = "${stateDir}/root.key";
-
-  confFile =
+  mkUnboundService =
   let
     isLocalAddress = x: substring 0 3 x == "::1" || substring 0 9 x == "127.0.0.1";
+    rootTrustAnchorFile = "${stateDir}/root.key";
+    confFile = pkgs.writeText "unbound.conf" ''
+      server:
+        directory: "${stateDir}"
+        username: unbound
+        chroot: "${stateDir}"
+        pidfile: ""
+        ${concatMapStringsSep "\n  " (x: "interface: ${x.addrOpts.address}") cfg.anycastAddrs.v4}
+        ${concatMapStringsSep "\n  " (x: "interface: ${x.addrOpts.address}") cfg.anycastAddrs.v6}
+        ${concatMapStringsSep "\n  " (x: "access-control: ${x} allow") cfg.allowedAccessIpv4}
+        ${concatMapStringsSep "\n  " (x: "access-control: ${x} allow") cfg.allowedAccessIpv6}
+        ${optionalString cfg.enableRootTrustAnchor "auto-trust-anchor-file: ${rootTrustAnchorFile}"}
+
+      unwanted-reply-threshold: 10000000
+
+      verbosity: 3
+      prefetch: yes
+      prefetch-key: yes
+
+      hide-version: yes
+      hide-identity: yes
+
+      private-address: 10.0.0.0/8
+      private-address: 172.16.0.0/12
+      private-address: 192.168.0.0/16
+      private-address: 169.254.0.0/16
+      private-address: fd00::/8
+      private-address: fe80::/10
+
+      ${optionalString blockListEnabled "include: ${blockListFile}"}
+      ${cfg.extraConfig}
+      ${optionalString (any isLocalAddress cfg.forwardAddresses) ''
+          do-not-query-localhost: no
+        '' +
+        optionalString (cfg.forwardAddresses != []) ''
+          forward-zone:
+            name: .
+        '' +
+        concatMapStringsSep "\n" (x: "    forward-addr: ${x}") cfg.forwardAddresses}
+    '';
   in
-  pkgs.writeText "unbound.conf" ''
-    server:
-      directory: "${stateDir}"
-      username: unbound
-      chroot: "${stateDir}"
-      pidfile: ""
-      ${concatMapStringsSep "\n  " (x: "interface: ${x.addrOpts.address}") cfg.anycastAddrs.v4}
-      ${concatMapStringsSep "\n  " (x: "interface: ${x.addrOpts.address}") cfg.anycastAddrs.v6}
-      ${concatMapStringsSep "\n  " (x: "access-control: ${x} allow") cfg.allowedAccessIpv4}
-      ${concatMapStringsSep "\n  " (x: "access-control: ${x} allow") cfg.allowedAccessIpv6}
-      ${optionalString cfg.enableRootTrustAnchor "auto-trust-anchor-file: ${rootTrustAnchorFile}"}
+  {
+    description = "Unbound recursive name server (anycast)";
+    after = [ "network.target" ];
+    before = [ "nss-lookup.target" ];
+    wants = [ "nss-lookup.target" ];
+    wantedBy = [ "multi-user.target" ];
 
-    unwanted-reply-threshold: 10000000
+    preStart = ''
+      mkdir -m 0755 -p ${stateDir}/dev/
+      cp ${confFile} ${stateDir}/unbound.conf
+      ${optionalString cfg.enableRootTrustAnchor ''
+        ${pkgs.unbound}/bin/unbound-anchor -a ${rootTrustAnchorFile} || echo "Root anchor updated!"
+        chown unbound ${stateDir} ${rootTrustAnchorFile}
+      ''}
+      touch ${stateDir}/dev/random
+      ${pkgs.utillinux}/bin/mount --bind -n /dev/urandom ${stateDir}/dev/random
+    '';
 
-    verbosity: 3
-    prefetch: yes
-    prefetch-key: yes
+    serviceConfig = {
+      ExecStart = "${pkgs.unbound}/bin/unbound -d -c ${stateDir}/unbound.conf";
+      ExecStopPost="${pkgs.utillinux}/bin/umount ${stateDir}/dev/random";
 
-    hide-version: yes
-    hide-identity: yes
-
-    private-address: 10.0.0.0/8
-    private-address: 172.16.0.0/12
-    private-address: 192.168.0.0/16
-    private-address: 169.254.0.0/16
-    private-address: fd00::/8
-    private-address: fe80::/10
-
-    ${optionalString blockListEnabled "include: ${blockListFile}"}
-    ${cfg.extraConfig}
-    ${optionalString (any isLocalAddress cfg.forwardAddresses) ''
-        do-not-query-localhost: no
-      '' +
-      optionalString (cfg.forwardAddresses != []) ''
-        forward-zone:
-          name: .
-      '' +
-      concatMapStringsSep "\n" (x: "    forward-addr: ${x}") cfg.forwardAddresses}
-  '';
+      ProtectSystem = true;
+      ProtectHome = true;
+      PrivateDevices = true;
+      Restart = "always";
+      RestartSec = "5s";
+    };
+  };
 
 in {
 
@@ -202,35 +230,7 @@ in {
       isSystemUser = true;
     };
 
-    systemd.services.unbound-anycast = {
-      description = "Unbound recursive name server (anycast)";
-      after = [ "network.target" ];
-      before = [ "nss-lookup.target" ];
-      wants = [ "nss-lookup.target" ];
-      wantedBy = [ "multi-user.target" ];
-
-      preStart = ''
-        mkdir -m 0755 -p ${stateDir}/dev/
-        cp ${confFile} ${stateDir}/unbound.conf
-        ${optionalString cfg.enableRootTrustAnchor ''
-          ${pkgs.unbound}/bin/unbound-anchor -a ${rootTrustAnchorFile} || echo "Root anchor updated!"
-          chown unbound ${stateDir} ${rootTrustAnchorFile}
-        ''}
-        touch ${stateDir}/dev/random
-        ${pkgs.utillinux}/bin/mount --bind -n /dev/urandom ${stateDir}/dev/random
-      '';
-
-      serviceConfig = {
-        ExecStart = "${pkgs.unbound}/bin/unbound -d -c ${stateDir}/unbound.conf";
-        ExecStopPost="${pkgs.utillinux}/bin/umount ${stateDir}/dev/random";
-
-        ProtectSystem = true;
-        ProtectHome = true;
-        PrivateDevices = true;
-        Restart = "always";
-        RestartSec = "5s";
-      };
-    };
+    systemd.services.unbound-anycast = mkUnboundService;
 
     systemd.services.pre-seed-unbound-blocklist = {
       description = "Pre-seed Unbound's block list";
