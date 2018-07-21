@@ -29,43 +29,23 @@ let
   blockListFile = "${blockListDir}/${blockListName}";
   seedBlockList = ./blocklist-someonewhocares.conf;
 
-  accessV4 = concatMapStringsSep "\n  " (x: "access-control: ${x} allow") cfg.allowedAccessIpv4;
-  accessV6 = concatMapStringsSep "\n  " (x: "access-control: ${x} allow") cfg.allowedAccessIpv6;
-
-  interfacesV4 = concatMapStringsSep "\n  " (x: "interface: ${x.addrOpts.address}") cfg.anycastAddrs.v4;
-  interfacesV6 = concatMapStringsSep "\n  " (x: "interface: ${x.addrOpts.address}") cfg.anycastAddrs.v6;
-
-  isLocalAddress = x: substring 0 3 x == "::1" || substring 0 9 x == "127.0.0.1";
-
-  forward =
-    optionalString (any isLocalAddress cfg.forwardAddresses) ''
-      do-not-query-localhost: no
-    '' +
-    optionalString (cfg.forwardAddresses != []) ''
-      forward-zone:
-        name: .
-    '' +
-    concatMapStringsSep "\n" (x: "    forward-addr: ${x}") cfg.forwardAddresses;
-
   rootTrustAnchorFile = "${stateDir}/root.key";
 
-  trustAnchor = optionalString cfg.enableRootTrustAnchor
-    "auto-trust-anchor-file: ${rootTrustAnchorFile}";
-
-  blockList = optionalString blockListEnabled
-    "include: ${blockListFile}";
-
-  confFile = pkgs.writeText "unbound.conf" ''
+  confFile =
+  let
+    isLocalAddress = x: substring 0 3 x == "::1" || substring 0 9 x == "127.0.0.1";
+  in
+  pkgs.writeText "unbound.conf" ''
     server:
       directory: "${stateDir}"
       username: unbound
       chroot: "${stateDir}"
       pidfile: ""
-      ${interfacesV4}
-      ${interfacesV6}
-      ${accessV4}
-      ${accessV6}
-      ${trustAnchor}
+      ${concatMapStringsSep "\n  " (x: "interface: ${x.addrOpts.address}") cfg.anycastAddrs.v4}
+      ${concatMapStringsSep "\n  " (x: "interface: ${x.addrOpts.address}") cfg.anycastAddrs.v6}
+      ${concatMapStringsSep "\n  " (x: "access-control: ${x} allow") cfg.allowedAccessIpv4}
+      ${concatMapStringsSep "\n  " (x: "access-control: ${x} allow") cfg.allowedAccessIpv6}
+      ${optionalString cfg.enableRootTrustAnchor "auto-trust-anchor-file: ${rootTrustAnchorFile}"}
 
     unwanted-reply-threshold: 10000000
 
@@ -83,9 +63,16 @@ let
     private-address: fd00::/8
     private-address: fe80::/10
 
-    ${blockList}
+    ${optionalString blockListEnabled "include: ${blockListFile}"}
     ${cfg.extraConfig}
-    ${forward}
+    ${optionalString (any isLocalAddress cfg.forwardAddresses) ''
+        do-not-query-localhost: no
+      '' +
+      optionalString (cfg.forwardAddresses != []) ''
+        forward-zone:
+          name: .
+      '' +
+      concatMapStringsSep "\n" (x: "    forward-addr: ${x}") cfg.forwardAddresses}
   '';
 
 in {
