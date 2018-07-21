@@ -88,11 +88,6 @@ let
     ${forward}
   '';
 
-  ipt4tcp = concatMapStringsSep "\n" (x: "iptables -A nixos-fw -p tcp -s ${x} --dport 53 -j nixos-fw-accept") cfg.allowedAccessIpv4;
-  ipt4udp = concatMapStringsSep "\n" (x: "iptables -A nixos-fw -p udp -s ${x} --dport 53 -j nixos-fw-accept") cfg.allowedAccessIpv4;
-  ipt6tcp = concatMapStringsSep "\n" (x: "ip6tables -A nixos-fw -p tcp -s ${x} --dport 53 -j nixos-fw-accept") cfg.allowedAccessIpv6;
-  ipt6udp = concatMapStringsSep "\n" (x: "ip6tables -A nixos-fw -p udp -s ${x} --dport 53 -j nixos-fw-accept") cfg.allowedAccessIpv6;
-
 in {
 
   options.services.qx-unbound = {
@@ -310,12 +305,10 @@ in {
       };
     };
 
-    networking.firewall.extraCommands = ''
-      ${ipt4tcp}
-      ${ipt4udp}
-      ${ipt6tcp}
-      ${ipt6udp}
-    '';
+    networking.firewall.allowedIPs = [
+      { protocol = "tcp"; port = 53; v4 = cfg.allowedAccessIpv4; v6 = cfg.allowedAccessIpv6; }
+      { protocol = "udp"; port = 53; v4 = cfg.allowedAccessIpv4; v6 = cfg.allowedAccessIpv6; }
+    ];
 
   };
 

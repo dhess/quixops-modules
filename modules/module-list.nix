@@ -36,6 +36,7 @@
   ./dns/qx-unbound
   ./email/service-status-email
   ./email/null-client
+  ./networking/allowed-ips
   ./networking/anycast
   ./networking/pcap-prep
   ./networking/wireguard

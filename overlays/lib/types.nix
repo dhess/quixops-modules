@@ -164,4 +164,46 @@ rec {
     };
   };
 
+  allowedIPs = types.listOf (types.submodule {
+    options = {
+
+      protocol = mkOption {
+        type = types.enum [ "udp" "tcp" ];
+        example = "tcp";
+        description = "The protocol namespace of <option>port</option>.";
+      };
+
+      port = mkOption {
+        type = pkgs.lib.types.port;
+        example = 22;
+        description = "The port number.";
+      };
+
+      v4 = mkOption {
+        type = types.listOf pkgs.lib.types.ipv4CIDR;
+        default = [];
+        example = [ "10.0.0.0/24" ];
+        description = ''
+          A list of IPv4 addresses to be allowed access for the given
+          protocol/port pair. Note that the addresses must be
+          specified in CIDR notation, i.e., with a corresponding
+          subnet prefix.
+        '';
+      };
+
+      v6 = mkOption {
+        type = types.listOf pkgs.lib.types.ipv6CIDR;
+        default = [];
+        example = [ "2001:db8::/64" ];
+        description = ''
+          A list of IPv6 addresses to be allowed access for the given
+          protocol/port pair. Note that the addresses must be
+          specified in CIDR notation, i.e., with a corresponding
+          subnet prefix.
+        '';
+      };
+
+    };
+  });
+
 }
