@@ -18,18 +18,17 @@ with lib;
 
 let
 
-  cfg = config.services.unbound-anycast;
-  enable = cfg.enable;
-
+  globalCfg = config.services.unbound-anycast;
+  enable = globalCfg.enable;
+  instances = { "anycast" = globalCfg; };
 
   stateDir = "/var/lib/unbound";
-  blockListEnabled = cfg.blockList.enable;
+  blockListEnabled = globalCfg.blockList.enable;
   blockListDir = "${stateDir}/blocklists";
-  blockListName = "blocklist-someonewhocares.conf";
-  blockListFile = "${blockListDir}/${blockListName}";
+  blockListFile = "${blockListDir}/blocklist-someonewhocares.conf";
   seedBlockList = ./blocklist-someonewhocares.conf;
 
-  mkUnboundService =
+  mkUnboundService = name: cfg:
   let
     isLocalAddress = x: substring 0 3 x == "::1" || substring 0 9 x == "127.0.0.1";
     rootTrustAnchorFile = "${stateDir}/root.key";
@@ -72,7 +71,7 @@ let
         '' +
         concatMapStringsSep "\n" (x: "    forward-addr: ${x}") cfg.forwardAddresses}
     '';
-  in
+  in nameValuePair "unbound-${name}"
   {
     description = "Unbound recursive name server (anycast)";
     after = [ "network.target" ];
@@ -201,19 +200,21 @@ in {
 
   };
 
-  config = mkIf cfg.enable {
+  config = mkIf globalCfg.enable {
 
-    assertions = [
-
-      { assertion = pkgs.lib.exclusiveOr cfg.enable config.services.unbound.enable;
+    assertions =
+    let
+      mkAssertion = name: cfg:
+        { assertion = (cfg.anycastAddrs.v4 == [] -> cfg.anycastAddrs.v6 != []) &&
+                      (cfg.anycastAddrs.v6 == [] -> cfg.anycastAddrs.v4 != []);
+          message = "At least one anycast address must be set in `services.unbound-anycast`";
+        };
+    in
+    [
+      { assertion = pkgs.lib.exclusiveOr globalCfg.enable config.services.unbound.enable;
         message = "Only one of `services.unbound` and `services.unbound-anycast` can be enabled";
       }
-
-      { assertion = (cfg.anycastAddrs.v4 == [] -> cfg.anycastAddrs.v6 != []) &&
-                    (cfg.anycastAddrs.v6 == [] -> cfg.anycastAddrs.v4 != []);
-        message = "At least one anycast address must be set in `services.unbound-anycast`";
-      }
-    ];
+    ] ++ mapAttrsToList mkAssertion instances;
 
     # Track changes in upstream service, in case we need to reproduce
     # them here.
@@ -221,7 +222,10 @@ in {
     quixops.assertions.moduleHashes."services/networking/unbound.nix" =
       "28324ab792c2eea96bce39599b49c3de29f678029342dc57ffcac186eee22f7b";
 
-    networking.anycastAddrs = cfg.anycastAddrs;
+    networking.anycastAddrs.v4 =
+      flatten (pkgs.lib.attrsets.mapValuesToList (cfg: cfg.anycastAddrs.v4) instances);
+    networking.anycastAddrs.v6 =
+      flatten (pkgs.lib.attrsets.mapValuesToList (cfg: cfg.anycastAddrs.v6) instances);
 
     environment.systemPackages = [ pkgs.unbound ];
 
@@ -230,72 +234,77 @@ in {
       isSystemUser = true;
     };
 
-    systemd.services.unbound-anycast = mkUnboundService;
+    systemd.services =
+      mapAttrs' mkUnboundService instances
+      // {
+        pre-seed-unbound-blocklist = {
+          description = "Pre-seed Unbound's block list";
+          before = [ "unbound-anycast.service" ];
+          requiredBy = if blockListEnabled then [ "unbound-anycast.service" ] else [];
+          script = ''
+            mkdir -p -m 0755 ${blockListDir} > /dev/null 2>&1 || true
+            if ! [ -e ${blockListFile} ] ; then
+              echo "Pre-seeding unbound-anycast block list"
+              cp ${seedBlockList} ${blockListFile}
+            else
+              echo "A unbound-anycast block list already exists; skipping"
+            fi
+            chown -R unbound:nogroup ${blockListDir}
+            find ${blockListDir} -type f -exec chmod 0644 {} \;
+          '';
+          restartIfChanged = true;
 
-    systemd.services.pre-seed-unbound-blocklist = {
-      description = "Pre-seed Unbound's block list";
-      before = [ "unbound-anycast.service" ];
-      requiredBy = if blockListEnabled then [ "unbound-anycast.service" ] else [];
-      script = ''
-        mkdir -p -m 0755 ${blockListDir} > /dev/null 2>&1 || true
-        if ! [ -e ${blockListFile} ] ; then
-          echo "Pre-seeding unbound-anycast block list"
-          cp ${seedBlockList} ${blockListFile}
-        else
-          echo "A unbound-anycast block list already exists; skipping"
-        fi
-        chown -R unbound:nogroup ${blockListDir}
-        find ${blockListDir} -type f -exec chmod 0644 {} \;
-      '';
-      restartIfChanged = true;
+          serviceConfig = {
+            Type = "oneshot";
+            RemainAfterExit = true;
+          };
+        };
 
-      serviceConfig = {
-        Type = "oneshot";
-        RemainAfterExit = true;
+        update-unbound-block-hosts = {
+          description = "Update Unbound's block list";
+          after = [ "unbound-anycast.service" ];
+          wantedBy = if blockListEnabled then [ "unbound-anycast.service" ] else [];
+          script = ''
+            until ${pkgs.unbound-block-hosts}/bin/unbound-block-hosts \
+              --file ${blockListFile}.latest
+            do
+              sleep 10
+            done
+
+            [ -e ${blockListFile} ] && \
+              cp ${blockListFile} ${blockListFile}.last
+
+            cp ${blockListFile}.latest ${blockListFile}
+
+            # Not yet working, need to run unbound-control-setup.
+            # ${pkgs.unbound}/bin/unbound-control -c ${stateDir}/unbound.conf reload
+          '';
+          restartIfChanged = true;
+
+          serviceConfig = {
+            PermissionsStartOnly = true;
+            User = "unbound";
+            Type = "oneshot";
+            RemainAfterExit = true;
+          };
+        };
       };
-    };
-
-    systemd.services.update-unbound-block-hosts = {
-      description = "Update Unbound's block list";
-      after = [ "unbound-anycast.service" ];
-      wantedBy = if blockListEnabled then [ "unbound-anycast.service" ] else [];
-      script = ''
-        until ${pkgs.unbound-block-hosts}/bin/unbound-block-hosts \
-          --file ${blockListFile}.latest
-        do
-          sleep 10
-        done
-
-        [ -e ${blockListFile} ] && \
-          cp ${blockListFile} ${blockListFile}.last
-
-        cp ${blockListFile}.latest ${blockListFile}
-
-        # Not yet working, need to run unbound-control-setup.
-        # ${pkgs.unbound}/bin/unbound-control -c ${stateDir}/unbound.conf reload
-      '';
-      restartIfChanged = true;
-
-      serviceConfig = {
-        PermissionsStartOnly = true;
-        User = "unbound";
-        Type = "oneshot";
-        RemainAfterExit = true;
-      };
-    };
 
     systemd.timers.update-unbound-block-hosts = {
       wantedBy = if blockListEnabled then [ "timers.target" ] else [];
       timerConfig = {
-        OnCalendar = cfg.blockList.updateFrequency;
+        OnCalendar = globalCfg.blockList.updateFrequency;
         Persistent = "yes";
       };
     };
 
-    networking.firewall.allowedIPs = [
-      { protocol = "tcp"; port = 53; v4 = cfg.allowedAccessIpv4; v6 = cfg.allowedAccessIpv6; }
-      { protocol = "udp"; port = 53; v4 = cfg.allowedAccessIpv4; v6 = cfg.allowedAccessIpv6; }
-    ];
+    networking.firewall.allowedIPs =
+    let
+      mkAllowedIPs = protocol: cfg:
+        { inherit protocol; port = 53; v4 = cfg.allowedAccessIpv4; v6 = cfg.allowedAccessIpv6; };
+    in    
+      (pkgs.lib.attrsets.mapValuesToList (cfg: mkAllowedIPs "tcp" cfg) instances)
+      ++ (pkgs.lib.attrsets.mapValuesToList (cfg: mkAllowedIPs "udp" cfg) instances);
 
   };
 
