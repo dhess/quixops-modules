@@ -200,6 +200,11 @@ let
         }
       };
 
+      subtest "check-stop", sub {
+        $server->stopJob("unbound-anycast.service");
+        $server->stopJob("update-unbound-block-hosts.timer");
+      };
+
     '';
   };
 
