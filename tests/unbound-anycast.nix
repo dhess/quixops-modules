@@ -116,9 +116,6 @@ in makeTest rec {
    };
 
    testScript = { nodes, ... }:
-   let
-     blocklist = nodes.server.config.services.unbound-anycast.instances.default.blockList.enable;
-   in
    ''
      startAll;
 
@@ -187,14 +184,9 @@ in makeTest rec {
        #$badclient->fail("${pkgs.dnsutils}/bin/dig \@${noblock_ipv6} A ad.doubleclick.net +time=2");
      };
 
-     subtest "check-permissions", sub {
-       $server->succeed("stat -c %a /var/lib/unbound-anycast/blocklists/blocklist-someonewhocares.conf | grep 644");
-     };
-
      subtest "check-stop", sub {
        $server->stopJob("unbound-anycast-adblock.service");
        $server->stopJob("unbound-anycast-noblock.service");
-       $server->stopJob("update-unbound-block-hosts.timer");
      };
 
    '';

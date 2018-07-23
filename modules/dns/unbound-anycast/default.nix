@@ -5,12 +5,6 @@
 # - `allowedAccess` from the Nixpkgs unbound module is broken up into
 #   separate IPv4 and IPv6 lists so that the addresses can easily be
 #   added to firewall rules.
-#
-# TODO:
-#
-# - Reload the block list when it is updated. Note -- this will
-#   require unbound-control functionality, which is not currently
-#   supported in Nixpkgs.
 
 { config, pkgs, lib, ... }:
 
@@ -21,20 +15,9 @@ let
   globalCfg = config.services.unbound-anycast;
 
   stateDir = "/var/lib/unbound-anycast";
-  blockListDir = "${stateDir}/blocklists";
-  blockListFile = "${blockListDir}/blocklist-someonewhocares.conf";
-  seedBlockList = ./blocklist-someonewhocares.conf;
+  blockList = ./blocklist-someonewhocares.conf;
 
   mkServiceName = name: "unbound-anycast-${name}";
-
-  blockListEnabled =
-    pkgs.lib.attrsets.anyAttrs (v: v.blockList.enable) globalCfg.instances;
-
-  blockListDependentInstances =
-  let
-    fullServiceName = n: "${mkServiceName n}.service";
-  in
-    mapAttrsToList (n: _: fullServiceName n) (filterAttrs (_: v: v.blockList.enable) globalCfg.instances);
 
   mkUnboundService = name: cfg:
   let
@@ -69,7 +52,7 @@ let
       private-address: fd00::/8
       private-address: fe80::/10
 
-      ${optionalString cfg.blockList.enable "include: ${blockListFile}"}
+      ${optionalString cfg.blockList.enable "include: ${blockList}"}
       ${cfg.extraConfig}
       ${optionalString (any isLocalAddress cfg.forwardAddresses) ''
           do-not-query-localhost: no
@@ -114,25 +97,6 @@ let
 in {
 
   options.services.unbound-anycast = {
-
-    blockList = {
-
-      updateFrequency = mkOption {
-        default = "daily";
-        example = "hourly";
-        type = pkgs.lib.types.nonEmptyStr;
-        description = ''
-          How often to update the block list. This value should be
-          specified as a valid <literal>systemd.timers</literal>
-          <literal>OnCalendar</literal> value.
-
-          Note that regardless of this option's value, the block list
-          will only be updated if one or more Unbound anycast
-          instances enable it.
-        '';
-      };
-
-    };
 
     instances = mkOption {
       description = ''
@@ -264,68 +228,7 @@ in {
     };
 
     systemd.services =
-      mapAttrs' mkUnboundService globalCfg.instances
-      // {
-        pre-seed-unbound-blocklist = {
-          description = "Pre-seed Unbound's block list";
-          before = blockListDependentInstances;
-          requiredBy = if blockListEnabled then blockListDependentInstances else [];
-          script = ''
-            mkdir -p -m 0755 ${blockListDir} > /dev/null 2>&1 || true
-            if ! [ -e ${blockListFile} ] ; then
-              echo "Pre-seeding unbound-anycast block list"
-              cp ${seedBlockList} ${blockListFile}
-            else
-              echo "A unbound-anycast block list already exists; skipping"
-            fi
-            chown -R unbound:nogroup ${blockListDir}
-            find ${blockListDir} -type f -exec chmod 0644 {} \;
-          '';
-          restartIfChanged = true;
-
-          serviceConfig = {
-            Type = "oneshot";
-            RemainAfterExit = true;
-          };
-        };
-
-        update-unbound-block-hosts = {
-          description = "Update Unbound's block list";
-          after = blockListDependentInstances;
-          wantedBy = if blockListEnabled then blockListDependentInstances else [];
-          script = ''
-            until ${pkgs.unbound-block-hosts}/bin/unbound-block-hosts \
-              --file ${blockListFile}.latest
-            do
-              sleep 10
-            done
-
-            [ -e ${blockListFile} ] && \
-              cp ${blockListFile} ${blockListFile}.last
-
-            cp ${blockListFile}.latest ${blockListFile}
-
-            # XXX - not yet implemented. Need to run
-            # unbound-control-setup here for each dependent instance.
-          '';
-          restartIfChanged = true;
-
-          serviceConfig = {
-            PermissionsStartOnly = true;
-            User = "unbound";
-            Type = "oneshot";
-            RemainAfterExit = true;
-          };
-        };
-      };
-
-    systemd.timers.update-unbound-block-hosts = {
-      wantedBy = if blockListEnabled then [ "timers.target" ] else [];
-      timerConfig = {
-        OnCalendar = globalCfg.blockList.updateFrequency;
-        Persistent = "yes";
-      };
-    };
+      mapAttrs' mkUnboundService globalCfg.instances;
 
     networking.firewall.allowedIPs =
     let
