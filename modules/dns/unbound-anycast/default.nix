@@ -19,22 +19,22 @@ with lib;
 let
 
   globalCfg = config.services.unbound-anycast;
-  enable = globalCfg.enable;
-  instances = { "anycast" = globalCfg; };
 
   stateDir = "/var/lib/unbound-anycast";
-  blockListEnabled = globalCfg.blockList.enable;
   blockListDir = "${stateDir}/blocklists";
   blockListFile = "${blockListDir}/blocklist-someonewhocares.conf";
   seedBlockList = ./blocklist-someonewhocares.conf;
 
-  mkServiceName = name: "unbound-${name}";
+  mkServiceName = name: "unbound-anycast-${name}";
+
+  blockListEnabled =
+    pkgs.lib.attrsets.anyAttrs (v: v.blockList.enable) globalCfg.instances;
 
   blockListDependentInstances =
   let
     fullServiceName = n: "${mkServiceName n}.service";
   in
-    mapAttrsToList (n: _: fullServiceName n) (filterAttrs (_: v: v.blockList.enable) instances);
+    mapAttrsToList (n: _: fullServiceName n) (filterAttrs (_: v: v.blockList.enable) globalCfg.instances);
 
   mkUnboundService = name: cfg:
   let
@@ -68,7 +68,7 @@ let
       private-address: fd00::/8
       private-address: fe80::/10
 
-      ${optionalString blockListEnabled "include: ${blockListFile}"}
+      ${optionalString cfg.blockList.enable "include: ${blockListFile}"}
       ${cfg.extraConfig}
       ${optionalString (any isLocalAddress cfg.forwardAddresses) ''
           do-not-query-localhost: no
@@ -114,19 +114,7 @@ in {
 
   options.services.unbound-anycast = {
 
-    enable = mkEnableOption "An opinionated Unbound service";
-
     blockList = {
-
-      enable = mkOption {
-        type = types.bool;
-        default = true;
-        description = ''
-          If true, the Unbound instance will use a blocklist to block
-          unwanted domains; these domains will return an address of
-          <literal>127.0.0.1</literal> or <literal>::1</literal>.
-        '';
-      };
 
       updateFrequency = mkOption {
         default = "daily";
@@ -136,79 +124,116 @@ in {
           How often to update the block list. This value should be
           specified as a valid <literal>systemd.timers</literal>
           <literal>OnCalendar</literal> value.
+
+          Note that regardless of this option's value, the block list
+          will only be updated if one or more Unbound anycast
+          instances enable it.
         '';
       };
 
     };
 
-    allowedAccessIpv4 = mkOption {
-      default = [ "127.0.0.0/8" ];
-      example = [ "192.168.1.0/24" ];
-      type = types.listOf pkgs.lib.types.ipv4CIDR;
+    instances = mkOption {
       description = ''
-        A list of IPv4 networks that can use the server as a resolver,
-        in CIDR notation.
-
-        Note that, in addition to specifying them in the Unbound
-        service configuration, these addresses will also be added to
-        the <literal>nixos-fw-accept</literal> firewall whitelist for
-        port 53 (UDP and TCP).
+        Unbound anycast service instances.
       '';
-    };
-
-    allowedAccessIpv6 = mkOption {
-      default = [ "::1/128" ];
-      example = [ "2001:db8::/32" ];
-      type = types.listOf pkgs.lib.types.ipv6CIDR;
-      description = ''
-        A list of IPv6 networks that can use the server as a resolver,
-        in CIDR notation.
-
-        Note that, in addition to specifying them in the Unbound
-        service configuration, these addresses will also be added to
-        the <literal>nixos-fw-accept</literal> firewall whitelist for
-        port 53 (UDP and TCP).
-      '';
-    };
-
-    anycastAddrs = mkOption {
-      type = pkgs.lib.types.anycastAddrs;
-      default = { v4 = []; v6 = []; };
+      default = {};
       example = {
-        v4 = [ { ifnum = 0; addrOpts = { address = "10.8.8.8"; prefixLength = 32; }; } ];
-        v6 = [ { ifnum = 0; addrOpts = { address = "2001:db8::1"; prefixLength = 128; }; } ];
+        adblock = {
+          blockList.enable = true;
+          allowedAccessIpv4 = [ "10.0.0.0/8" ];
+          anycastAddrs.v4 = [
+            { ifnum = 0; addrOpts = { address = "10.8.8.8"; prefixLength = 32; }; }
+          ];
+        };
       };
-      description = ''
-        A set of IPv4 and IPv6 anycast addresses on which the Unbound
-        service will listen.
-      '';
-    };
+      type = types.attrsOf (types.submodule {
+        options = {
 
-    forwardAddresses = mkOption {
-      default = pkgs.lib.dns.googleDNS;
-      example = [ "8.8.8.8" "2001:4860:4860::8888" ];
-      type = types.nonEmptyListOf (types.either pkgs.lib.types.ipv4NoCIDR pkgs.lib.types.ipv6NoCIDR);
-      description = ''
-        The address(es) of forwarding servers for this Unbound
-        service. Both IPv4 and IPv6 addresses are supported.
-      '';
-    };
+          blockList = {
+            enable = mkOption {
+              type = types.bool;
+              default = true;
+              description = ''
+                If true, this Unbound instance will use a blocklist to block
+                unwanted domains; these domains will return an address of
+                <literal>127.0.0.1</literal> or <literal>::1</literal>.
+              '';
+            };
+          };
 
-    enableRootTrustAnchor = mkOption {
-      default = true;
-      type = types.bool;
-      description = "Use and update root trust anchor for DNSSEC validation.";
-    };
+          allowedAccessIpv4 = mkOption {
+            default = [ "127.0.0.0/8" ];
+            example = [ "192.168.1.0/24" ];
+            type = types.listOf pkgs.lib.types.ipv4CIDR;
+            description = ''
+              A list of IPv4 networks that can use this instance as
+              a resolver, in CIDR notation.
 
-    extraConfig = mkOption {
-      default = "";
-      type = types.lines;
-      description = "Extra unbound config.";
+              Note that, in addition to specifying them in the Unbound
+              service configuration, these addresses will also be added to
+              the <literal>nixos-fw-accept</literal> firewall whitelist for
+              port 53 (UDP and TCP).
+            '';
+          };
+
+          allowedAccessIpv6 = mkOption {
+            default = [ "::1/128" ];
+            example = [ "2001:db8::/32" ];
+            type = types.listOf pkgs.lib.types.ipv6CIDR;
+            description = ''
+              A list of IPv6 networks that can use this instance as
+              a resolver, in CIDR notation.
+
+              Note that, in addition to specifying them in the Unbound
+              service configuration, these addresses will also be added to
+              the <literal>nixos-fw-accept</literal> firewall whitelist for
+              port 53 (UDP and TCP).
+            '';
+          };
+
+          anycastAddrs = mkOption {
+            type = pkgs.lib.types.anycastAddrs;
+            default = { v4 = []; v6 = []; };
+            example = {
+              v4 = [ { ifnum = 0; addrOpts = { address = "10.8.8.8"; prefixLength = 32; }; } ];
+              v6 = [ { ifnum = 0; addrOpts = { address = "2001:db8::1"; prefixLength = 128; }; } ];
+            };
+            description = ''
+              A set of IPv4 and IPv6 anycast addresses on which this
+              Unbound instance will listen.
+            '';
+          };
+
+          forwardAddresses = mkOption {
+            default = pkgs.lib.dns.googleDNS;
+            example = [ "8.8.8.8" "2001:4860:4860::8888" ];
+            type = types.nonEmptyListOf (types.either pkgs.lib.types.ipv4NoCIDR pkgs.lib.types.ipv6NoCIDR);
+            description = ''
+              The address(es) of forwarding servers for this Unbound
+              instance. Both IPv4 and IPv6 addresses are supported.
+            '';
+          };
+
+          enableRootTrustAnchor = mkOption {
+            default = true;
+            type = types.bool;
+            description = "Use and update root trust anchor for DNSSEC validation on this Unbound instance.";
+          };
+
+          extraConfig = mkOption {
+            default = "";
+            type = types.lines;
+            description = "Extra Unbound config for this instance.";
+          };
+
+        };
+      });
     };
 
   };
 
-  config = mkIf globalCfg.enable {
+  config = mkIf (globalCfg.instances != {}) {
 
     assertions =
     let
@@ -217,7 +242,7 @@ in {
                       (cfg.anycastAddrs.v6 == [] -> cfg.anycastAddrs.v4 != []);
           message = "At least one anycast address must be set in `services.unbound-anycast.${name}`";
         };
-    in mapAttrsToList mkAssertion instances;
+    in mapAttrsToList mkAssertion globalCfg.instances;
 
     # Track changes in upstream service, in case we need to reproduce
     # them here.
@@ -226,9 +251,9 @@ in {
       "28324ab792c2eea96bce39599b49c3de29f678029342dc57ffcac186eee22f7b";
 
     networking.anycastAddrs.v4 =
-      flatten (pkgs.lib.attrsets.mapValuesToList (cfg: cfg.anycastAddrs.v4) instances);
+      flatten (pkgs.lib.attrsets.mapValuesToList (cfg: cfg.anycastAddrs.v4) globalCfg.instances);
     networking.anycastAddrs.v6 =
-      flatten (pkgs.lib.attrsets.mapValuesToList (cfg: cfg.anycastAddrs.v6) instances);
+      flatten (pkgs.lib.attrsets.mapValuesToList (cfg: cfg.anycastAddrs.v6) globalCfg.instances);
 
     environment.systemPackages = [ pkgs.unbound ];
 
@@ -238,7 +263,7 @@ in {
     };
 
     systemd.services =
-      mapAttrs' mkUnboundService instances
+      mapAttrs' mkUnboundService globalCfg.instances
       // {
         pre-seed-unbound-blocklist = {
           description = "Pre-seed Unbound's block list";
@@ -306,8 +331,8 @@ in {
       mkAllowedIPs = protocol: cfg:
         { inherit protocol; port = 53; v4 = cfg.allowedAccessIpv4; v6 = cfg.allowedAccessIpv6; };
     in    
-      (pkgs.lib.attrsets.mapValuesToList (cfg: mkAllowedIPs "tcp" cfg) instances)
-      ++ (pkgs.lib.attrsets.mapValuesToList (cfg: mkAllowedIPs "udp" cfg) instances);
+      (pkgs.lib.attrsets.mapValuesToList (cfg: mkAllowedIPs "tcp" cfg) globalCfg.instances)
+      ++ (pkgs.lib.attrsets.mapValuesToList (cfg: mkAllowedIPs "udp" cfg) globalCfg.instances);
 
   };
 

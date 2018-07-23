@@ -66,8 +66,7 @@ let
         nixpkgs.localSystem.system = system;
         imports = (import pkgs.lib.quixops.modulesPath);
         networking.useDHCP = false;
-        services.unbound-anycast = {
-          enable = true;
+        services.unbound-anycast.instances.default = {
           enableRootTrustAnchor = false; # required for testing.
           blockList.enable = blockListEnable;
           allowedAccessIpv4 = [ "192.168.1.2/32" ];
@@ -118,12 +117,12 @@ let
 
     testScript = { nodes, ... }:
     let
-      blocklist = nodes.server.config.services.unbound-anycast.blockList.enable;
+      blocklist = nodes.server.config.services.unbound-anycast.instances.default.blockList.enable;
     in
     ''
       startAll;
 
-      $server->waitForUnit("unbound-anycast.service");
+      $server->waitForUnit("unbound-anycast-default.service");
       $nsd->waitForUnit("nsd.service");
       $client->waitForUnit("multi-user.target");
       $badclient->waitForUnit("multi-user.target");
@@ -196,12 +195,12 @@ let
 
       subtest "check-permissions", sub {
         if ("${toString blocklist}" eq "true") {
-          $server->succeed("stat -c %a /var/lib/unbound/blocklists/blocklist-someonewhocares.conf | grep 644");
+          $server->succeed("stat -c %a /var/lib/unbound-anycast/blocklists/blocklist-someonewhocares.conf | grep 644");
         }
       };
 
       subtest "check-stop", sub {
-        $server->stopJob("unbound-anycast.service");
+        $server->stopJob("unbound-anycast-default.service");
         $server->stopJob("update-unbound-block-hosts.timer");
       };
 
