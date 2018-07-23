@@ -23,7 +23,8 @@ let
   let
     isLocalAddress = x: substring 0 3 x == "::1" || substring 0 9 x == "127.0.0.1";
     rootTrustAnchorFile = "${stateDir}/root.key";
-    confFile = pkgs.writeText "unbound-anycast-${name}.conf" ''
+    confFileName = "unbound-anycast-${name}.conf";
+    confFile = pkgs.writeText confFileName ''
       server:
         directory: "${stateDir}"
         username: unbound
@@ -72,6 +73,7 @@ let
 
     preStart = ''
       mkdir -m 0755 -p ${stateDir}/dev/
+      cp ${confFile} ${stateDir}/${confFileName}
       ${optionalString cfg.enableRootTrustAnchor ''
         ${pkgs.unbound}/bin/unbound-anchor -a ${rootTrustAnchorFile} || echo "Root anchor updated!"
         chown unbound ${stateDir} ${rootTrustAnchorFile}
@@ -81,7 +83,7 @@ let
     '';
 
     serviceConfig = {
-      ExecStart = "${pkgs.unbound}/bin/unbound -d -c ${confFile}";
+      ExecStart = "${pkgs.unbound}/bin/unbound -d -c ${stateDir}/${confFileName}";
       ExecStopPost="${pkgs.utillinux}/bin/umount ${stateDir}/dev/random";
 
       ProtectSystem = true;
