@@ -67,7 +67,7 @@ let
     postfix-null-client = callTest ../tests/postfix-null-client.nix {};
     service-status-email = callTest ../tests/service-status-email.nix {};
     tarsnapper = callTest ../tests/tarsnapper.nix {};
-    unbound-anycast = callSubTests ../tests/unbound-anycast.nix {};
+    unbound-anycast = callTest ../tests/unbound-anycast.nix {};
     znc = callSubTests ../tests/znc.nix {};
 
     ## Configuration.
