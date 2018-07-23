@@ -28,6 +28,14 @@ let
   blockListFile = "${blockListDir}/blocklist-someonewhocares.conf";
   seedBlockList = ./blocklist-someonewhocares.conf;
 
+  mkServiceName = name: "unbound-${name}";
+
+  blockListDependentInstances =
+  let
+    fullServiceName = n: "${mkServiceName n}.service";
+  in
+    mapAttrsToList (n: _: fullServiceName n) (filterAttrs (_: v: v.blockList.enable) instances);
+
   mkUnboundService = name: cfg:
   let
     isLocalAddress = x: substring 0 3 x == "::1" || substring 0 9 x == "127.0.0.1";
@@ -71,7 +79,7 @@ let
         '' +
         concatMapStringsSep "\n" (x: "    forward-addr: ${x}") cfg.forwardAddresses}
     '';
-  in nameValuePair "unbound-${name}"
+  in nameValuePair (mkServiceName name)
   {
     description = "Unbound recursive name server (anycast)";
     after = [ "network.target" ];
@@ -239,8 +247,8 @@ in {
       // {
         pre-seed-unbound-blocklist = {
           description = "Pre-seed Unbound's block list";
-          before = [ "unbound-anycast.service" ];
-          requiredBy = if blockListEnabled then [ "unbound-anycast.service" ] else [];
+          before = blockListDependentInstances;
+          requiredBy = if blockListEnabled then blockListDependentInstances else [];
           script = ''
             mkdir -p -m 0755 ${blockListDir} > /dev/null 2>&1 || true
             if ! [ -e ${blockListFile} ] ; then
@@ -262,8 +270,8 @@ in {
 
         update-unbound-block-hosts = {
           description = "Update Unbound's block list";
-          after = [ "unbound-anycast.service" ];
-          wantedBy = if blockListEnabled then [ "unbound-anycast.service" ] else [];
+          after = blockListDependentInstances;
+          wantedBy = if blockListEnabled then blockListDependentInstances else [];
           script = ''
             until ${pkgs.unbound-block-hosts}/bin/unbound-block-hosts \
               --file ${blockListFile}.latest
