@@ -22,7 +22,7 @@ let
   enable = globalCfg.enable;
   instances = { "anycast" = globalCfg; };
 
-  stateDir = "/var/lib/unbound";
+  stateDir = "/var/lib/unbound-anycast";
   blockListEnabled = globalCfg.blockList.enable;
   blockListDir = "${stateDir}/blocklists";
   blockListFile = "${blockListDir}/blocklist-someonewhocares.conf";
@@ -215,14 +215,9 @@ in {
       mkAssertion = name: cfg:
         { assertion = (cfg.anycastAddrs.v4 == [] -> cfg.anycastAddrs.v6 != []) &&
                       (cfg.anycastAddrs.v6 == [] -> cfg.anycastAddrs.v4 != []);
-          message = "At least one anycast address must be set in `services.unbound-anycast`";
+          message = "At least one anycast address must be set in `services.unbound-anycast.${name}`";
         };
-    in
-    [
-      { assertion = pkgs.lib.exclusiveOr globalCfg.enable config.services.unbound.enable;
-        message = "Only one of `services.unbound` and `services.unbound-anycast` can be enabled";
-      }
-    ] ++ mapAttrsToList mkAssertion instances;
+    in mapAttrsToList mkAssertion instances;
 
     # Track changes in upstream service, in case we need to reproduce
     # them here.
