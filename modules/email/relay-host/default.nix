@@ -225,6 +225,7 @@ in
 
     services.postfix = {
       enable = true;
+      enableSubmission = true;
 
       domain = cfg.myDomain;
       origin = cfg.myOrigin;
