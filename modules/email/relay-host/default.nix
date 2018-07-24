@@ -18,7 +18,6 @@
 # TODO
 # - add allowedIPs and firewall config
 # - run smtpd and submission only on anycast addresses
-# - client cert fingerprints
 
 { config, pkgs, lib, ... }:
 
@@ -71,10 +70,9 @@ in
       that many SMTP-enabled devices have poor SMTP client
       implementations for which secure configurations may not be
       practical, or even possible. Therefore, the preferred way to
-      connect to this relay host service is via port 587 with client
-      certificate authorization (using a pre-computed fingerprint),
-      but clients that are not capable of this are allowed to connect
-      with a plaintext connection over port 25.
+      connect to this relay host service is via TLS, but clients that
+      are not capable of this are allowed to connect with a plaintext
+      connection.
 
       This configuration will listen on one or more specified anycast
       addresses and will open local TCP firewall ports on 25 and 587.
