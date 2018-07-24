@@ -245,7 +245,17 @@ in
 
     services.postfix = {
       enable = true;
+
       enableSubmission = true;
+      submissionOptions = {
+        tls_preempt_cipherlist = "yes";
+        smtpd_tls_dh1024_param_file = "${dhParamsFile}";
+        syslog_name = "postfix/submission";
+        smtpd_tls_security_level = "encrypt";
+        smtpd_reject_unlisted_recipient = "no";
+        smtpd_client_restrictions = "permit_tls_clientcerts,reject";
+        milter_macro_daemon_name = "ORIGINATING";
+      };
 
       domain = cfg.myDomain;
       origin = cfg.myOrigin;
