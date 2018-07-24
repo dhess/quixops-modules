@@ -28,7 +28,9 @@ let
   globalCfg = config;
   cfg = config.services.postfix-relay-host;
   enabled = cfg.enable;
-  stateDir = "/var/lib/postfix-relay-host";
+
+  # NOTE - must be the same as upstream.
+  stateDir = "/var/lib/postfix/data";
 
   user = config.services.postfix.user;
   group = config.services.postfix.group;
@@ -267,7 +269,7 @@ in
         smtpd_tls_ask_ccert = yes
         smtpd_tls_fingerprint_digest = sha1
         smtpd_tls_mandatory_protocols = !SSLv2, !SSLv3
-        smtpd_tls_dh1024_param_file = ${pkgs.lib.security.ffdhe3072Pem};
+        smtpd_tls_dh1024_param_file = ${stateDir}/dh.pem
         smtpd_tls_eecdh_grade = strong
         smtpd_tls_received_header = yes
         smtpd_relay_restrictions = permit_auth_destination reject
@@ -289,6 +291,7 @@ in
       script = ''
         install -m 0700 -o ${user} -g ${group} -d ${stateDir} > /dev/null 2>&1 || true
         install -m 0400 -o ${user} -g ${group} ${deployedKeyFile} ${keyFileName}
+        install -m 0644 -o ${user} -g ${group} ${pkgs.lib.security.ffdhe3072Pem} ${stateDir}/dh.pem
       '';
     };
 
