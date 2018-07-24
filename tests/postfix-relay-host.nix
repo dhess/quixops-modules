@@ -11,6 +11,7 @@ let
 
   ca-cert = ./testfiles/certs/root.crt;
   bob-cert = ./testfiles/certs/bob-at-acme.com.crt;
+  bob-sha1 = ./testfiles/certs/bob-at-acme.com.sha1;
   bob-certKey = ./testfiles/keys/bob-at-acme.com.key;
   bob-certKeyInStore = pkgs.copyPathToStore ./testfiles/keys/bob-at-acme.com.key;
 
@@ -44,6 +45,7 @@ in makeTest rec {
         myDomain = "example.com";
         myOrigin = "example.com";
         relayDomains = [ "example.com" ];
+        relayClientCertFingerprintsFile = bob-sha1;
         anycastAddrs.v4 = [
           { ifnum = 0; addrOpts = { address = "192.168.1.25"; prefixLength = 32; }; }
         ];
