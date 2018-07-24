@@ -312,6 +312,7 @@ in
         install -m 0700 -o ${user} -g ${group} -d ${stateDir} > /dev/null 2>&1 || true
         install -m 0400 -o ${user} -g ${group} ${deployedKeyFile} ${keyFileName}
         ln -sf ${cfg.relayClientCertFingerprintsFile} ${clientCertsFile}
+        ${pkgs.postfix}/bin/postmap hash:${clientCertsFile}
         ln -sf ${pkgs.lib.security.ffdhe3072Pem} ${dhParamsFile}
       '';
     };
