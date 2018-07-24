@@ -37,7 +37,6 @@ let
   keyFileName = "${stateDir}/relay-host.key";
   deployedKeyFile = config.quixops.keychain.keys.postfix-relay-host-cert-key.path;
 
-  clientCertsFile = "${stateDir}/relay_clientcerts";
   dhParamsFile = "${stateDir}/dh.pem";
 
   v4interfaces =
@@ -273,6 +272,10 @@ in
       sslCert = "${cfg.smtpTlsCertFile}";
       sslKey = keyFileName;
 
+      mapFiles = {
+        relay_clientcerts = cfg.relayClientCertFingerprintsFile;
+      };
+
       extraConfig = ''
 
         ##
@@ -307,7 +310,7 @@ in
         smtp_tls_mandatory_protocols = !SSLv2, !SSLv3
         smtp_tls_mandatory_ciphers = high
 
-        relay_clientcerts = hash:${clientCertsFile}
+        relay_clientcerts = hash:/var/lib/postfix/conf/relay_clientcerts
       '';
     };
 
@@ -321,8 +324,6 @@ in
       script = ''
         install -m 0700 -o ${user} -g ${group} -d ${stateDir} > /dev/null 2>&1 || true
         install -m 0400 -o ${user} -g ${group} ${deployedKeyFile} ${keyFileName}
-        ln -sf ${cfg.relayClientCertFingerprintsFile} ${clientCertsFile}
-        ${pkgs.postfix}/bin/postmap hash:${clientCertsFile}
         ln -sf ${pkgs.lib.security.ffdhe3072Pem} ${dhParamsFile}
       '';
     };
