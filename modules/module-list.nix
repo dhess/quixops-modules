@@ -37,6 +37,7 @@
   ./dns/unbound-anycast
   ./email/service-status-email
   ./email/null-client
+  ./email/relay-host
   ./networking/allowed-ips
   ./networking/anycast
   ./networking/pcap-prep

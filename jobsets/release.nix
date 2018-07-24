@@ -65,6 +65,7 @@ let
     netsniff-ng = callSubTests ../tests/netsniff-ng.nix {};
     pinpon = callTest ../tests/pinpon.nix {};
     postfix-null-client = callTest ../tests/postfix-null-client.nix {};
+    postfix-relay-host = callTest ../tests/postfix-relay-host.nix {};
     service-status-email = callTest ../tests/service-status-email.nix {};
     tarsnapper = callTest ../tests/tarsnapper.nix {};
     unbound-anycast = callTest ../tests/unbound-anycast.nix {};
