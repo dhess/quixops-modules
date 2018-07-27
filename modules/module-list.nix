@@ -39,7 +39,6 @@
   ./email/null-client
   ./email/relay-host
   ./networking/allowed-ips
-  ./networking/anycast
   ./networking/pcap-prep
   ./networking/wireguard
   ./services/full-tunnel-vpn
