@@ -46,12 +46,6 @@ in makeTest rec {
         myOrigin = "example.com";
         relayDomains = [ "example.com" ];
         relayClientCertFingerprintsFile = bob-sha1;
-        anycastAddrs.v4 = [
-          { ifnum = 0; addrOpts = { address = "192.168.1.25"; prefixLength = 32; }; }
-        ];
-        anycastAddrs.v6 = [
-          { ifnum = 0; addrOpts = { address = "fd00:1234:5678::25"; prefixLength = 128; }; }
-        ];
         smtpTlsCAFile = ca-cert;
         smtpTlsCertFile = bob-cert;
         smtpTlsKeyLiteral = builtins.readFile bob-certKey;

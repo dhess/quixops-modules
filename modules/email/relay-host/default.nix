@@ -1,12 +1,9 @@
-## Configuration for an opinionated, anycast Postfix relay host, i.e.,
-## a host that can send mail *to a prescribed set of domains* on
-## behalf of other hosts. One typical use for such a service is to
-## support oddball hardware (e.g., a UPS) that can send email, but not
+## Configuration for an opinionated Postfix relay host, i.e., a host
+## that can send mail *to a prescribed set of domains* on behalf of
+## other hosts. One typical use for such a service is to support
+## oddball hardware (e.g., a UPS) that can send email, but not
 ## securely; or to limit outbound SMTP access to a limited number of
 ## hosts that run the relay service.
-##
-## This configuration will listen on the specified anycast addresses
-## and will open local firewall ports on 25 and 587.
 
 # Generally speaking, my approach here is to name options by their
 # actual Postfix name, so that the mapping between options specified
@@ -17,7 +14,7 @@
 
 # TODO
 # - add allowedIPs and firewall config
-# - run smtpd and submission only on anycast addresses
+# - Run smtpd and submission only on specified addresses.
 
 { config, pkgs, lib, ... }:
 
@@ -38,15 +35,6 @@ let
   deployedKeyFile = config.quixops.keychain.keys.postfix-relay-host-cert-key.path;
 
   dhParamsFile = "${stateDir}/dh.pem";
-
-  v4interfaces =
-    concatMapStringsSep " " (o:
-      "${o.addrOpts.address}"
-    ) cfg.anycastAddrs.v4;
-  v6interfaces =
-    concatMapStringsSep " " (o:
-      "[${o.addrOpts.address}]"
-    ) cfg.anycastAddrs.v6;
 
 in
 {
@@ -79,11 +67,11 @@ in
       but clients that are not capable of this are allowed to connect
       with a plaintext connection over port 25.
 
-      This configuration will listen on one or more specified anycast
+      This configuration will listen on one or more specified IP
       addresses and will open local TCP firewall ports on 25 and 587.
       You can optionally provide a list of IPs that are permitted to
-      connect to these anycast IP/port combinations, in which case all
-      other IPs will be blocked by the local firewall configuration
+      connect to these IP/port combinations, in which case all other
+      IPs will be blocked by the local firewall configuration
       (assuming the firewall is enabled in the host's config).
 
     '';
@@ -205,16 +193,12 @@ in
       '';
     };
 
-    anycastAddrs = mkOption {
-      type = pkgs.lib.types.anycastAddrs;
-      default = { v4 = []; v6 = []; };
-      example = {
-        v4 = [ { ifnum = 0; addrOpts = { address = "10.8.8.8"; prefixLength = 32; }; } ];
-        v6 = [ { ifnum = 0; addrOpts = { address = "2001:db8::1"; prefixLength = 128; }; } ];
-      };
+    listenAddresses = mkOption {
+      type = types.nonEmptyListOf (types.either pkgs.lib.types.ipv4NoCIDR pkgs.lib.types.ipv6NoCIDR);
+      example = [ "10.0.0.25" "2001:db8::25" ];
       description = ''
-        A set of IPv4 and IPv6 anycast addresses on which the
-        Postfix relay host will listen.
+        A list of IPv4 and/or IPv6 addresses on which Postfix will
+        listen for incoming connections.
       '';
     };
 
@@ -233,13 +217,8 @@ in
       { assertion = !globalCfg.services.postfix-null-client.enable;
         message = "Only one of `services.postfix-null-client` and `services.postfix-relay-host` can be set";
       }
-      { assertion = (cfg.anycastAddrs.v4 == [] -> cfg.anycastAddrs.v6 != []) &&
-                    (cfg.anycastAddrs.v6 == [] -> cfg.anycastAddrs.v4 != []);
-        message = "At least one anycast address must be set in `services.postfix-relay-host`";
-      }
     ];
 
-    networking.anycastAddrs = cfg.anycastAddrs;
     networking.firewall.allowedTCPPorts = [ 25 587 ];
 
     services.postfix = {
