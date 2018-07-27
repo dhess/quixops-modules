@@ -50,7 +50,6 @@ let
     ## Overlays.
     #bb-org-overlays = callSubTests ./bb-org-overlays.nix { system = "armv7l-linux"; };
     custom-cacert = callSubTests ../tests/custom-cacert.nix {};
-    ffmpeg-snapshot = callSubTests ../tests/ffmpeg-snapshot.nix {};
     unbound-block-hosts = callSubTests ../tests/unbound-block-hosts.nix {};
     suricata = callTest ../tests/suricata.nix { system = "x86_64-linux"; };
     trimpcap = callTest ../tests/trimpcap.nix {};
