@@ -16,7 +16,7 @@ let
 
 in makeTest rec {
 
-   name = "unbound-anycast";
+   name = "unbound-multi-instance";
 
    meta = with pkgs.lib.maintainers; {
      maintainers = [ dhess-qx ];
@@ -51,19 +51,12 @@ in makeTest rec {
        nixpkgs.localSystem.system = system;
        imports = (import pkgs.lib.quixops.modulesPath);
        networking.useDHCP = false;
-       services.unbound-anycast.instances = {
+       services.unbound-multi-instance.instances = {
          adblock = {
            enableRootTrustAnchor = false; # required for testing.
            allowedAccessIpv4 = [ "192.168.1.2/32" ];
            allowedAccessIpv6 = [ ipv6_prefix ];
-           anycastAddrs = {
-             v4 = [
-               { addrOpts = { address = adblock_ipv4; prefixLength = 32; }; }
-             ];
-             v6 = [
-               { addrOpts = { address = adblock_ipv6; prefixLength = 128; }; }
-             ];
-           };
+           listenAddresses = [ adblock_ipv4 adblock_ipv6 ];
            forwardAddresses = [ "192.168.1.250" ];
          };
 
@@ -72,14 +65,7 @@ in makeTest rec {
            blockList.enable = false;
            allowedAccessIpv4 = [ "192.168.1.2/32" ];
            allowedAccessIpv6 = [ ipv6_prefix ];
-           anycastAddrs = {
-             v4 = [
-               { addrOpts = { address = noblock_ipv4; prefixLength = 32; }; }
-             ];
-             v6 = [
-               { addrOpts = { address = noblock_ipv6; prefixLength = 128; }; }
-             ];
-           };
+           listenAddresses = [ noblock_ipv4 noblock_ipv6 ];
            forwardAddresses = [ "192.168.1.250" ];
          };
        };
@@ -88,6 +74,15 @@ in makeTest rec {
        ];
        networking.interfaces.eth1.ipv6.addresses = [
          { address = "fd00:1234:5678::1000"; prefixLength = 64; }
+       ];
+       boot.kernelModules = [ "dummy" ];
+       networking.interfaces.dummy0.ipv4.addresses = [
+         { address = adblock_ipv4; prefixLength = 32; }
+         { address = noblock_ipv4; prefixLength = 32; }
+       ];
+       networking.interfaces.dummy0.ipv6.addresses = [
+         { address = adblock_ipv6; prefixLength = 128; }
+         { address = noblock_ipv6; prefixLength = 128; }
        ];
      };
 
@@ -119,8 +114,8 @@ in makeTest rec {
    ''
      startAll;
 
-     $server->waitForUnit("unbound-anycast-adblock.service");
-     $server->waitForUnit("unbound-anycast-noblock.service");
+     $server->waitForUnit("unbound-adblock.service");
+     $server->waitForUnit("unbound-noblock.service");
      $nsd->waitForUnit("nsd.service");
      $client->waitForUnit("multi-user.target");
      $badclient->waitForUnit("multi-user.target");
@@ -185,8 +180,8 @@ in makeTest rec {
      };
 
      subtest "check-stop", sub {
-       $server->stopJob("unbound-anycast-adblock.service");
-       $server->stopJob("unbound-anycast-noblock.service");
+       $server->stopJob("unbound-adblock.service");
+       $server->stopJob("unbound-noblock.service");
      };
 
    '';

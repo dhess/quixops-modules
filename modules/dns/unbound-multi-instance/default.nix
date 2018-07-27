@@ -1,4 +1,4 @@
-# An opinionated anycast unbound instance.
+# An opinionated unbound that supports multiple instances.
 #
 # Other notes:
 #
@@ -12,28 +12,28 @@ with lib;
 
 let
 
-  globalCfg = config.services.unbound-anycast;
+  globalCfg = config;
+  instances = globalCfg.services.unbound-multi-instance.instances;
 
-  stateDir = "/var/lib/unbound-anycast";
+  stateDir = "/var/lib/unbound-multi-instance";
   blockList = ./blocklist-someonewhocares.conf;
 
-  mkServiceName = name: "unbound-anycast-${name}";
+  mkServiceName = name: "unbound-${name}";
 
   mkUnboundService = name: cfg:
   let
     isLocalAddress = x: substring 0 3 x == "::1" || substring 0 9 x == "127.0.0.1";
     rootTrustAnchorFile = "${stateDir}/root.key";
-    confFileName = "unbound-anycast-${name}.conf";
+    confFileName = "unbound-${name}.conf";
     confFile = pkgs.writeText confFileName ''
       server:
         directory: "${stateDir}"
         username: unbound
         chroot: "${stateDir}"
         pidfile: ""
-        ${concatMapStringsSep "\n  " (x: "interface: ${x.addrOpts.address}") cfg.anycastAddrs.v4}
-        ${concatMapStringsSep "\n  " (x: "interface: ${x.addrOpts.address}") cfg.anycastAddrs.v6}
-        ${concatMapStringsSep "\n  " (x: "access-control: ${x} allow") cfg.allowedAccessIpv4}
-        ${concatMapStringsSep "\n  " (x: "access-control: ${x} allow") cfg.allowedAccessIpv6}
+        ${concatMapStringsSep "\n  " (ip: "interface: ${ip}") cfg.listenAddresses}
+        ${concatMapStringsSep "\n  " (cidr: "access-control: ${cidr} allow") cfg.allowedAccessIpv4}
+        ${concatMapStringsSep "\n  " (cidr: "access-control: ${cidr} allow") cfg.allowedAccessIpv6}
         ${optionalString cfg.enableRootTrustAnchor "auto-trust-anchor-file: ${rootTrustAnchorFile}"}
 
       unwanted-reply-threshold: 10000000
@@ -65,7 +65,7 @@ let
     '';
   in nameValuePair (mkServiceName name)
   {
-    description = "Unbound recursive name server (anycast)";
+    description = "Unbound recursive name server (multi-instance)";
     after = [ "network.target" ];
     before = [ "nss-lookup.target" ];
     wants = [ "nss-lookup.target" ];
@@ -96,20 +96,18 @@ let
 
 in {
 
-  options.services.unbound-anycast = {
+  options.services.unbound-multi-instance = {
 
     instances = mkOption {
       description = ''
-        Unbound anycast service instances.
+        Zero or more Unbound service instances.
       '';
       default = {};
       example = {
         adblock = {
           blockList.enable = true;
           allowedAccessIpv4 = [ "10.0.0.0/8" ];
-          anycastAddrs.v4 = [
-            { ifnum = 0; addrOpts = { address = "10.8.8.8"; prefixLength = 32; }; }
-          ];
+          listenAddresses = [ "10.8.8.8" "2001:db8::1" ];
         };
       };
       type = types.attrsOf (types.submodule {
@@ -157,16 +155,15 @@ in {
             '';
           };
 
-          anycastAddrs = mkOption {
-            type = pkgs.lib.types.anycastAddrs;
-            default = { v4 = []; v6 = []; };
-            example = {
-              v4 = [ { ifnum = 0; addrOpts = { address = "10.8.8.8"; prefixLength = 32; }; } ];
-              v6 = [ { ifnum = 0; addrOpts = { address = "2001:db8::1"; prefixLength = 128; }; } ];
-            };
+          listenAddresses = mkOption {
+            type = types.nonEmptyListOf (types.either pkgs.lib.types.ipv4NoCIDR pkgs.lib.types.ipv6NoCIDR);
+            example = [ "10.8.8.8" "2001:db8::1" ];
             description = ''
-              A set of IPv4 and IPv6 anycast addresses on which this
-              Unbound instance will listen.
+              A list of IPv4 and/or IPv6 addresses on which this
+              Unbound instance will listen. Note that no more than one
+              instance can listen on any given unique address.
+
+              At least one address must be provided.
             '';
           };
 
@@ -198,27 +195,19 @@ in {
 
   };
 
-  config = mkIf (globalCfg.instances != {}) {
+  config = mkIf (instances != {}) {
 
-    assertions =
-    let
-      mkAssertion = name: cfg:
-        { assertion = (cfg.anycastAddrs.v4 == [] -> cfg.anycastAddrs.v6 != []) &&
-                      (cfg.anycastAddrs.v6 == [] -> cfg.anycastAddrs.v4 != []);
-          message = "At least one anycast address must be set in `services.unbound-anycast.${name}`";
-        };
-    in mapAttrsToList mkAssertion globalCfg.instances;
+    assertions = [
+      { assertion = !globalCfg.services.unbound.enable;
+        message = "Only one of `services.unbound` and `services.unbound-multi-instance` can be enabled.";
+      }
+    ];
 
     # Track changes in upstream service, in case we need to reproduce
     # them here.
 
     quixops.assertions.moduleHashes."services/networking/unbound.nix" =
       "28324ab792c2eea96bce39599b49c3de29f678029342dc57ffcac186eee22f7b";
-
-    networking.anycastAddrs.v4 =
-      flatten (pkgs.lib.attrsets.mapValuesToList (cfg: cfg.anycastAddrs.v4) globalCfg.instances);
-    networking.anycastAddrs.v6 =
-      flatten (pkgs.lib.attrsets.mapValuesToList (cfg: cfg.anycastAddrs.v6) globalCfg.instances);
 
     environment.systemPackages = [ pkgs.unbound ];
 
@@ -228,15 +217,15 @@ in {
     };
 
     systemd.services =
-      mapAttrs' mkUnboundService globalCfg.instances;
+      mapAttrs' mkUnboundService instances;
 
     networking.firewall.allowedIPs =
     let
       mkAllowedIPs = protocol: cfg:
         { inherit protocol; port = 53; v4 = cfg.allowedAccessIpv4; v6 = cfg.allowedAccessIpv6; };
     in    
-      (pkgs.lib.attrsets.mapValuesToList (cfg: mkAllowedIPs "tcp" cfg) globalCfg.instances)
-      ++ (pkgs.lib.attrsets.mapValuesToList (cfg: mkAllowedIPs "udp" cfg) globalCfg.instances);
+      (pkgs.lib.attrsets.mapValuesToList (cfg: mkAllowedIPs "tcp" cfg) instances)
+      ++ (pkgs.lib.attrsets.mapValuesToList (cfg: mkAllowedIPs "udp" cfg) instances);
 
   };
 

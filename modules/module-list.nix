@@ -34,7 +34,7 @@
   ./config/overlays.nix
   ./core/keychain
   ./core/module-hashes.nix
-  ./dns/unbound-anycast
+  ./dns/unbound-multi-instance
   ./email/service-status-email
   ./email/null-client
   ./email/relay-host
