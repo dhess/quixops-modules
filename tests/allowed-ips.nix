@@ -13,11 +13,15 @@ let
 
   extraHosts = ''
     192.168.1.1 server
-    fd00:1234:5678::1000 server
-    192.168.1.2 client
-    fd00:1234:5678::2000 client
-    192.168.1.3 badclient
-    fd00:1234:5678::3000 badclient
+    fd00:1234:0:5678::1000 server
+    192.168.2.1 server_vlan2
+    fd00:1234:0:5679::1000 server_vlan2
+    192.168.1.2 client1
+    fd00:1234:0:5678::2000 client1
+    192.168.1.3 client2
+    fd00:1234:0:5678::3000 client2
+    192.168.2.2 client3
+    fd00:1234:0:5679::2000 client3
   '';
 
   makeAllowedIPsTest = name: makeTest rec {
@@ -36,26 +40,31 @@ let
         networking.useDHCP = false;
         networking.extraHosts = extraHosts;
         networking.firewall.enable = true;
+        networking.firewall.rejectPackets = true;
         networking.firewall.allowedIPs = [
+
+          # Only client1 can connect on port 80.
+
           { protocol = "tcp";
             port = 80;
             v4 = [ "192.168.1.2/32" ];
-            v6 = [ "fd00:1234:5678::2000/128" ];
+            v6 = [ "fd00:1234:0:5678::2000/128" ];
           }
 
-          # Here we accept connections from any host on the network,
-          # but only when the source port is in the range 800:801;
+          # Any host on the network can connect to 8080:8081, but only
+          # when the source port is in the range 800:801.
           
           { protocol = "tcp";
             port = "8080:8081";
             sourcePort = "800:801";
-            v4 = [ "192.168.1.0/24" ];
-            v6 = [ "fd00:1234:5678::/64" ];
+            v4 = [ "192.168.0.0/16" ];
+            v6 = [ "fd00:1234:0:5600::/56" ];
           }
         ];
         services.nginx = {
           enable = true;
           virtualHosts."server" = {
+            default = true;
             listen = [
               { addr = "0.0.0.0"; port = 80; }
               { addr = "0.0.0.0"; port = 8080; }
@@ -70,35 +79,69 @@ let
             '';
           };
         };
-        networking.interfaces.eth1.ipv4.addresses = [
-          { address = "192.168.1.1"; prefixLength = 24; }
-        ];
-        networking.interfaces.eth1.ipv6.addresses = [
-          { address = "fd00:1234:5678::1000"; prefixLength = 64; }
-        ];
+
+        # server lives on both networks.
+        virtualisation.vlans = [ 1 2 ];
+        networking.interfaces.eth1 = {
+          ipv4.addresses = pkgs.lib.mkOverride 0 [
+            { address = "192.168.1.1"; prefixLength = 24; }
+          ];
+          ipv6.addresses = pkgs.lib.mkOverride 0 [
+            { address = "fd00:1234:0:5678::1000"; prefixLength = 64; }
+          ];
+        };
+        networking.interfaces.eth2 = {
+          ipv4.addresses = pkgs.lib.mkOverride 0 [
+            { address = "192.168.2.1"; prefixLength = 24; }
+          ];
+          ipv6.addresses = pkgs.lib.mkOverride 0 [
+            { address = "fd00:1234:0:5679::1000"; prefixLength = 64; }
+          ];
+        };
       };
 
-      client = { config, ... }: {
+      client1 = { config, ... }: {
         nixpkgs.localSystem.system = system;
         networking.useDHCP = false;
         networking.extraHosts = extraHosts;
-        networking.interfaces.eth1.ipv4.addresses = [
+        networking.defaultGateway = "192.168.1.1";
+        networking.defaultGateway6 = "fd00:1234:0:5678::1000";
+        networking.interfaces.eth1.ipv4.addresses = pkgs.lib.mkOverride 0 [
           { address = "192.168.1.2"; prefixLength = 24; }
         ];
-        networking.interfaces.eth1.ipv6.addresses = [
-          { address = "fd00:1234:5678::2000"; prefixLength = 64; }
+        networking.interfaces.eth1.ipv6.addresses = pkgs.lib.mkOverride 0 [
+          { address = "fd00:1234:0:5678::2000"; prefixLength = 64; }
         ];
       };
 
-      badclient = { config, ... }: {
+      client2 = { config, ... }: {
         nixpkgs.localSystem.system = system;
         networking.useDHCP = false;
+        networking.defaultGateway = "192.168.1.1";
+        networking.defaultGateway6 = "fd00:1234:0:5678::1000";
         networking.extraHosts = extraHosts;
-        networking.interfaces.eth1.ipv4.addresses = [
+        networking.interfaces.eth1.ipv4.addresses = pkgs.lib.mkOverride 0 [
           { address = "192.168.1.3"; prefixLength = 24; }
         ];
-        networking.interfaces.eth1.ipv6.addresses = [
-          { address = "fd00:1234:5678::3000"; prefixLength = 64; }
+        networking.interfaces.eth1.ipv6.addresses = pkgs.lib.mkOverride 0 [
+          { address = "fd00:1234:0:5678::3000"; prefixLength = 64; }
+        ];
+      };
+
+      # client3 lives on vlan 2.
+
+      client3 = { config, ... }: {
+        nixpkgs.localSystem.system = system;
+        networking.useDHCP = false;
+        networking.defaultGateway = "192.168.2.1";
+        networking.defaultGateway6 = "fd00:1234:0:5679::1000";
+        networking.extraHosts = extraHosts;
+        virtualisation.vlans = [ 2 ];
+        networking.interfaces.eth1.ipv4.addresses = pkgs.lib.mkOverride 0 [
+          { address = "192.168.2.2"; prefixLength = 24; }
+        ];
+        networking.interfaces.eth1.ipv6.addresses = pkgs.lib.mkOverride 0 [
+          { address = "fd00:1234:0:5679::2000"; prefixLength = 64; }
         ];
       };
 
@@ -109,8 +152,9 @@ let
       startAll;
 
       $server->waitForUnit("nginx.service");
-      $client->waitForUnit("multi-user.target");
-      $badclient->waitForUnit("multi-user.target");
+      $client1->waitForUnit("multi-user.target");
+      $client2->waitForUnit("multi-user.target");
+      $client3->waitForUnit("multi-user.target");
 
       # Make sure we have IPv6 connectivity and there isn't an issue
       # with the network setup in the test.
@@ -123,32 +167,53 @@ let
           return $ip;
       }
 
-      waitForAddress $client, "eth1", "global";
-      waitForAddress $badclient, "eth1", "global";
+      waitForAddress $client1, "eth1", "global";
+      waitForAddress $client2, "eth1", "global";
+      waitForAddress $client3, "eth1", "global";
       waitForAddress $server, "eth1", "global";
 
-      $server->succeed("ping -c 1 fd00:1234:5678::2000 >&2");
-      $server->succeed("ping -c 1 fd00:1234:5678::3000 >&2");
-      $client->succeed("ping -c 1 fd00:1234:5678::1000 >&2");
-      $badclient->succeed("ping -c 1 fd00:1234:5678::1000 >&2");
+      $server->succeed("ping -c 1 192.168.1.2 >&2");
+      $server->succeed("ping -c 1 fd00:1234:0:5678::2000 >&2");
+      $server->succeed("ping -c 1 192.168.1.3 >&2");
+      $server->succeed("ping -c 1 fd00:1234:0:5678::3000 >&2");
+      $server->succeed("ping -c 1 192.168.2.2 >&2");
+      $server->succeed("ping -c 1 fd00:1234:0:5679::2000 >&2");
 
-      # Make sure nginx is running.
-      subtest "localhost-connections", sub {
-        $server->succeed("${pkgs.netcat}/bin/nc -w 5 localhost 80");
+      $client1->succeed("ping -c 1 192.168.1.1 >&2");
+      $client1->succeed("ping -c 1 fd00:1234:0:5678::1000 >&2");
+      $client2->succeed("ping -c 1 192.168.1.1 >&2");
+      $client2->succeed("ping -c 1 fd00:1234:0:5678::1000 >&2");
+      $client3->succeed("ping -c 1 192.168.2.1 >&2");
+      $client3->succeed("ping -c 1 fd00:1234:0:5679::1000 >&2");
+
+      subtest "remote-connections", sub {
+        $client1->succeed("${pkgs.curl}/bin/curl -4 http://server:80");
+        $client1->succeed("${pkgs.curl}/bin/curl -6 http://server:80");
+        $client1->fail("${pkgs.curl}/bin/curl -4 http://server:8080");
+        $client1->fail("${pkgs.curl}/bin/curl -4 http://server:8081");
+        $client1->fail("${pkgs.curl}/bin/curl -6 http://server:8081");
+        $client1->fail("${pkgs.curl}/bin/curl -6 http://server:8081");
+        $client1->succeed("${pkgs.curl}/bin/curl --local-port 800 -4 http://server:8080");
+        $client1->succeed("${pkgs.curl}/bin/curl --local-port 801 -6 http://server:8081");
+
+        $client2->fail("${pkgs.curl}/bin/curl -4 http://server:80");
+        $client2->fail("${pkgs.curl}/bin/curl -6 http://server:80");
+        $client2->fail("${pkgs.curl}/bin/curl -4 http://server:8080");
+        $client2->fail("${pkgs.curl}/bin/curl -4 http://server:8081");
+        $client2->fail("${pkgs.curl}/bin/curl -6 http://server:8080");
+        $client2->fail("${pkgs.curl}/bin/curl -6 http://server:8081");
+        $client2->succeed("${pkgs.curl}/bin/curl --local-port 800 -4 http://server:8080");
+        $client2->succeed("${pkgs.curl}/bin/curl --local-port 801 -6 http://server:8081");
+
+        $client3->fail("${pkgs.curl}/bin/curl -4 http://server_vlan2:80");
+        $client3->fail("${pkgs.curl}/bin/curl -6 http://server_vlan2:80");
+        $client3->fail("${pkgs.curl}/bin/curl -4 http://server_vlan2:8080");
+        $client3->fail("${pkgs.curl}/bin/curl -4 http://server_vlan2:8081");
+        $client3->fail("${pkgs.curl}/bin/curl -6 http://server_vlan2:8080");
+        $client3->fail("${pkgs.curl}/bin/curl -6 http://server_vlan2:8081");
+        $client3->succeed("${pkgs.curl}/bin/curl --local-port 800 -4 http://server_vlan2:8080");
+        $client3->succeed("${pkgs.curl}/bin/curl --local-port 801 -6 http://server_vlan2:8081");
       };
-
-      subtest "allow-remote-connections", sub {
-        $client->succeed("${pkgs.netcat}/bin/nc -w 5 server 80");
-        $client->succeed("${pkgs.netcat}/bin/nc -6 -w 5 server 80");
-        $badclient->succeed("${pkgs.netcat}/bin/nc -p 800 -w 5 server 8080");
-        $badclient->succeed("${pkgs.netcat}/bin/nc -6 -p 801 -w 5 server 8081");
-      };
-
-      subtest "no-remote-connections", sub {
-        $badclient->fail("${pkgs.netcat}/bin/nc -w 5 server 80");
-        $badclient->fail("${pkgs.netcat}/bin/nc -6 -w 5 server 80");
-      };
-
     '';
   };
 
