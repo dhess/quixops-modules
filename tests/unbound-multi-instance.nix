@@ -33,6 +33,7 @@ in makeTest rec {
          { address = "fd00:1234:5678::ffff"; prefixLength = 64; }
        ];
        networking.firewall.allowedUDPPorts = [ 53 ];
+       networking.firewall.allowedTCPPorts = [ 53 ];
        services.nsd.enable = true;
        services.nsd.interfaces = [ "192.168.1.250" ];
        services.nsd.zones."example.com.".data = ''
@@ -51,11 +52,12 @@ in makeTest rec {
        nixpkgs.localSystem.system = system;
        imports = (import pkgs.lib.quixops.modulesPath);
        networking.useDHCP = false;
+       networking.firewall.allowedUDPPorts = [ 53 ];
+       networking.firewall.allowedTCPPorts = [ 53 ];
        services.unbound-multi-instance.instances = {
          adblock = {
            enableRootTrustAnchor = false; # required for testing.
-           allowedAccessIpv4 = [ "192.168.1.2/32" ];
-           allowedAccessIpv6 = [ ipv6_prefix ];
+           allowedAccess = [ "192.168.1.2/32" ipv6_prefix];
            listenAddresses = [ adblock_ipv4 adblock_ipv6 ];
            forwardAddresses = [ "192.168.1.250" ];
          };
@@ -63,8 +65,7 @@ in makeTest rec {
          noblock = {
            enableRootTrustAnchor = false; # required for testing.
            blockList.enable = false;
-           allowedAccessIpv4 = [ "192.168.1.2/32" ];
-           allowedAccessIpv6 = [ ipv6_prefix ];
+           allowedAccess = [ "192.168.1.2/32" ipv6_prefix ];
            listenAddresses = [ noblock_ipv4 noblock_ipv6 ];
            forwardAddresses = [ "192.168.1.250" ];
          };

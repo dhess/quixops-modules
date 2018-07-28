@@ -1,10 +1,4 @@
 # An opinionated unbound that supports multiple instances.
-#
-# Other notes:
-#
-# - `allowedAccess` from the Nixpkgs unbound module is broken up into
-#   separate IPv4 and IPv6 lists so that the addresses can easily be
-#   added to firewall rules.
 
 { config, pkgs, lib, ... }:
 
@@ -32,8 +26,7 @@ let
         chroot: "${stateDir}"
         pidfile: ""
         ${concatMapStringsSep "\n  " (ip: "interface: ${ip}") cfg.listenAddresses}
-        ${concatMapStringsSep "\n  " (cidr: "access-control: ${cidr} allow") cfg.allowedAccessIpv4}
-        ${concatMapStringsSep "\n  " (cidr: "access-control: ${cidr} allow") cfg.allowedAccessIpv6}
+        ${concatMapStringsSep "\n  " (cidr: "access-control: ${cidr} allow") cfg.allowedAccess}
         ${optionalString cfg.enableRootTrustAnchor "auto-trust-anchor-file: ${rootTrustAnchorFile}"}
 
       unwanted-reply-threshold: 10000000
@@ -106,7 +99,7 @@ in {
       example = {
         adblock = {
           blockList.enable = true;
-          allowedAccessIpv4 = [ "10.0.0.0/8" ];
+          allowedAccess = [ "10.0.0.0/8" ];
           listenAddresses = [ "10.8.8.8" "2001:db8::1" ];
         };
       };
@@ -125,33 +118,16 @@ in {
             };
           };
 
-          allowedAccessIpv4 = mkOption {
-            default = [ "127.0.0.0/8" ];
-            example = [ "192.168.1.0/24" ];
-            type = types.listOf pkgs.lib.types.ipv4CIDR;
+          allowedAccess = mkOption {
+            default = [ "127.0.0.0/8" "::1" ];
+            example = [ "192.168.1.0/24" "2001:db8::/64"];
+            type = types.listOf (types.either pkgs.lib.types.ipv4CIDR pkgs.lib.types.ipv6CIDR);
             description = ''
-              A list of IPv4 networks that can use this instance as
-              a resolver, in CIDR notation.
+              A list of networks that can use this instance as a
+              resolver, in CIDR notation.
 
-              Note that, in addition to specifying them in the Unbound
-              service configuration, these addresses will also be added to
-              the <literal>nixos-fw-accept</literal> firewall whitelist for
-              port 53 (UDP and TCP).
-            '';
-          };
-
-          allowedAccessIpv6 = mkOption {
-            default = [ "::1/128" ];
-            example = [ "2001:db8::/32" ];
-            type = types.listOf pkgs.lib.types.ipv6CIDR;
-            description = ''
-              A list of IPv6 networks that can use this instance as
-              a resolver, in CIDR notation.
-
-              Note that, in addition to specifying them in the Unbound
-              service configuration, these addresses will also be added to
-              the <literal>nixos-fw-accept</literal> firewall whitelist for
-              port 53 (UDP and TCP).
+              Note that this setting does not alter any firewall
+              settings; it is only an application-level access list.
             '';
           };
 
@@ -218,14 +194,6 @@ in {
 
     systemd.services =
       mapAttrs' mkUnboundService instances;
-
-    networking.firewall.allowedIPs =
-    let
-      mkAllowedIPs = protocol: cfg:
-        { inherit protocol; port = 53; v4 = cfg.allowedAccessIpv4; v6 = cfg.allowedAccessIpv6; };
-    in    
-      (pkgs.lib.attrsets.mapValuesToList (cfg: mkAllowedIPs "tcp" cfg) instances)
-      ++ (pkgs.lib.attrsets.mapValuesToList (cfg: mkAllowedIPs "udp" cfg) instances);
 
   };
 
