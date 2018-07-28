@@ -60,6 +60,16 @@ let
             v4 = [ "192.168.0.0/16" ];
             v6 = [ "fd00:1234:0:5600::/56" ];
           }
+
+          ## Only packets entering on eth2 can connect to port 8088.
+
+          { protocol = "tcp";
+            port = 8088;
+            interface = "eth2";
+            v4 = [ "192.168.0.0/16" ];
+            v6 = [ "fd00:1234:0:5600::/56" ];
+          }
+
         ];
         services.nginx = {
           enable = true;
@@ -69,9 +79,11 @@ let
               { addr = "0.0.0.0"; port = 80; }
               { addr = "0.0.0.0"; port = 8080; }
               { addr = "0.0.0.0"; port = 8081; }
+              { addr = "0.0.0.0"; port = 8088; }
               { addr = "[::]"; port = 80; }
               { addr = "[::]"; port = 8080; }
               { addr = "[::]"; port = 8081; }
+              { addr = "[::]"; port = 8088; }
             ];
             locations."/".root = pkgs.runCommand "docroot" {} ''
               mkdir -p "$out/"
@@ -195,6 +207,8 @@ let
         $client1->fail("${pkgs.curl}/bin/curl -6 http://server:8081");
         $client1->succeed("${pkgs.curl}/bin/curl --local-port 800 -4 http://server:8080");
         $client1->succeed("${pkgs.curl}/bin/curl --local-port 801 -6 http://server:8081");
+        $client1->fail("${pkgs.curl}/bin/curl -4 http://server:8088");
+        $client1->fail("${pkgs.curl}/bin/curl -6 http://server:8088");
 
         $client2->fail("${pkgs.curl}/bin/curl -4 http://server:80");
         $client2->fail("${pkgs.curl}/bin/curl -6 http://server:80");
@@ -204,6 +218,8 @@ let
         $client2->fail("${pkgs.curl}/bin/curl -6 http://server:8081");
         $client2->succeed("${pkgs.curl}/bin/curl --local-port 800 -4 http://server:8080");
         $client2->succeed("${pkgs.curl}/bin/curl --local-port 801 -6 http://server:8081");
+        $client2->fail("${pkgs.curl}/bin/curl -4 http://server:8088");
+        $client2->fail("${pkgs.curl}/bin/curl -6 http://server:8088");
 
         $client3->fail("${pkgs.curl}/bin/curl -4 http://server_vlan2:80");
         $client3->fail("${pkgs.curl}/bin/curl -6 http://server_vlan2:80");
@@ -213,6 +229,8 @@ let
         $client3->fail("${pkgs.curl}/bin/curl -6 http://server_vlan2:8081");
         $client3->succeed("${pkgs.curl}/bin/curl --local-port 800 -4 http://server_vlan2:8080");
         $client3->succeed("${pkgs.curl}/bin/curl --local-port 801 -6 http://server_vlan2:8081");
+        $client3->succeed("${pkgs.curl}/bin/curl -4 http://server:8088");
+        $client3->succeed("${pkgs.curl}/bin/curl -6 http://server:8088");
       };
     '';
   };
