@@ -13,7 +13,6 @@
 # to figure out exactly what's going to be set to what.)
 
 # TODO
-# - add allowedIPs and firewall config
 # - Run smtpd and submission only on specified addresses.
 
 { config, pkgs, lib, ... }:
@@ -66,14 +65,6 @@ in
       certificate authorization (using a pre-computed fingerprint),
       but clients that are not capable of this are allowed to connect
       with a plaintext connection over port 25.
-
-      This configuration will listen on one or more specified IP
-      addresses and will open local TCP firewall ports on 25 and 587.
-      You can optionally provide a list of IPs that are permitted to
-      connect to these IP/port combinations, in which case all other
-      IPs will be blocked by the local firewall configuration
-      (assuming the firewall is enabled in the host's config).
-
     '';
 
     myDomain = mkOption {
@@ -218,8 +209,6 @@ in
         message = "Only one of `services.postfix-null-client` and `services.postfix-relay-host` can be set";
       }
     ];
-
-    networking.firewall.allowedTCPPorts = [ 25 587 ];
 
     services.postfix = {
       enable = true;

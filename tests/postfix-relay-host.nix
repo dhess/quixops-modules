@@ -30,6 +30,7 @@ in makeTest rec {
         (import pkgs.lib.quixops.testModulesPath);
 
        networking.useDHCP = false;
+       networking.firewall.allowedTCPPorts = [ 25 587 ];
        networking.interfaces.eth1.ipv4.addresses = [
          { address = "192.168.1.1"; prefixLength = 24; }
        ];
