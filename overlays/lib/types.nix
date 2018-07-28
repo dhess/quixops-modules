@@ -92,9 +92,11 @@ rec {
     options = {
 
       protocol = mkOption {
-        type = types.enum [ "udp" "tcp" ];
+        type = pkgs.lib.types.nonEmptyStr;
         example = "tcp";
-        description = "The protocol namespace of <option>port</option>.";
+        description = ''
+          The protocol of the rule or packet to check.
+        '';
       };
 
       port = mkOption {
