@@ -12,23 +12,27 @@ let
   cfg = config.networking.firewall;
   enable = cfg.allowedIPs != [] && cfg.enable;
 
-  ipt = cmd: port: proto: ips:
+  ipt = cmd: port: proto: sourcePort: ifname: ips:
+  let
+    sourcePortFilter = optionalString (sourcePort != null) "--sport ${toString sourcePort}";
+    ifFilter = optionalString (ifname != null) "-i ${ifname}";
+  in
     concatMapStrings (ip:
       ''
-        ${cmd} -A nixos-fw -p ${proto} -s ${ip} --dport ${toString port} -j nixos-fw-accept
+        ${cmd} -A nixos-fw -p ${proto} -s ${ip} ${ifFilter} ${sourcePortFilter} --dport ${toString port} -j nixos-fw-accept
       ''
     ) ips;
 
-  iptables = port: proto: v4: v6:
+  iptables = port: proto: sourcePort: ifname: v4: v6:
     ''
-      ${ipt "iptables" port proto v4}
-      ${ipt "ip6tables" port proto v6}
+      ${ipt "iptables" port proto sourcePort ifname v4}
+      ${ipt "ip6tables" port proto sourcePort ifname v6}
     '';
   
   extraCommands =
     concatMapStrings (desc:
       ''
-        ${iptables desc.port desc.protocol desc.v4 desc.v6}
+        ${iptables desc.port desc.protocol desc.sourcePort desc.interface desc.v4 desc.v6}
       ''
       ) cfg.allowedIPs;
 

@@ -98,9 +98,36 @@ rec {
       };
 
       port = mkOption {
-        type = pkgs.lib.types.port;
-        example = 22;
-        description = "The port number.";
+        type = types.either pkgs.lib.types.port (types.strMatching "[[:digit:]]+:[[:digit:]]+");
+        example = "8000:8007";
+        description = ''
+          The local (destination) port number, or colon-delimited port number range.
+        '';
+      };
+
+      sourcePort = mkOption {
+        type = types.nullOr (types.either pkgs.lib.types.port (types.strMatching "[[:digit:]]+:[[:digit:]]+"));
+        default = null;
+        example = "67:68";
+        description = ''
+          An optional source port number, or colon-delimited port
+          number range, to filter on. If non-null, an additional
+          filter will be applied using the provided source port
+          number.
+
+          This is helpful for securing certain protocols, e.g., DHCP.
+        '';
+      };
+
+      interface = mkOption {
+        type = types.nullOr pkgs.lib.types.nonEmptyStr;
+        default = null;
+        example = "eth0";
+        description = ''
+          An optional device interface name. If non-null, an
+          additional filter will be applied, using the interface on
+          which packets are received.
+        '';
       };
 
       v4 = mkOption {
