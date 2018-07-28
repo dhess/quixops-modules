@@ -44,7 +44,7 @@ in
    type = pkgs.lib.types.allowedIPs;
    default = [];
    example = [ {
-     protocol = tcp;
+     protocol = "tcp";
      port = 22;
      v4 = [ "10.0.0.0/24" ];
      v6 = [ "2001:db8::3:0/64" ];
