@@ -84,8 +84,6 @@ in {
     environment.systemPackages = [ pkgs.ntp ];
     services.timesyncd.enable = mkForce false;
 
-    networking.firewall.allowedUDPPorts = [ 123 ];
-
     users.users = singleton
       { name = ntpUser;
         uid = config.ids.uids.ntp;
