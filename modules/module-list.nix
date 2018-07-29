@@ -38,7 +38,7 @@
   ./email/service-status-email
   ./email/null-client
   ./email/relay-host
-  ./networking/allowed-ips
+  ./networking/accept
   ./networking/pcap-prep
   ./networking/wireguard
   ./services/full-tunnel-vpn

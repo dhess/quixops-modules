@@ -88,7 +88,7 @@ rec {
   });
 
 
-  allowedIPs = types.listOf (types.submodule {
+  fwRule = types.listOf (types.submodule {
     options = {
 
       protocol = mkOption {
@@ -137,10 +137,9 @@ rec {
         default = [];
         example = [ "10.0.0.0/24" ];
         description = ''
-          A list of IPv4 addresses to be allowed access for the given
-          protocol/port pair. Note that the addresses must be
-          specified in CIDR notation, i.e., with a corresponding
-          subnet prefix.
+          A list of IPv4 addresses to filter on. Note that the
+          addresses must be specified in CIDR notation, i.e., with a
+          corresponding subnet prefix.
         '';
       };
 
@@ -149,10 +148,9 @@ rec {
         default = [];
         example = [ "2001:db8::/64" ];
         description = ''
-          A list of IPv6 addresses to be allowed access for the given
-          protocol/port pair. Note that the addresses must be
-          specified in CIDR notation, i.e., with a corresponding
-          subnet prefix.
+          A list of IPv6 addresses to filter on. Note that the
+          addresses must be specified in CIDR notation, i.e., with a
+          corresponding subnet prefix.
         '';
       };
 

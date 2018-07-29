@@ -41,7 +41,7 @@ let
         networking.extraHosts = extraHosts;
         networking.firewall.enable = true;
         networking.firewall.rejectPackets = true;
-        networking.firewall.allowedIPs = [
+        networking.firewall.accept = [
 
           # Only client1 can connect on port 80.
 
@@ -237,5 +237,5 @@ let
 
 in
 {
-  allowedIPs = makeAllowedIPsTest "allowed-ips";
+  accept = makeAllowedIPsTest "accept";
 }

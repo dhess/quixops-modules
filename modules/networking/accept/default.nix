@@ -1,8 +1,5 @@
 ## Punch holes in the firewall on a protocol/port/IP basis.
 
-# TODO
-# - Merge allowedIPs based on a protocol+port key.
-
 { config, lib, pkgs, ... }:
 
 with lib;
@@ -10,18 +7,22 @@ with lib;
 let
 
   cfg = config.networking.firewall;
-  enable = cfg.allowedIPs != [] && cfg.enable;
+  enable = cfg.accept != [] && cfg.enable;
 
   ipt = cmd: port: proto: sourcePort: ifname: ips:
   let
     sourcePortFilter = optionalString (sourcePort != null) "--sport ${toString sourcePort}";
     ifFilter = optionalString (ifname != null) "-i ${ifname}";
   in
-    concatMapStrings (ip:
-      ''
-        ${cmd} -A nixos-fw -p ${proto} -s ${ip} ${ifFilter} ${sourcePortFilter} --dport ${toString port} -j nixos-fw-accept
-      ''
-    ) ips;
+    if (ips == []) then ''
+      ${cmd} -A nixos-fw -p ${proto} ${ifFilter} ${sourcePortFilter} --dport ${toString port} -j nixos-fw-accept
+    ''
+    else
+      concatMapStrings (ip:
+        ''
+          ${cmd} -A nixos-fw -p ${proto} -s ${ip} ${ifFilter} ${sourcePortFilter} --dport ${toString port} -j nixos-fw-accept
+        ''
+      ) ips;
 
   iptables = port: proto: sourcePort: ifname: v4: v6:
     ''
@@ -34,14 +35,14 @@ let
       ''
         ${iptables desc.port desc.protocol desc.sourcePort desc.interface desc.v4 desc.v6}
       ''
-      ) cfg.allowedIPs;
+      ) cfg.accept;
 
 in
 
 {
 
-  options.networking.firewall.allowedIPs = mkOption {
-   type = pkgs.lib.types.allowedIPs;
+  options.networking.firewall.accept = mkOption {
+   type = pkgs.lib.types.fwRule;
    default = [];
    example = [ {
      protocol = "tcp";
