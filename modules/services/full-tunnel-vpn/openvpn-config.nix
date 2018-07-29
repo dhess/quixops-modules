@@ -80,21 +80,6 @@ mkIf (instances != {}) {
         "${serverCfg.ipv4ClientBaseAddr}/24"
        )) instances);
 
-  networking.firewall.allowedUDPPorts =
-    filter
-      (x: x != null)
-      (mapAttrsToList
-        (_: cfg: if (cfg.proto == "udp" || cfg.proto == "udp6") then cfg.port else null)
-        instances
-      );
-  networking.firewall.allowedTCPPorts =
-    filter
-      (x: x != null)
-      (mapAttrsToList
-        (_: cfg: if (cfg.proto == "tcp" || cfg.proto == "tcp6") then cfg.port else null)
-        instances
-      );
-
   services.openvpn.servers = listToAttrs (filter (x: x.value != null) (
     (mapAttrsToList
       (_: serverCfg: nameValuePair "${serverCfg.name}" ({

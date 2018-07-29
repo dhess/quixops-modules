@@ -124,6 +124,10 @@ let
     # Use the test key deployment system.
     deployment.reallyReallyEnable = true;
 
+    # Turn off the firewall for these tests, as that's not really what
+    # we're trying to test here.
+    networking.firewall.enable = false;
+
     services.full-tunnel-vpn = {
       routedInterface = "eth1";
       inherit openvpn;

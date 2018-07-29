@@ -61,7 +61,6 @@ mkIf cfg.enable {
   };
   
   networking.nat.internalIPs = [ cfg.ipv4ClientCidr ];
-  networking.firewall.allowedUDPPorts = [ ikev2Port ikev2NatTPort ];
 
   systemd.services.strongswan-setup = {
     description = "strongswan setup script ";
