@@ -13,10 +13,11 @@ let
   let
     sourcePortFilter = optionalString (src.port != null) "--sport ${toString src.port}";
     sourceIPFilter = optionalString (src.ip != null) "--source ${src.ip}";
+    destPortFilter = optionalString (dest.port != null) "--dport ${toString dest.port}";
     destIPFilter = optionalString (dest.ip != null) "--destination ${dest.ip}";
     ifFilter = optionalString (interface != null) "-i ${interface}";
   in ''
-    ${cmd} -A nixos-fw -p ${protocol} ${ifFilter} ${sourceIPFilter} ${sourcePortFilter} ${destIPFilter} --dport ${toString dest.port} -j nixos-fw-accept
+    ${cmd} -A nixos-fw -p ${protocol} ${ifFilter} ${sourceIPFilter} ${sourcePortFilter} ${destIPFilter} ${destPortFilter} -j nixos-fw-accept
   '';
 
   extraCommands = ''

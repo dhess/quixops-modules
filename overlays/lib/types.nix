@@ -140,10 +140,11 @@ rec {
 
       dest = {
         port = mkOption {
-          type = types.either pkgs.lib.types.port (types.strMatching "[[:digit:]]+:[[:digit:]]+");
+          type = types.nullOr (types.either pkgs.lib.types.port (types.strMatching "[[:digit:]]+:[[:digit:]]+"));
+          default = null;
           example = "8000:8007";
           description = ''
-            The local (destination) port number, or colon-delimited port number range.
+            An optional destination port number, or colon-delimited port number range.
           '';
         };
 
@@ -215,10 +216,11 @@ rec {
 
       dest = {
         port = mkOption {
-          type = types.either pkgs.lib.types.port (types.strMatching "[[:digit:]]+:[[:digit:]]+");
+          type = types.nullOr (types.either pkgs.lib.types.port (types.strMatching "[[:digit:]]+:[[:digit:]]+"));
+          default = null;
           example = "8000:8007";
           description = ''
-            The local (destination) port number, or colon-delimited port number range.
+            An optional destination port number, or colon-delimited port number range.
           '';
         };
 
