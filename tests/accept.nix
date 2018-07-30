@@ -22,6 +22,10 @@ let
     fd00:1234:0:5678::3000 client2
     192.168.2.2 client3
     fd00:1234:0:5679::2000 client3
+
+    # A virtual IP.
+    10.0.0.8 virtual_server
+    fd00:1234:0:567a::1000 virtual_server
   '';
 
   makeAllowedIPsTest = name: makeTest rec {
@@ -67,6 +71,13 @@ let
             src.ip = "192.168.0.0/16";
           }
 
+          ## Only packets bound for the virtual IP can connect to port
+          ## 8089.
+
+          { protocol = "tcp";
+            dest.port = 8089;
+            dest.ip = "10.0.0.8/32";
+          }
         ];
         networking.firewall.accept6 = [
 
@@ -94,6 +105,13 @@ let
             src.ip = "fd00:1234:0:5600::/56";
           }
 
+          ## Only packets bound for the virtual IP can connect to port
+          ## 8089.
+
+          { protocol = "tcp";
+            dest.port = 8089;
+            dest.ip = "fd00:1234:0:567a::1000/128";
+          }
         ];
         services.nginx = {
           enable = true;
@@ -104,10 +122,12 @@ let
               { addr = "0.0.0.0"; port = 8080; }
               { addr = "0.0.0.0"; port = 8081; }
               { addr = "0.0.0.0"; port = 8088; }
+              { addr = "0.0.0.0"; port = 8089; }
               { addr = "[::]"; port = 80; }
               { addr = "[::]"; port = 8080; }
               { addr = "[::]"; port = 8081; }
               { addr = "[::]"; port = 8088; }
+              { addr = "[::]"; port = 8089; }
             ];
             locations."/".root = pkgs.runCommand "docroot" {} ''
               mkdir -p "$out/"
@@ -134,6 +154,13 @@ let
             { address = "fd00:1234:0:5679::1000"; prefixLength = 64; }
           ];
         };
+        boot.kernelModules = [ "dummy" ];
+        networking.interfaces.dummy0.ipv4.addresses = [
+          { address = "10.0.0.8"; prefixLength = 32; }
+        ];
+        networking.interfaces.dummy0.ipv6.addresses = [
+          { address = "fd00:1234:0:567a::1000"; prefixLength = 128; }
+        ];
       };
 
       client1 = { config, ... }: {
@@ -216,11 +243,17 @@ let
       $server->succeed("ping -c 1 fd00:1234:0:5679::2000 >&2");
 
       $client1->succeed("ping -c 1 192.168.1.1 >&2");
+      $client1->succeed("ping -c 1 10.0.0.8 >&2");
       $client1->succeed("ping -c 1 fd00:1234:0:5678::1000 >&2");
+      $client1->succeed("ping -c 1 fd00:1234:0:567a::1000 >&2");
       $client2->succeed("ping -c 1 192.168.1.1 >&2");
+      $client2->succeed("ping -c 1 10.0.0.8 >&2");
       $client2->succeed("ping -c 1 fd00:1234:0:5678::1000 >&2");
+      $client2->succeed("ping -c 1 fd00:1234:0:567a::1000 >&2");
       $client3->succeed("ping -c 1 192.168.2.1 >&2");
+      $client3->succeed("ping -c 1 10.0.0.8 >&2");
       $client3->succeed("ping -c 1 fd00:1234:0:5679::1000 >&2");
+      $client3->succeed("ping -c 1 fd00:1234:0:567a::1000 >&2");
 
       subtest "remote-connections", sub {
         $client1->succeed("${pkgs.curl}/bin/curl -4 http://server:80");
@@ -233,6 +266,10 @@ let
         $client1->succeed("${pkgs.curl}/bin/curl --local-port 801 -6 http://server:8081");
         $client1->fail("${pkgs.curl}/bin/curl -4 http://server:8088");
         $client1->fail("${pkgs.curl}/bin/curl -6 http://server:8088");
+        $client1->fail("${pkgs.curl}/bin/curl -4 http://server:8089");
+        $client1->fail("${pkgs.curl}/bin/curl -6 http://server:8089");
+        $client1->succeed("${pkgs.curl}/bin/curl -4 http://virtual_server:8089");
+        $client1->succeed("${pkgs.curl}/bin/curl -6 http://virtual_server:8089");
 
         $client2->fail("${pkgs.curl}/bin/curl -4 http://server:80");
         $client2->fail("${pkgs.curl}/bin/curl -6 http://server:80");
@@ -244,6 +281,10 @@ let
         $client2->succeed("${pkgs.curl}/bin/curl --local-port 801 -6 http://server:8081");
         $client2->fail("${pkgs.curl}/bin/curl -4 http://server:8088");
         $client2->fail("${pkgs.curl}/bin/curl -6 http://server:8088");
+        $client2->fail("${pkgs.curl}/bin/curl -4 http://server:8089");
+        $client2->fail("${pkgs.curl}/bin/curl -6 http://server:8089");
+        $client2->succeed("${pkgs.curl}/bin/curl -4 http://virtual_server:8089");
+        $client2->succeed("${pkgs.curl}/bin/curl -6 http://virtual_server:8089");
 
         $client3->fail("${pkgs.curl}/bin/curl -4 http://server_vlan2:80");
         $client3->fail("${pkgs.curl}/bin/curl -6 http://server_vlan2:80");
@@ -255,6 +296,10 @@ let
         $client3->succeed("${pkgs.curl}/bin/curl --local-port 801 -6 http://server_vlan2:8081");
         $client3->succeed("${pkgs.curl}/bin/curl -4 http://server:8088");
         $client3->succeed("${pkgs.curl}/bin/curl -6 http://server:8088");
+        $client3->fail("${pkgs.curl}/bin/curl -4 http://server_vlan2:8089");
+        $client3->fail("${pkgs.curl}/bin/curl -6 http://server_vlan2:8089");
+        $client3->succeed("${pkgs.curl}/bin/curl -4 http://virtual_server:8089");
+        $client3->succeed("${pkgs.curl}/bin/curl -6 http://virtual_server:8089");
       };
     '';
   };
