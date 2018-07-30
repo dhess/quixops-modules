@@ -46,25 +46,25 @@ let
           # Only client1 can connect on port 80.
 
           { protocol = "tcp";
-            port = 80;
-            sourceIP = "192.168.1.2/32";
+            dest.port = 80;
+            src.ip = "192.168.1.2/32";
           }
 
           # Any host on the network can connect to 8080:8081, but only
           # when the source port is in the range 800:801.
           
           { protocol = "tcp";
-            port = "8080:8081";
-            sourcePort = "800:801";
-            sourceIP = "192.168.0.0/16";
+            dest.port = "8080:8081";
+            src.port = "800:801";
+            src.ip = "192.168.0.0/16";
           }
 
           ## Only packets entering on eth2 can connect to port 8088.
 
           { protocol = "tcp";
-            port = 8088;
+            dest.port = 8088;
             interface = "eth2";
-            sourceIP = "192.168.0.0/16";
+            src.ip = "192.168.0.0/16";
           }
 
         ];
@@ -73,25 +73,25 @@ let
           # Only client1 can connect on port 80.
 
           { protocol = "tcp";
-            port = 80;
-            sourceIP = "fd00:1234:0:5678::2000/128";
+            dest.port = 80;
+            src.ip = "fd00:1234:0:5678::2000/128";
           }
 
           # Any host on the network can connect to 8080:8081, but only
           # when the source port is in the range 800:801.
           
           { protocol = "tcp";
-            port = "8080:8081";
-            sourcePort = "800:801";
-            sourceIP = "fd00:1234:0:5600::/56";
+            dest.port = "8080:8081";
+            src.port = "800:801";
+            src.ip = "fd00:1234:0:5600::/56";
           }
 
           ## Only packets entering on eth2 can connect to port 8088.
 
           { protocol = "tcp";
-            port = 8088;
+            dest.port = 8088;
             interface = "eth2";
-            sourceIP = "fd00:1234:0:5600::/56";
+            src.ip = "fd00:1234:0:5600::/56";
           }
 
         ];

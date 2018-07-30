@@ -9,18 +9,18 @@ let
   cfg = config.networking.firewall;
   enable = cfg.accept != [] && cfg.enable;
 
-  ipt = cmd: desc:
+  ipt = cmd: protocol: interface: src: dest:
   let
-    sourcePortFilter = optionalString (desc.sourcePort != null) "--sport ${toString desc.sourcePort}";
-    sourceIPFilter = optionalString (desc.sourceIP != null) "-s ${desc.sourceIP}";
-    ifFilter = optionalString (desc.interface != null) "-i ${desc.interface}";
+    sourcePortFilter = optionalString (src.port != null) "--sport ${toString src.port}";
+    sourceIPFilter = optionalString (src.ip != null) "-s ${src.ip}";
+    ifFilter = optionalString (interface != null) "-i ${interface}";
   in ''
-    ${cmd} -A nixos-fw -p ${desc.protocol} ${sourceIPFilter} ${ifFilter} ${sourcePortFilter} --dport ${toString desc.port} -j nixos-fw-accept
+    ${cmd} -A nixos-fw -p ${protocol} ${sourceIPFilter} ${ifFilter} ${sourcePortFilter} --dport ${toString dest.port} -j nixos-fw-accept
   '';
 
   extraCommands = ''
-    ${concatMapStrings (desc: ipt "iptables" desc) cfg.accept}
-    ${concatMapStrings (desc: ipt "ip6tables" desc) cfg.accept6}
+    ${concatMapStrings (r: ipt "iptables" r.protocol r.interface r.src r.dest) cfg.accept}
+    ${concatMapStrings (r: ipt "ip6tables" r.protocol r.interface r.src r.dest) cfg.accept6}
   '';
 
 in
@@ -32,12 +32,12 @@ in
    default = [];
    example = [
      { protocol = "tcp";
-       port = 22;
-       sourceIP = "10.0.0.0/24";
+       dest.port = 22;
+       src.ip = "10.0.0.0/24";
      }
      { protocol = "tcp";
-       port = 80;
-       interface = "eth0"; 
+       interface = "eth0";
+       dest.port = 80;
      }
    ];
    description = ''
@@ -55,12 +55,12 @@ in
    default = [];
    example = [
      { protocol = "tcp";
-       port = 22;
-       sourceIP = "2001:db8::/64";
+       src.ip = "2001:db8::/64";
+       dest.port = 22;
      }
      { protocol = "tcp";
-       port = 80;
        interface = "eth0"; 
+       dest.port = 80;
      }
    ];
    description = ''

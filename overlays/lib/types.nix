@@ -99,28 +99,6 @@ rec {
         '';
       };
 
-      port = mkOption {
-        type = types.either pkgs.lib.types.port (types.strMatching "[[:digit:]]+:[[:digit:]]+");
-        example = "8000:8007";
-        description = ''
-          The local (destination) port number, or colon-delimited port number range.
-        '';
-      };
-
-      sourcePort = mkOption {
-        type = types.nullOr (types.either pkgs.lib.types.port (types.strMatching "[[:digit:]]+:[[:digit:]]+"));
-        default = null;
-        example = "67:68";
-        description = ''
-          An optional source port number, or colon-delimited port
-          number range, to filter on. If non-null, an additional
-          filter will be applied using the provided source port
-          number.
-
-          This is helpful for securing certain protocols, e.g., DHCP.
-        '';
-      };
-
       interface = mkOption {
         type = types.nullOr pkgs.lib.types.nonEmptyStr;
         default = null;
@@ -132,16 +110,42 @@ rec {
         '';
       };
 
-      sourceIP = mkOption {
-        type = types.nullOr pkgs.lib.types.ipv4CIDR;
-        default = null;
-        example = "10.0.0.0/24";
-        description = ''
-          An optional source IP address to filter on. Note that
-          the address must be specified in CIDR notation, i.e., with a
-          corresponding subnet prefix. Use "/32" for singleton IP
-          addresses.
-        '';
+      src = {
+        port = mkOption {
+          type = types.nullOr (types.either pkgs.lib.types.port (types.strMatching "[[:digit:]]+:[[:digit:]]+"));
+          default = null;
+          example = "67:68";
+          description = ''
+            An optional source port number, or colon-delimited port
+            number range, to filter on. If non-null, an additional
+            filter will be applied using the provided source port
+            number.
+
+            This is helpful for securing certain protocols, e.g., DHCP.
+          '';
+        };
+
+        ip = mkOption {
+          type = types.nullOr pkgs.lib.types.ipv4CIDR;
+          default = null;
+          example = "10.0.0.0/24";
+          description = ''
+            An optional source IP address to filter on. Note that
+            the address must be specified in CIDR notation, i.e., with a
+            corresponding subnet prefix. Use "/32" for singleton IP
+            addresses.
+          '';
+        };
+      };
+
+      dest = {
+        port = mkOption {
+          type = types.either pkgs.lib.types.port (types.strMatching "[[:digit:]]+:[[:digit:]]+");
+          example = "8000:8007";
+          description = ''
+            The local (destination) port number, or colon-delimited port number range.
+          '';
+        };
       };
 
     };
@@ -158,28 +162,6 @@ rec {
         '';
       };
 
-      port = mkOption {
-        type = types.either pkgs.lib.types.port (types.strMatching "[[:digit:]]+:[[:digit:]]+");
-        example = "8000:8007";
-        description = ''
-          The local (destination) port number, or colon-delimited port number range.
-        '';
-      };
-
-      sourcePort = mkOption {
-        type = types.nullOr (types.either pkgs.lib.types.port (types.strMatching "[[:digit:]]+:[[:digit:]]+"));
-        default = null;
-        example = "67:68";
-        description = ''
-          An optional source port number, or colon-delimited port
-          number range, to filter on. If non-null, an additional
-          filter will be applied using the provided source port
-          number.
-
-          This is helpful for securing certain protocols, e.g., DHCP.
-        '';
-      };
-
       interface = mkOption {
         type = types.nullOr pkgs.lib.types.nonEmptyStr;
         default = null;
@@ -191,16 +173,42 @@ rec {
         '';
       };
 
-      sourceIP = mkOption {
-        type = types.nullOr pkgs.lib.types.ipv6CIDR;
-        default = null;
-        example = "2001:db8::3:0/64";
-        description = ''
-          An optional source IPv6 address to filter on. Note that
-          the address must be specified in CIDR notation, i.e., with a
-          corresponding network prefix. Use "/128" for singleton IPv6
-          addresses.
-        '';
+      src = {
+        port = mkOption {
+          type = types.nullOr (types.either pkgs.lib.types.port (types.strMatching "[[:digit:]]+:[[:digit:]]+"));
+          default = null;
+          example = "67:68";
+          description = ''
+            An optional source port number, or colon-delimited port
+            number range, to filter on. If non-null, an additional
+            filter will be applied using the provided source port
+            number.
+
+            This is helpful for securing certain protocols, e.g., DHCP.
+          '';
+        };
+
+        ip = mkOption {
+          type = types.nullOr pkgs.lib.types.ipv6CIDR;
+          default = null;
+          example = "2001:db8::3:0/64";
+          description = ''
+            An optional source IPv6 address to filter on. Note that
+            the address must be specified in CIDR notation, i.e., with a
+            corresponding network prefix. Use "/128" for singleton IPv6
+            addresses.
+          '';
+        };
+      };
+
+      dest = {
+        port = mkOption {
+          type = types.either pkgs.lib.types.port (types.strMatching "[[:digit:]]+:[[:digit:]]+");
+          example = "8000:8007";
+          description = ''
+            The local (destination) port number, or colon-delimited port number range.
+          '';
+        };
       };
 
     };
