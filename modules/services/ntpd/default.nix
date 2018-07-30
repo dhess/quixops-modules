@@ -1,4 +1,7 @@
-{ config, pkgs, lib, ... }:
+# Just like upstream ntpd, except this one allows an extraConfig. This
+# should probably be upstreamed at some point.
+
+{ config, lib, pkgs, ... }:
 
 with lib;
 
@@ -6,46 +9,71 @@ let
 
   inherit (pkgs) ntp;
 
-  cfg = config.services.ntp-server;
-  ntpEnabled = config.services.ntp.enable;
+  cfg = config.services.ntp;
+
   stateDir = "/var/lib/ntp";
-  enabled = cfg.enable;
+
   ntpUser = "ntp";
-  ntpFlags = "-c ${configFile} -u ${ntpUser}:nogroup";
+
   configFile = pkgs.writeText "ntp.conf" ''
     driftfile ${stateDir}/ntp.drift
-
-    restrict -4 default kod notrap nomodify nopeer noquery limited
-    restrict -6 default kod notrap nomodify nopeer noquery limited
 
     restrict 127.0.0.1
     restrict -6 ::1
 
     ${toString (map (server: "server " + server + " iburst\n") cfg.servers)}
+    ${cfg.extraConfig}
   '';
 
-in {
+  ntpFlags = "-c ${configFile} -u ${ntpUser}:nogroup ${toString cfg.extraFlags}";
 
-  options.services.ntp-server = {
+in
 
-    enable = mkEnableOption "An NTP configured to accept external client queries (securely).";
+{
 
-    servers = mkOption {
-      type = types.nonEmptyListOf pkgs.lib.types.nonEmptyStr;
-      description = ''
-        A list of one or more upstream NTP servers (preferably between 4 and 7).
-      '';
+  disabledModules = [ "services/networking/ntpd.nix" ];
+
+  ###### interface
+
+  options = {
+
+    services.ntp = {
+
+      enable = mkOption {
+        default = false;
+        description = ''
+          Whether to synchronise your machine's time using the NTP
+          protocol.
+        '';
+      };
+
+      servers = mkOption {
+        default = config.networking.timeServers;
+        description = ''
+          The set of NTP servers from which to synchronise.
+        '';
+      };
+
+      extraFlags = mkOption {
+        type = types.listOf types.str;
+        description = "Extra flags passed to the ntpd command.";
+        default = [];
+      };
+
+      extraConfig = mkOption {
+        type = types.lines;
+        description = "Extra ntpd config that is appended to the default config file.";
+        default = "";
+      };
+
     };
 
   };
 
-  config = mkIf enabled {
 
-    assertions = [
-      { assertion = ! ntpEnabled;
-        message = "Only one of 'services.ntp-server' and 'services.ntp' must be enabled";
-      }
-    ];
+  ###### implementation
+
+  config = mkIf config.services.ntp.enable {
 
     quixops.assertions.moduleHashes."services/networking/ntpd.nix" =
       "660709cc9bd7b7269d7f91ac278d2d7b9f51a53ab02425c27778af2f405b9fe0";
@@ -82,5 +110,4 @@ in {
 
   };
 
-  meta.maintainers = lib.maintainers.dhess-qx;
 }
