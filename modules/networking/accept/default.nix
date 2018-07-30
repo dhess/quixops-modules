@@ -9,33 +9,19 @@ let
   cfg = config.networking.firewall;
   enable = cfg.accept != [] && cfg.enable;
 
-  ipt = cmd: port: proto: sourcePort: ifname: ips:
+  ipt = cmd: desc:
   let
-    sourcePortFilter = optionalString (sourcePort != null) "--sport ${toString sourcePort}";
-    ifFilter = optionalString (ifname != null) "-i ${ifname}";
-  in
-    if (ips == []) then ''
-      ${cmd} -A nixos-fw -p ${proto} ${ifFilter} ${sourcePortFilter} --dport ${toString port} -j nixos-fw-accept
-    ''
-    else
-      concatMapStrings (ip:
-        ''
-          ${cmd} -A nixos-fw -p ${proto} -s ${ip} ${ifFilter} ${sourcePortFilter} --dport ${toString port} -j nixos-fw-accept
-        ''
-      ) ips;
+    sourcePortFilter = optionalString (desc.sourcePort != null) "--sport ${toString desc.sourcePort}";
+    sourceIPFilter = optionalString (desc.sourceIP != null) "-s ${desc.sourceIP}";
+    ifFilter = optionalString (desc.interface != null) "-i ${desc.interface}";
+  in ''
+    ${cmd} -A nixos-fw -p ${desc.protocol} ${sourceIPFilter} ${ifFilter} ${sourcePortFilter} --dport ${toString desc.port} -j nixos-fw-accept
+  '';
 
-  iptables = port: proto: sourcePort: ifname: v4: v6:
-    ''
-      ${ipt "iptables" port proto sourcePort ifname v4}
-      ${ipt "ip6tables" port proto sourcePort ifname v6}
-    '';
-  
-  extraCommands =
-    concatMapStrings (desc:
-      ''
-        ${iptables desc.port desc.protocol desc.sourcePort desc.interface desc.v4 desc.v6}
-      ''
-      ) cfg.accept;
+  extraCommands = ''
+    ${concatMapStrings (desc: ipt "iptables" desc) cfg.accept}
+    ${concatMapStrings (desc: ipt "ip6tables" desc) cfg.accept6}
+  '';
 
 in
 
@@ -44,15 +30,42 @@ in
   options.networking.firewall.accept = mkOption {
    type = pkgs.lib.types.fwRule;
    default = [];
-   example = [ {
-     protocol = "tcp";
-     port = 22;
-     v4 = [ "10.0.0.0/24" ];
-     v6 = [ "2001:db8::3:0/64" ];
-   } ];
+   example = [
+     { protocol = "tcp";
+       port = 22;
+       sourceIP = "10.0.0.0/24";
+     }
+     { protocol = "tcp";
+       port = 80;
+       interface = "eth0"; 
+     }
+   ];
    description = ''
-     A list of specific protocol+port+IP addresses on which incoming
-     connections are accepted.
+     A list of filters that specify which incoming IPv4 packets should
+     be accepted by the firewall.
+
+     This option provides finer-grained control than the
+     <option>networking.firewall.allowedTCPPorts</option> etc. options
+     provide.
+   '';
+  };
+
+  options.networking.firewall.accept6 = mkOption {
+   type = pkgs.lib.types.fwRule6;
+   default = [];
+   example = [
+     { protocol = "tcp";
+       port = 22;
+       sourceIP = "2001:db8::/64";
+     }
+     { protocol = "tcp";
+       port = 80;
+       interface = "eth0"; 
+     }
+   ];
+   description = ''
+     A list of filters that specify which incoming IPv6 packets should
+     be accepted by the firewall.
 
      This option provides finer-grained control than the
      <option>networking.firewall.allowedTCPPorts</option> etc. options

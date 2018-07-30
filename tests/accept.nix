@@ -47,8 +47,7 @@ let
 
           { protocol = "tcp";
             port = 80;
-            v4 = [ "192.168.1.2/32" ];
-            v6 = [ "fd00:1234:0:5678::2000/128" ];
+            sourceIP = "192.168.1.2/32";
           }
 
           # Any host on the network can connect to 8080:8081, but only
@@ -57,8 +56,7 @@ let
           { protocol = "tcp";
             port = "8080:8081";
             sourcePort = "800:801";
-            v4 = [ "192.168.0.0/16" ];
-            v6 = [ "fd00:1234:0:5600::/56" ];
+            sourceIP = "192.168.0.0/16";
           }
 
           ## Only packets entering on eth2 can connect to port 8088.
@@ -66,8 +64,34 @@ let
           { protocol = "tcp";
             port = 8088;
             interface = "eth2";
-            v4 = [ "192.168.0.0/16" ];
-            v6 = [ "fd00:1234:0:5600::/56" ];
+            sourceIP = "192.168.0.0/16";
+          }
+
+        ];
+        networking.firewall.accept6 = [
+
+          # Only client1 can connect on port 80.
+
+          { protocol = "tcp";
+            port = 80;
+            sourceIP = "fd00:1234:0:5678::2000/128";
+          }
+
+          # Any host on the network can connect to 8080:8081, but only
+          # when the source port is in the range 800:801.
+          
+          { protocol = "tcp";
+            port = "8080:8081";
+            sourcePort = "800:801";
+            sourceIP = "fd00:1234:0:5600::/56";
+          }
+
+          ## Only packets entering on eth2 can connect to port 8088.
+
+          { protocol = "tcp";
+            port = 8088;
+            interface = "eth2";
+            sourceIP = "fd00:1234:0:5600::/56";
           }
 
         ];
