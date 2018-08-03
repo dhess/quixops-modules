@@ -308,7 +308,7 @@ in
   config = mkIf (cfg.interfaces != {}) {
 
     quixops.assertions.moduleHashes."services/networking/wireguard.nix" =
-      "b68e64e5e67eebe19fcb50476a2f6d44ef516f3abdd99a5920fa5f80244bca86";
+      "6d8fe9c87686404f86a0cc237411a4702c527045dcd0c5c28dffbcf50faa47b2";
 
     boot.extraModulePackages = [ kernel.wireguard ];
     environment.systemPackages = [ pkgs.wireguard-tools ];

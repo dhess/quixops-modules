@@ -61,7 +61,7 @@ in
 mkIf (instances != {}) {
 
   quixops.assertions.moduleHashes."services/networking/openvpn.nix" =
-    "08afe47a76f066c2278f34dfbc6df0b48c30791d7c18413ddbea92af8b5c583f";
+    "ddc549a7f879306b31d88f2af1aba79da33d2d8f6f8e4a4c37af0d138e005403";
 
   quixops.keychain.keys = listToAttrs (filter (x: x.value != null) (
     (mapAttrsToList

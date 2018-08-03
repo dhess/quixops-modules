@@ -345,6 +345,16 @@ in
           '';
         };
 
+        uriPrefix = mkOption {
+          type = types.nullOr types.str;
+          default = null;
+          example = "/znc/";
+          description = ''
+            An optional URI prefix for the ZNC web interface. Can be
+            used to make ZNC available behind a reverse proxy.
+          '';
+        };
+
         extraZncConf = mkOption {
           default = "";
           type = types.lines;
@@ -394,7 +404,7 @@ in
   config = mkIf cfg.enable {
 
     quixops.assertions.moduleHashes."services/networking/znc.nix" =
-      "1c0c295595dda8539be4615f650701d7bffb49b76035bdcd99e328e569e48595";
+      "d0f9d25fc355e6b1afd23649afb16d3db6c8a0b886bd55a4228fc62442c68dd2";
 
     quixops.keychain.keys.znc-config = {
       text = cfg.configLiteral;

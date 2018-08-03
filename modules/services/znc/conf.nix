@@ -16,6 +16,7 @@ let
             IPv4 = true
             IPv6 = true
             SSL = ${boolToString confOpts.useSSL}
+            ${optionalString (confOpts.uriPrefix != null) "URIPrefix = ${confOpts.uriPrefix}"}
     </Listener>
 
     <User ${confOpts.userName}>
