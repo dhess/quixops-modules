@@ -29,5 +29,7 @@ in
     # Enable it by default.
     # ref: https://serverfault.com/questions/513807/is-there-still-a-use-for-irqbalance-on-modern-hardware
     services.irqbalance.enable = true;
+
+    hardware.enableAllFirmware = true;
   };
 }
