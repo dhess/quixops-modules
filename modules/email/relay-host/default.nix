@@ -12,9 +12,6 @@
 # option names, I find that I have to dig through the postfix.nix file
 # to figure out exactly what's going to be set to what.)
 
-# TODO
-# - Run smtpd and submission only on specified addresses.
-
 { config, pkgs, lib, ... }:
 
 with lib;
@@ -46,21 +43,21 @@ in
       <strong>Do not</strong> run this service on an untrusted
       network, e.g., on the public Internet. It configures Postfix to
       accept mail from any host as long as the recipient address is in
-      the prescribed set of relay domains. Tthe consequences of a
-      rogue mail agent using this service are less severe than they
-      would be on a full mailhost, since only recipients in the set of
-      relay domains could be spammed by such an agent; but it would
-      still be detrimental to recipients in the relay domains.
+      the prescribed set of relay domains. The consequences of a rogue
+      mail agent using this service are less severe than they would be
+      on a full mailhost, since only recipients in the set of relay
+      domains could be spammed by such an agent; but it would still be
+      detrimental to recipients in the relay domains.
 
       This configuration enforces a high-security encrypted transport
       from this host to the remote relay host. This requires trusted
       TLS certificates and the requisite TLS configuration on the
       remote relay host.
 
-      Clients of this relay host are given a bit more leeway, given
-      that many SMTP-enabled devices have poor SMTP client
-      implementations for which secure configurations may not be
-      practical, or even possible. Therefore, the preferred way to
+      On the other hand, clients of this relay host are given a bit
+      more leeway, given that many SMTP-enabled devices have poor SMTP
+      client implementations for which secure configurations may not
+      be practical, or even possible. Therefore, the preferred way to
       connect to this relay host service is via port 587 with client
       certificate authorization (using a pre-computed fingerprint),
       but clients that are not capable of this are allowed to connect
@@ -186,10 +183,15 @@ in
 
     listenAddresses = mkOption {
       type = types.nonEmptyListOf (types.either pkgs.lib.types.ipv4NoCIDR pkgs.lib.types.ipv6NoCIDR);
-      example = [ "10.0.0.25" "2001:db8::25" ];
+      default = [ "127.0.0.1" "::1" ];
+      example = [ "127.0.0.1" "::1" "10.0.0.25" "2001:db8::25" ];
       description = ''
         A list of IPv4 and/or IPv6 addresses on which Postfix will
         listen for incoming connections.
+
+        Note that you should also list any loopback addresses here on
+        which you want Postfix to accept local delivery to the relay
+        domains.
       '';
     };
 
@@ -236,7 +238,30 @@ in
             ];
           };
         }
-      ) cfg.listenAddresses);
+      ) cfg.listenAddresses)
+
+      // listToAttrs (map (ip:
+        { name = "[${ip}]:smtp";
+          value = {
+            type = "inet";
+            private = false;
+            command = "smtpd";
+          };
+        }
+      ) cfg.listenAddresses)
+
+      //
+      {
+        # Nixpkgs postfix module always enables smtp inet; we have to
+        # override it here.
+        #
+        # Note: this is a bit of a hack. It works because the name of
+        # the service is at the beginning of the line and we can
+        # change its name to be a comment.
+        smtp_inet = {
+          name = mkForce "#smtp";
+        };
+      };
 
       domain = cfg.myDomain;
       origin = cfg.myOrigin;
