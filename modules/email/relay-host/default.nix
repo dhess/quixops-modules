@@ -213,16 +213,30 @@ in
     services.postfix = {
       enable = true;
 
-      enableSubmission = true;
-      submissionOptions = {
-        tls_preempt_cipherlist = "yes";
-        smtpd_tls_dh1024_param_file = "${dhParamsFile}";
-        syslog_name = "postfix/submission";
-        smtpd_tls_security_level = "encrypt";
-        smtpd_reject_unlisted_recipient = "no";
-        smtpd_client_restrictions = "permit_tls_clientcerts,reject";
-        milter_macro_daemon_name = "ORIGINATING";
-      };
+      # We don't use enableSubmission here because we want to limit it
+      # to just the listenAddresses, and the NixOS submissionOptions is
+      # too limited to permit that. We have to construct the
+      # "submission" master.cf line manually.
+
+      enableSubmission = false;
+      masterConfig = listToAttrs (map (ip:
+        { name = "[${ip}]:submission";
+          value = {
+            type = "inet";
+            private = false;
+            command = "smtpd";
+            args = [
+              "-o" "milter_macro_daemon_name=ORIGINATING"
+              "-o" "smtpd_client_restrictions=permit_tls_clientcerts,reject"
+              "-o" "smtpd_reject_unlisted_recipient=no"
+              "-o" "smtpd_tls_dh1024_param_file=${dhParamsFile}"
+              "-o" "smtpd_tls_security_level=encrypt"
+              "-o" "syslog_name=postfix/submission"
+              "-o" "tls_preempt_cipherlist=yes"
+            ];
+          };
+        }
+      ) cfg.listenAddresses);
 
       domain = cfg.myDomain;
       origin = cfg.myOrigin;

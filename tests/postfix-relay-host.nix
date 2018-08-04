@@ -43,6 +43,7 @@ in makeTest rec {
 
       services.postfix-relay-host = {
         enable = true;
+        listenAddresses = [ "192.168.1.1" "fd00:1234:5678::1000" ];
         myDomain = "example.com";
         myOrigin = "example.com";
         relayDomains = [ "example.com" ];
