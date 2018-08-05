@@ -241,8 +241,7 @@ rec {
   });
 
 
-  ## An IPv4 subnet description. This could be used for, e.g.,
-  ## generating IPv4 subnet stanzas for dhcpd.
+  ## An IPv4 subnet description.
 
   ipv4Subnet = types.submodule {
     options = rec {
@@ -290,7 +289,21 @@ rec {
         '';
       };
 
-      dhcp.range = mkOption {
+    };
+  };
+
+  dhcp4Subnet = types.submodule {
+    options = {
+
+      subnet = mkOption {
+        type = ipv4Subnet;
+        readOnly = true;
+        description = ''
+          The descriptor of the IPv4 subnet that will be served.
+        '';
+      };
+
+      range = mkOption {
         type = types.nullOr (types.submodule {
           options = {
             start = mkOption {
@@ -307,11 +320,11 @@ rec {
           end = "192.168.1.220";
         };
         description = ''
-          An optional range of dynamic addresses, for use with dhcpd.
+          An optional range of dynamic addresses.
         '';
       };
 
-      dhcp.leaseTime = mkOption {
+      leaseTime = mkOption {
         type = types.nullOr (types.submodule {
           options = {
             default = mkOption {
@@ -328,23 +341,21 @@ rec {
           max = 7200;
         };
         description = ''
-          An optional default and maximum lease time for the subnet,
-          which override the global defaults.
+          An optional default and maximum lease time for this subnet.
         '';
       };
 
-      dhcp.nameservers = mkOption {
+      nameservers = mkOption {
         type = types.listOf (types.either pkgs.lib.types.ipv4NoCIDR pkgs.lib.types.ipv6NoCIDR);
         default = [];
         example = [ "192.168.0.8" "2001:db8::8" ];
         description = ''
           An optional list of IPv4 and IPv6 addresses of nameservers
-          for clients on this subnet, which overrides the global
-          default.
+          for clients on this subnet.
         '';
       };
 
-      dhcp.deny = mkOption {
+      deny = mkOption {
         type = types.listOf pkgs.lib.types.nonEmptyStr;
         default = [];
         example = [ "unknown-clients" ];
