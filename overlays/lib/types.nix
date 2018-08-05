@@ -240,4 +240,122 @@ rec {
     };
   });
 
+
+  ## An IPv4 subnet description. This could be used for, e.g.,
+  ## generating IPv4 subnet stanzas for dhcpd.
+
+  ipv4Subnet = types.submodule {
+    options = {
+
+      description = mkOption {
+        type = types.nullOr types.str;
+        default = null;
+        example = "The foo subnet";
+        description = ''
+          An optional one-line description of the subnet.
+        '';
+      };
+
+      nocidr = {
+
+        ip = mkOption {
+          type = pkgs.lib.types.ipv4NoCIDR;
+          example = "192.168.1.0";
+          description = ''
+            The IPv4 address of the subnet, with no CIDR prefix.
+          '';
+        };
+
+        netmask = mkOption {
+          type = pkgs.lib.types.ipv4NoCIDR;
+          example = "255.255.255.0";
+          description = ''
+            The IPV4 subnet netmask (4 octets).
+          '';
+        };
+
+      };
+
+      router = mkOption {
+        type = types.nullOr pkgs.lib.types.ipv4NoCIDR;
+        example = "192.168.1.1";
+        description = ''
+          The subnet's default router, expressed as an IPv4 address.
+
+          Technically this attribute is optional; it can be set to
+          <literal>null</literal>. This is useful for things like
+          point-to-point networks, or networks that should not be
+          routed, like inter-router communication networks. However,
+          there is no default value, to prevent you from forgetting to
+          configure one.
+        '';
+      };
+
+      dhcp.range = mkOption {
+        type = types.nullOr (types.submodule {
+          options = {
+            start = mkOption {
+              type = pkgs.lib.types.ipv4NoCIDR;
+            };
+            end = mkOption {
+              type = pkgs.lib.types.ipv4NoCIDR;
+            };
+          };
+        });
+        default = null;
+        example = {
+          start = "192.168.1.200";
+          end = "192.168.1.220";
+        };
+        description = ''
+          An optional range of dynamic addresses, for use with dhcpd.
+        '';
+      };
+
+      dhcp.leaseTime = mkOption {
+        type = types.nullOr (types.submodule {
+          options = {
+            default = mkOption {
+              type = types.ints.unsigned;
+            };
+            max = mkOption {
+              type = types.ints.unsigned;
+            };
+          };
+        });
+        default = null;
+        example = {
+          default = 3600;
+          max = 7200;
+        };
+        description = ''
+          An optional default and maximum lease time for the subnet,
+          which override the global defaults.
+        '';
+      };
+
+      dhcp.nameservers = mkOption {
+        type = types.listOf (types.either pkgs.lib.types.ipv4NoCIDR pkgs.lib.types.ipv6NoCIDR);
+        default = [];
+        example = [ "192.168.0.8" "2001:db8::8" ];
+        description = ''
+          An optional list of IPv4 and IPv6 addresses of nameservers
+          for clients on this subnet, which overrides the global
+          default.
+        '';
+      };
+
+      dhcp.deny = mkOption {
+        type = types.listOf pkgs.lib.types.nonEmptyStr;
+        default = [];
+        example = [ "unknown-clients" ];
+        description = ''
+          An optional list of <literal>dhcpd</literal>
+          <literal>deny</literal> directives for this subnet.
+        '';
+      };
+
+    };
+  };
+
 }
