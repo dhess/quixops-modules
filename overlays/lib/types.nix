@@ -256,55 +256,23 @@ rec {
         '';
       };
 
-      nocidr = {
-
-        ip = mkOption {
-          type = pkgs.lib.types.ipv4NoCIDR;
-          example = "192.168.1.0";
-          description = ''
-            The IPv4 address of the subnet, with no CIDR prefix.
-          '';
-        };
-
-        netmask = mkOption {
-          type = pkgs.lib.types.ipv4NoCIDR;
-          example = "255.255.255.0";
-          description = ''
-            The IPV4 subnet netmask (4 octets).
-          '';
-        };
-
+      ip = mkOption {
+        type = pkgs.lib.types.ipv4CIDR;
+        example = "192.168.1.0/24";
+        description = ''
+          The IPv4 address of the subnet in CIDR notation.
+        '';
       };
 
-      cidr = {
+      prefix = mkOption {
+        type = pkgs.lib.types.nonEmptyStr;
+        example = "192.168.1";
+        description = ''
+          Just the prefix part of the IPv4 address of the subnet.
 
-        ip = mkOption {
-          type = pkgs.lib.types.ipv4CIDR;
-          example = "192.168.1.0/24";
-          description = ''
-            The IPv4 address of the subnet in CIDR notation.
-          '';
-        };
-
-        prefix = mkOption {
-          type = pkgs.lib.types.nonEmptyStr;
-          example = "192.168.1";
-          description = ''
-            Just the prefix part of the IPv4 address of the subnet.
-
-            <em>Note: this should be calculated automatically, but
-            currently it is not.</em>
-          '';
-        };
-
-        prefixLength = mkOption {
-          type = types.ints.between 1 32;
-          example = 24;
-          description = ''
-            The IPv4 address's subnet prefix length.
-          '';
-        };
-
+          <em>Note: this should be calculated automatically, but
+          currently it is not.</em>
+        '';
       };
 
       router = mkOption {
