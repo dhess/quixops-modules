@@ -12,6 +12,8 @@ let
   genConfig = cfg:
   let
     stateDir = "${stateDirBase}/${cfg.name}";
+    ipv4ClientBase = pkgs.lib.ipaddr.ipv4AddrFromCIDR cfg.ipv4ClientSubnet;
+    netmask = pkgs.lib.ipaddr.netmaskFromIPv4CIDR cfg.ipv4ClientSubnet;
   in
   ''
     port ${toString cfg.port}
@@ -25,7 +27,7 @@ let
     crl-verify ${cfg.crlFile}
 
     topology subnet
-    server ${cfg.ipv4ClientBaseAddr} 255.255.255.0
+    server ${ipv4ClientBase} ${netmask}
     server-ipv6 ${cfg.ipv6ClientPrefix}
     route-ipv6 ${cfg.ipv6ClientPrefix}
 
@@ -77,7 +79,7 @@ mkIf (instances != {}) {
   networking.nat.internalIPs =
     (mapAttrsToList
       (_: serverCfg: (
-        "${serverCfg.ipv4ClientBaseAddr}/24"
+        "${serverCfg.ipv4ClientSubnet}"
        )) instances);
 
   services.openvpn.servers = listToAttrs (filter (x: x.value != null) (

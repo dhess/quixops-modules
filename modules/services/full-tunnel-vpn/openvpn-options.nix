@@ -1,8 +1,3 @@
-# Limitations:
-# - IPv4 netmask for clients is assumed to be 255.255.255.0. This is
-#   because the NAT rules want a CIDR postfix (e.g., "/24") rather
-#   than a netmask and I don't feel like writing a converter.
-
 { name, config, lib, pkgs }:
 
 with lib;
@@ -49,16 +44,12 @@ rec {
       '';
     };
 
-    ipv4ClientBaseAddr = mkOption {
-      type = pkgs.lib.types.ipv4NoCIDR;
-      example = "10.0.1.0";
+    ipv4ClientSubnet = mkOption {
+      type = pkgs.lib.types.ipv4CIDR;
+      example = "10.0.1.0/24";
       description = ''
-        The base of the IPv4 address range that will be used for
-        clients. Do not provide a CIDR suffix.
-
-        Note: the netmask for the range is always
-        <literal>255.255.255.0</literal>, so you should assign
-        <literal>/24</literal>s here.
+        The IPv4 subnet from which client IPv4 addresses will be
+        assigned.
       '';
     };
 

@@ -50,7 +50,7 @@ in
       default = {};
       example = literalExample ''
         vpn1 = {
-          ipv4ClientBaseAddr = "10.0.0.0";
+          ipv4ClientSubnet = "10.0.0.0/24";
           ipv6ClientPrefix = "2001:db8::/64";
           caFile = ./root.crt;
           certFile = ./vpn1.crt;

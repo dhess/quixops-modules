@@ -81,7 +81,7 @@ let
 
   openvpn = {
     vpn1 = {
-      ipv4ClientBaseAddr = "10.150.0.0";
+      ipv4ClientSubnet = "10.150.0.0/24";
       ipv6ClientPrefix = "fd00:1234:5678:9::/64";
       caFile = ca-cert;
       certFile = vpn1-cert;
@@ -92,7 +92,7 @@ let
     vpn2 = {
       port = 443;
       proto = "tcp6";
-      ipv4ClientBaseAddr = "10.150.1.0";
+      ipv4ClientSubnet = "10.150.1.0/24";
       ipv6ClientPrefix = "fd00:1234:5678:a::/64";
       caFile = ca-cert;
       certFile = vpn2-cert;
