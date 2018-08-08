@@ -10,15 +10,14 @@ let
   cfg = config.services.pinpon;
   enabled = cfg.enable;
   stateDir = "/var/lib/pinpon";
-  credentialsFile = "${stateDir}/aws.credentials";
 
-  keychain = config.quixops.keychain.keys;
+  key = config.quixops.keychain.keys.aws-pinpon;
 
   pinponScript = cfg:
   ''
     ${pkgs.pinpon}/bin/pinpon \
       --region ${cfg.awsRegion} \
-      --credentials-file ${credentialsFile} \
+      --credentials-file ${key.path} \
       --profile ${cfg.awsProfile} \
       --port ${toString cfg.port} \
       --platform ${cfg.snsPlatform} \
@@ -98,7 +97,10 @@ in {
 
   config = mkIf enabled {
 
-    quixops.keychain.keys.pinpon = {
+    quixops.keychain.keys.aws-pinpon = {
+      user = "pinpon";
+      group = "pinpon";
+      destDir = stateDir;
       text = cfg.awsCredentialsLiteral;
     };
 
@@ -111,11 +113,6 @@ in {
       script = pinponScript cfg;
       restartIfChanged = true;
       restartTriggers = [ pkgs.pinpon ];
-
-      preStart = ''
-        install -m 0700 -o pinpon -g pinpon -d ${stateDir} > /dev/null 2>&1 || true
-        install -m 0400 -o pinpon -g pinpon ${keychain.pinpon.path} ${credentialsFile}
-      '';
 
       serviceConfig = {
         PermissionsStartOnly = "true";
