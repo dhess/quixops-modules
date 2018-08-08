@@ -61,7 +61,7 @@ in makeTest rec {
     $host->requireActiveUnit("postfix.service");
 
     subtest "check-keys", sub {
-      $host->succeed("diff ${bob-certKeyInStore} /var/lib/postfix/data/relay-host.key");
+      $host->succeed("diff ${bob-certKeyInStore} /var/lib/postfix/data/keys/postfix-relay-host-cert");
     };
   '';
 }

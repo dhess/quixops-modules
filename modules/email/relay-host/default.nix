@@ -22,13 +22,13 @@ let
   cfg = config.services.postfix-relay-host;
   enabled = cfg.enable;
 
+  key = config.quixops.keychain.keys.postfix-relay-host-cert;
+
   # NOTE - must be the same as upstream.
   stateDir = "/var/lib/postfix/data";
 
   user = config.services.postfix.user;
   group = config.services.postfix.group;
-  keyFileName = "${stateDir}/relay-host.key";
-  deployedKeyFile = config.quixops.keychain.keys.postfix-relay-host-cert-key.path;
 
   dhParamsFile = "${stateDir}/dh.pem";
 
@@ -202,7 +202,9 @@ in
     quixops.assertions.moduleHashes."services/mail/postfix.nix" =
       "4bd84b1e40118e4f1822376945b3405797d9c41fc1ca8d12373daa737130af32";
 
-    quixops.keychain.keys.postfix-relay-host-cert-key = {
+    quixops.keychain.keys.postfix-relay-host-cert = {
+      inherit user group;
+      destDir = "${stateDir}/keys";
       text = cfg.smtpTlsKeyLiteral;
     };
 
@@ -277,7 +279,7 @@ in
 
       sslCACert = "${cfg.smtpTlsCAFile}";
       sslCert = "${cfg.smtpTlsCertFile}";
-      sslKey = keyFileName;
+      sslKey = key.path;
 
       mapFiles = {
         relay_clientcerts = cfg.relayClientCertFingerprintsFile;
@@ -321,19 +323,13 @@ in
       '';
     };
 
-    systemd.services.postfix-relay-host-setup = {
-      description = "Postfix relay host setup script";
-      wantedBy = [ "multi-user.target" "postfix.service" ];
+    systemd.services.postfix = {
       wants = [ "keys.target" ];
       after = [ "keys.target" ];
-      before = [ "postfix.service" ];
-      script = ''
-        install -m 0700 -o ${user} -g ${group} -d ${stateDir} > /dev/null 2>&1 || true
-        install -m 0400 -o ${user} -g ${group} ${deployedKeyFile} ${keyFileName}
-        ln -sf ${pkgs.lib.security.ffdhe3072Pem} ${dhParamsFile}
-      '';
     };
 
-    meta.maintainers = lib.maintainers.dhess-qx;
   };
+
+  meta.maintainers = lib.maintainers.dhess-qx;
+
 }
