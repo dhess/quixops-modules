@@ -6,11 +6,12 @@ let
   gcfg = config.services.tarsnapper;
   keychain = config.quixops.keychain.keys;
 
+  key = config.quixops.keychain.keys.tarsnap-key;
+
   cacheDir = "/var/cache/tarsnap/tarsnapper";
-  keyFile = "${cacheDir}/key";
 
   tarsnapConfigFile = ''
-    keyfile ${keyFile}
+    keyfile ${key.path}
     cachedir ${cacheDir}
     nodump
     print-stats
@@ -117,7 +118,8 @@ in
 
   config = mkIf gcfg.enable {
 
-    quixops.keychain.keys.tarsnapper-tarsnap = {
+    quixops.keychain.keys.tarsnap-key = {
+      destDir = cacheDir;
       text = gcfg.keyLiteral;
     };
 
@@ -142,7 +144,6 @@ in
         set -e
 
         install -m 0700 -o root -g root -d ${cacheDir} > /dev/null 2>&1 || true
-        install -m 0400 -o root -g root ${keychain.tarsnapper-tarsnap.path} ${keyFile}
 
         TIMESTAMP=`date +\%Y\%m\%d-\%H\%M\%S`
         HOSTNAME=`hostname -f`
