@@ -93,10 +93,9 @@ mkIf (instances != {}) {
     (mapAttrsToList
       (_: serverCfg: nameValuePair "openvpn-${serverCfg.name}-setup" (rec {
           description = "openvpn-${serverCfg.name} setup script ";
-          wantedBy = [ "multi-user.target" ];
+          wantedBy = [ "multi-user.target" "openvpn-${serverCfg.name}.service" ];
           wants = [ "keys.target" ];
           after = [ "keys.target" ];
-          requiredBy = [ "openvpn-${serverCfg.name}.service" ];
           script =
           let
             stateDir = "${stateDirBase}/${serverCfg.name}";

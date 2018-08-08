@@ -151,10 +151,9 @@ in
 
     systemd.services.postfix-null-client-setup = {
       description = "Postfix null client setup script";
-      wantedBy = [ "multi-user.target" ];
+      wantedBy = [ "multi-user.target" "postfix.service" ];
       wants = [ "keys.target" ];
       after = [ "keys.target" ];
-      requiredBy = [ "postfix.service" ];
       before = [ "postfix.service" ];
       script = ''
         install -m 0700 -o ${user} -g ${group} -d ${cfg.stateDir} > /dev/null 2>&1 || true

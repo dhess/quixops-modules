@@ -64,10 +64,9 @@ mkIf cfg.enable {
 
   systemd.services.strongswan-setup = {
     description = "strongswan setup script ";
-    wantedBy = [ "multi-user.target" ];
+    wantedBy = [ "multi-user.target" "strongswan.service" ];
     wants = [ "keys.target" ];
     after = [ "keys.target" ];
-    requiredBy = [ "strongswan.service" ];
     before = [ "strongswan.service" ];
     script =
     ''

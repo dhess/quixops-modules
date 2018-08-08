@@ -187,10 +187,9 @@ let
     nameValuePair "wireguard-${name}-keys"
       {
         description = "Install WireGuard keys for interface ${name}";
-        wantedBy = [ "multi-user.target" ];
+        wantedBy = [ "multi-user.target" "wireguard-${name}.service" ];
         wants = [ "keys.target" ];
         after = [ "keys.target" ];
-        requiredBy = [ "wireguard-${name}.service" ];
         before = [ "wireguard-${name}.service" ];
         unitConfig.DefaultDependencies = false; # needed to prevent a cycle
         serviceConfig.Type = "oneshot";
