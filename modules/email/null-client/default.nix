@@ -18,10 +18,10 @@ let
   cfg = config.services.postfix-null-client;
   enabled = cfg.enable;
 
+  key = config.quixops.keychain.keys.postfix-null-client-cert;
+
   user = config.services.postfix.user;
   group = config.services.postfix.group;
-  keyFileName = "${cfg.stateDir}/null-client.key";
-  deployedKeyFile = config.quixops.keychain.keys.postfix-null-client-cert-key.path;
 
 in
 {
@@ -111,7 +111,9 @@ in
     quixops.assertions.moduleHashes."services/mail/postfix.nix" =
       "4bd84b1e40118e4f1822376945b3405797d9c41fc1ca8d12373daa737130af32";
 
-    quixops.keychain.keys.postfix-null-client-cert-key = {
+    quixops.keychain.keys.postfix-null-client-cert = {
+      inherit user group;
+      destDir = "${cfg.stateDir}/keys";
       text = cfg.smtpTlsKeyLiteral;
     };
 
@@ -130,7 +132,7 @@ in
 
       sslCACert = "${cfg.smtpTlsCAFile}";
       sslCert = "${cfg.smtpTlsCertFile}";
-      sslKey = keyFileName;
+      sslKey = key.path;
 
       extraConfig = ''
 
@@ -149,18 +151,13 @@ in
       '';
     };
 
-    systemd.services.postfix-null-client-setup = {
-      description = "Postfix null client setup script";
-      wantedBy = [ "multi-user.target" "postfix.service" ];
+    systemd.services.postfix = {
       wants = [ "keys.target" ];
       after = [ "keys.target" ];
-      before = [ "postfix.service" ];
-      script = ''
-        install -m 0700 -o ${user} -g ${group} -d ${cfg.stateDir} > /dev/null 2>&1 || true
-        install -m 0400 -o ${user} -g ${group} ${deployedKeyFile} ${keyFileName}
-      '';
     };
 
-    meta.maintainers = lib.maintainers.dhess-qx;
   };
+
+  meta.maintainers = lib.maintainers.dhess-qx;
+
 }

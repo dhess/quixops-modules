@@ -52,7 +52,7 @@ in makeTest rec {
     $client->requireActiveUnit("postfix.service");
 
     subtest "check-keys", sub {
-      $client->succeed("diff ${bob-certKeyInStore} ${stateDir}/null-client.key");
+      $client->succeed("diff ${bob-certKeyInStore} ${stateDir}/keys/postfix-null-client-cert");
     };
   '';
 }
