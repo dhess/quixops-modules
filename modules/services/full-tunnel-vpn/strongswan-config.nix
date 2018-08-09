@@ -7,15 +7,12 @@ let
   inherit (builtins) toFile;
   ikev2Port = 500;
   ikev2NatTPort = 4500;
-
-  deployedCertKeyFile = keys.strongswan-cert-key.path;
-
-  keyFile = "/var/lib/strongswan/key";
+  key = keys.strongswan-cert-key;
 
   strongSwanDns = concatMapStringsSep "," (x: "${x}") cfg.dns;
 
   secretsFile = toFile "strongswan.secrets"
-    ": RSA ${keyFile}";
+    ": RSA ${key.path}";
     
 in
 mkIf cfg.enable {
@@ -24,6 +21,7 @@ mkIf cfg.enable {
         "4dbdea221ac2f5ab469e9d8c7f7cf0c6ce5dcf837504c05e69de5e3b727fef6c";
 
   quixops.keychain.keys.strongswan-cert-key = {
+    destDir = "/var/lib/strongswan";
     text = cfg.certKeyLiteral;
   };
 
@@ -62,17 +60,9 @@ mkIf cfg.enable {
   
   networking.nat.internalIPs = [ cfg.ipv4ClientCidr ];
 
-  systemd.services.strongswan-setup = {
-    description = "strongswan setup script ";
-    wantedBy = [ "multi-user.target" "strongswan.service" ];
+  systemd.services.strongswan = {
     wants = [ "keys.target" ];
     after = [ "keys.target" ];
-    before = [ "strongswan.service" ];
-    script =
-    ''
-      install -m 0700 -o root -g root -d `dirname ${keyFile}` > /dev/null 2>&1 || true
-      install -m 0400 -o root -g root ${deployedCertKeyFile} ${keyFile}
-    '';
   };
 
 }

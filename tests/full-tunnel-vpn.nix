@@ -291,7 +291,7 @@ let
       };
 
       subtest "check-keys", sub {
-        $server->succeed("diff ${vpn1-certKeyInStore} /var/lib/strongswan/key");
+        $server->succeed("diff ${vpn1-certKeyInStore} /var/lib/strongswan/strongswan-cert-key");
       };
 
       sub testConnection {
