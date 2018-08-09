@@ -14,11 +14,8 @@ let
   kernel = config.boot.kernelPackages;
 
   stateDir = "/var/lib/wireguard";
-  interfaceDir = name: "${stateDir}/${name}";
-  privateKeyFile = name: "${interfaceDir name}/key";
-  presharedKeyFile = name: peer: "${interfaceDir name}/${peer}.psk";
-  deployedKeyName = name: "wireguard-${name}-key";
-  deployedPSKName = name: peer: "wireguard-${name}-${peer}-psk";
+  keyName = name: "wireguard-${name}-key";
+  pskName = name: peer: "wireguard-${name}-${peer}-psk";
 
   # interface options
 
@@ -183,41 +180,12 @@ let
 
   };
 
-  installKeys = name: values:
-    nameValuePair "wireguard-${name}-keys"
-      {
-        description = "Install WireGuard keys for interface ${name}";
-        wantedBy = [ "multi-user.target" "wireguard-${name}.service" ];
-        wants = [ "keys.target" ];
-        after = [ "keys.target" ];
-        before = [ "wireguard-${name}.service" ];
-        unitConfig.DefaultDependencies = false; # needed to prevent a cycle
-        serviceConfig.Type = "oneshot";
-        script =
-        let
-          keyPath = keys."${deployedKeyName name}".path;
-        in
-        ''
-          install -m 0700 -o root -g root -d ${interfaceDir name} > /dev/null 2>&1 || true
-          install -m 0400 -o root -g root ${keyPath} ${privateKeyFile name}
-          ${concatMapStringsSep "\n" (peer:
-          let
-            pskPath = keys."${deployedPSKName name peer.name}".path;
-          in
-            ''
-              install -m 0400 -o root -g root ${pskPath} ${presharedKeyFile name peer.name}
-            ''
-            ) (mapAttrsToList (_: peer: peer) values.peers)}
-        '';
-      };
-
   generateUnit = name: values:
-    let privKey = privateKeyFile name;
-    in
     nameValuePair "wireguard-${name}"
       {
         description = "WireGuard Tunnel - ${name}";
-        after = [ "network.target" ];
+        wants = [ "keys.target" ];
+        after = [ "network.target" "keys.target" ];
         wantedBy = [ "multi-user.target" ];
         environment.DEVICE = name;
         path = with pkgs; [ kmod iproute wireguard-tools ];
@@ -227,7 +195,11 @@ let
           RemainAfterExit = true;
         };
 
-        script = ''
+        script =
+        let
+          keyPath = keys."${keyName name}".path;
+        in
+        ''
           modprobe wireguard
 
           ${values.preSetup}
@@ -238,14 +210,14 @@ let
             "ip address add ${ip} dev ${name}"
           ) values.ips}
 
-          wg set ${name} private-key ${privKey} ${
+          wg set ${name} private-key ${keyPath} ${
             optionalString (values.listenPort != null) " listen-port ${toString values.listenPort}"}
 
           ${concatMapStringsSep "\n" (peer:
-            let psk = presharedKeyFile name peer.name;
+            let pskPath = keys."${pskName name peer.name}".path;
             in
               "wg set ${name} peer ${peer.publicKey}" +
-              " preshared-key ${psk}" +
+              " preshared-key ${pskPath}" +
               optionalString (peer.endpoint != null) " endpoint ${peer.endpoint}" +
               optionalString (peer.persistentKeepalive != null) " persistent-keepalive ${toString peer.persistentKeepalive}" +
               optionalString (peer.allowedIPs != []) " allowed-ips ${concatStringsSep "," peer.allowedIPs}"
@@ -312,19 +284,20 @@ in
     boot.extraModulePackages = [ kernel.wireguard ];
     environment.systemPackages = [ pkgs.wireguard-tools ];
 
-    systemd.services = (mapAttrs' generateUnit cfg.interfaces) //
-      (mapAttrs' installKeys cfg.interfaces);
+    systemd.services = (mapAttrs' generateUnit cfg.interfaces);
 
     quixops.keychain.keys = listToAttrs (filter (x: x.value != null) (
       (mapAttrsToList
-        (ifname: values: nameValuePair (deployedKeyName ifname) ({
+        (ifname: values: nameValuePair (keyName ifname) ({
+          destDir = stateDir;
           text = values.privateKeyLiteral;
         })) cfg.interfaces) ++
       (lib.flatten
         (mapAttrsToList
           (ifname: values:
             mapAttrsToList
-              (peer: values: nameValuePair (deployedPSKName ifname peer) ({
+              (peer: values: nameValuePair (pskName ifname peer) ({
+                destDir = stateDir;
                 text = values.presharedKeyLiteral;
               }))
               values.peers)
