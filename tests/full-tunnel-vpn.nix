@@ -212,10 +212,10 @@ let
       };
 
       subtest "check-keys", sub {
-        $server->succeed("diff ${vpn1-certKeyInStore} /var/lib/openvpn/vpn1/pki.key");
-        $server->succeed("diff ${vpn1-tlsAuthKeyInStore} /var/lib/openvpn/vpn1/tls-auth.key");
-        $server->succeed("diff ${vpn2-certKeyInStore} /var/lib/openvpn/vpn2/pki.key");
-        $server->succeed("diff ${vpn2-tlsAuthKeyInStore} /var/lib/openvpn/vpn2/tls-auth.key");
+        $server->succeed("diff ${vpn1-certKeyInStore} /var/lib/openvpn/vpn1/openvpn-vpn1-cert-key");
+        $server->succeed("diff ${vpn1-tlsAuthKeyInStore} /var/lib/openvpn/vpn1/openvpn-vpn1-tls-auth-key");
+        $server->succeed("diff ${vpn2-certKeyInStore} /var/lib/openvpn/vpn2/openvpn-vpn2-cert-key");
+        $server->succeed("diff ${vpn2-tlsAuthKeyInStore} /var/lib/openvpn/vpn2/openvpn-vpn2-tls-auth-key");
       };
 
       sub testTunIPs {

@@ -4,16 +4,19 @@ with lib;
 
 let
 
-  stateDirBase = "/var/lib/openvpn";
-  keychain = config.quixops.keychain.keys;
+  stateDirFun = name: "/var/lib/openvpn/${name}";
+  keys = config.quixops.keychain.keys;
+
+  certKey = name: "openvpn-${name}-cert-key";
+  tlsAuthKey = name: "openvpn-${name}-tls-auth-key";
 
   dns = cfg: concatMapStrings (x: "push \"dhcp-option DNS ${x}\"\n") cfg.dns;
 
   genConfig = cfg:
   let
-    stateDir = "${stateDirBase}/${cfg.name}";
     ipv4ClientBase = pkgs.lib.ipaddr.ipv4AddrFromCIDR cfg.ipv4ClientSubnet;
     netmask = pkgs.lib.ipaddr.netmaskFromIPv4CIDR cfg.ipv4ClientSubnet;
+    stateDir = stateDirFun cfg.name;
   in
   ''
     port ${toString cfg.port}
@@ -23,7 +26,7 @@ let
     dh ${pkgs.lib.security.ffdhe3072Pem}
     ca ${cfg.caFile}
     cert ${cfg.certFile}
-    key ${stateDir}/pki.key
+    key ${stateDir}/${certKey cfg.name}
     crl-verify ${cfg.crlFile}
 
     topology subnet
@@ -37,7 +40,7 @@ let
 
     keepalive 10 120
 
-    tls-auth ${stateDir}/tls-auth.key 0
+    tls-auth ${stateDir}/${tlsAuthKey cfg.name} 0
 
     tls-cipher TLS-ECDHE-ECDSA-WITH-AES-256-GCM-SHA384:TLS-DHE-RSA-WITH-AES-256-GCM-SHA384
     cipher AES-128-GCM
@@ -67,11 +70,17 @@ mkIf (instances != {}) {
 
   quixops.keychain.keys = listToAttrs (filter (x: x.value != null) (
     (mapAttrsToList
-      (_: serverCfg: nameValuePair "openvpn-${serverCfg.name}-cert-key" ({
+      (_: serverCfg: nameValuePair (certKey serverCfg.name) ({
+        user = "openvpn";
+        group = "openvpn";
+        destDir = stateDirFun serverCfg.name;
         text = serverCfg.certKeyLiteral;
       })) instances) ++
     (mapAttrsToList
-      (_: serverCfg: nameValuePair "openvpn-${serverCfg.name}-tls-auth-key" ({
+      (_: serverCfg: nameValuePair (tlsAuthKey serverCfg.name) ({
+        user = "openvpn";
+        group = "openvpn";
+        destDir = stateDirFun serverCfg.name;
         text = serverCfg.tlsAuthKeyLiteral;
       })) instances)
   ));
@@ -91,22 +100,9 @@ mkIf (instances != {}) {
 
   systemd.services = listToAttrs (filter (x: x.value != null) (
     (mapAttrsToList
-      (_: serverCfg: nameValuePair "openvpn-${serverCfg.name}-setup" (rec {
-          description = "openvpn-${serverCfg.name} setup script ";
-          wantedBy = [ "multi-user.target" "openvpn-${serverCfg.name}.service" ];
+      (_: serverCfg: nameValuePair "openvpn-${serverCfg.name}" (rec {
           wants = [ "keys.target" ];
           after = [ "keys.target" ];
-          script =
-          let
-            stateDir = "${stateDirBase}/${serverCfg.name}";
-            deployedCertKey = keychain."openvpn-${serverCfg.name}-cert-key".path;
-            deployedTLSAuthKey = keychain."openvpn-${serverCfg.name}-tls-auth-key".path;
-          in
-          ''
-            install -m 0750 -o openvpn -g openvpn -d ${stateDir} > /dev/null 2>&1 || true
-            install -m 0400 -o openvpn -g openvpn ${deployedCertKey} ${stateDir}/pki.key
-            install -m 0400 -o openvpn -g openvpn ${deployedTLSAuthKey} ${stateDir}/tls-auth.key
-          '';
         })) instances)
   ));
 
