@@ -7,8 +7,8 @@ let
   stateDirFun = name: "/var/lib/openvpn/${name}";
   keys = config.quixops.keychain.keys;
 
-  certKey = name: "openvpn-${name}-cert-key";
-  tlsAuthKey = name: "openvpn-${name}-tls-auth-key";
+  certKeyName = name: "openvpn-${name}-cert-key";
+  tlsAuthKeyName = name: "openvpn-${name}-tls-auth-key";
 
   dns = cfg: concatMapStrings (x: "push \"dhcp-option DNS ${x}\"\n") cfg.dns;
 
@@ -17,6 +17,8 @@ let
     ipv4ClientBase = pkgs.lib.ipaddr.ipv4AddrFromCIDR cfg.ipv4ClientSubnet;
     netmask = pkgs.lib.ipaddr.netmaskFromIPv4CIDR cfg.ipv4ClientSubnet;
     stateDir = stateDirFun cfg.name;
+    certKeyPath = keys."${certKeyName cfg.name}".path;
+    tlsAuthKeyPath = keys."${tlsAuthKeyName cfg.name}".path;
   in
   ''
     port ${toString cfg.port}
@@ -26,7 +28,7 @@ let
     dh ${pkgs.lib.security.ffdhe3072Pem}
     ca ${cfg.caFile}
     cert ${cfg.certFile}
-    key ${stateDir}/${certKey cfg.name}
+    key ${certKeyPath}
     crl-verify ${cfg.crlFile}
 
     topology subnet
@@ -40,7 +42,7 @@ let
 
     keepalive 10 120
 
-    tls-auth ${stateDir}/${tlsAuthKey cfg.name} 0
+    tls-auth ${tlsAuthKeyPath} 0
 
     tls-cipher TLS-ECDHE-ECDSA-WITH-AES-256-GCM-SHA384:TLS-DHE-RSA-WITH-AES-256-GCM-SHA384
     cipher AES-128-GCM
@@ -70,14 +72,14 @@ mkIf (instances != {}) {
 
   quixops.keychain.keys = listToAttrs (filter (x: x.value != null) (
     (mapAttrsToList
-      (_: serverCfg: nameValuePair (certKey serverCfg.name) ({
+      (_: serverCfg: nameValuePair (certKeyName serverCfg.name) ({
         user = "openvpn";
         group = "openvpn";
         destDir = stateDirFun serverCfg.name;
         text = serverCfg.certKeyLiteral;
       })) instances) ++
     (mapAttrsToList
-      (_: serverCfg: nameValuePair (tlsAuthKey serverCfg.name) ({
+      (_: serverCfg: nameValuePair (tlsAuthKeyName serverCfg.name) ({
         user = "openvpn";
         group = "openvpn";
         destDir = stateDirFun serverCfg.name;
