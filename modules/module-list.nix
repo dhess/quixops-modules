@@ -52,5 +52,6 @@
   ./services/pinpon/server.nix
   ./services/systemd-digitalocean
   ./services/tarsnapper
+  ./services/tftpd-hpa
   ./services/znc
 ]

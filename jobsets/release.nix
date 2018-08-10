@@ -66,6 +66,7 @@ let
     postfix-relay-host = callTest ../tests/postfix-relay-host.nix {};
     service-status-email = callTest ../tests/service-status-email.nix {};
     tarsnapper = callTest ../tests/tarsnapper.nix {};
+    tftpd-hpa = callTest ../tests/tftpd-hpa.nix {};
     unbound-multi-instance = callTest ../tests/unbound-multi-instance.nix {};
     znc = callSubTests ../tests/znc.nix {};
 
