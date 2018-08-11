@@ -105,6 +105,7 @@ in
       group = "${group}";
       isSystemUser = true;          
     };
+    users.groups."${group}".name = "${group}";
 
   };
 
