@@ -44,6 +44,7 @@
   ./networking/accept
   ./networking/pcap-prep
   ./networking/wireguard
+  ./services/apcupsd-net
   ./services/full-tunnel-vpn
   ./services/hydra-manual-setup
   ./services/mellon/auto-unlock.nix
