@@ -6,6 +6,9 @@ let
 
   cfg = config.services.tftpd-hpa;
 
+  user = "tftp";
+  group = "tftp";
+
   # tftp-hpa requires IPv6 addresses to be enclosed in brackets.
   addressOption =
   let
@@ -82,13 +85,25 @@ in
       description = "hpa's original TFTP server";
       after = [ "network.target" ];
       wantedBy = [ "multi-user.target" ];
+
+      # Note that in.tftpd starts as root and then drops privileges to
+      # the provided user upon client connection, so it will usually
+      # appear to be running as root in `ps`.
+
       script = ''
-        ${pkgs.tftp-hpa}/bin/in.tftpd --listen ${addressOption} ${concatStringsSep " " cfg.extraOptions} --secure ${cfg.root}
+        ${pkgs.tftp-hpa}/bin/in.tftpd --user ${user} --listen ${addressOption} ${concatStringsSep " " cfg.extraOptions} --secure ${cfg.root}
       '';
 
       serviceConfig = {
         Type = "forking";
       };
+    };
+
+    users.users."${user}" = {
+      description = "tftp user";
+      name = "${user}";
+      group = "${group}";
+      isSystemUser = true;          
     };
 
   };
