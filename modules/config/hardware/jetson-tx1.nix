@@ -23,7 +23,7 @@ in
     boot.loader.grub.enable = false;
     boot.loader.generic-extlinux-compatible.enable = true;
 
-    boot.kernelPackages = pkgs.linuxPackages_4_14;
+    boot.kernelPackages = pkgs.linuxPackages_latest;
 
     boot.initrd.availableKernelModules = [ "ahci_tegra" "nvme" ];
 
