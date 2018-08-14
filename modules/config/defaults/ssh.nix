@@ -19,6 +19,11 @@ in
     services.openssh.passwordAuthentication = false;
     services.openssh.permitRootLogin = lib.mkForce "prohibit-password";
 
+    # Prevent users from installing their own authorized_keys.
+
+    services.openssh.authorizedKeysFiles = pkgs.lib.mkForce
+      [ "/etc/ssh/authorized_keys.d/%u" ];
+
     # More reliable GPG forwarding.
     #
     # Use mkOrder 999 to give the user a chance to override it in
