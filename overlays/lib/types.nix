@@ -274,6 +274,18 @@ rec {
         '';
       };
 
+      prefixLength = mkOption {
+        type = types.ints.between 0 32;
+        example = 24;
+        description = ''
+          Just the prefix length part of the IPv4 address of the
+          subnet.
+
+          <em>Note: this should be calculated automatically, but
+          currently it is not.</em>
+        '';
+      };
+
       router = mkOption {
         type = types.nullOr pkgs.lib.types.ipv4NoCIDR;
         example = "192.168.1.1";
