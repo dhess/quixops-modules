@@ -368,6 +368,69 @@ rec {
     };
   };
 
+  ## An IPv6 subnet description.
+
+  ipv6Subnet = types.submodule {
+    options = rec {
+
+      description = mkOption {
+        type = types.nullOr types.str;
+        default = null;
+        example = "The foo subnet";
+        description = ''
+          An optional one-line description of the subnet.
+        '';
+      };
+
+      ip = mkOption {
+        type = pkgs.lib.types.ipv6CIDR;
+        example = "2001:db8::/64";
+        description = ''
+          The IPv6 address of the subnet in CIDR notation.
+        '';
+      };
+
+      prefix = mkOption {
+        type = pkgs.lib.types.nonEmptyStr;
+        example = "2001:db8::";
+        description = ''
+          Just the prefix part of the IPv6 address of the subnet.
+
+          <em>Note: this should be calculated automatically, but
+          currently it is not.</em>
+        '';
+      };
+
+      prefixLength = mkOption {
+        type = types.ints.between 0 128;
+        example = 64;
+        description = ''
+          Just the prefix length part of the IPv6 address of the
+          subnet.
+
+          <em>Note: this should be calculated automatically, but
+          currently it is not.</em>
+        '';
+      };
+
+      router = mkOption {
+        type = types.nullOr pkgs.lib.types.ipv6NoCIDR;
+        example = "fe80::1";
+        description = ''
+          The subnet's default router, expressed as an IPv6 address.
+
+          Technically this attribute is optional; it can be set to
+          <literal>null</literal>. This is useful for things like
+          point-to-point networks, or networks that should not be
+          routed, like inter-router communication networks. However,
+          there is no default value, to prevent you from forgetting to
+          configure one.
+        '';
+      };
+
+    };
+  };
+
   # A WireGuard peer.
 
   wgPeer = types.submodule ({ config, name, ... }: {
