@@ -45,11 +45,11 @@ rec {
     };
 
     ipv4ClientSubnet = mkOption {
-      type = pkgs.lib.types.ipv4CIDR;
+      type = pkgs.lib.types.ipv4RFC1918CIDR;
       example = "10.0.1.0/24";
       description = ''
-        The IPv4 subnet from which client IPv4 addresses will be
-        assigned.
+        The RFC 1918 IPv4 subnet (in CIDR format) from which client
+        IPv4 addresses will be assigned
       '';
     };
 

@@ -24,11 +24,11 @@ with lib;
   };
 
   ipv4ClientCidr = mkOption {
-    type = pkgs.lib.types.ipv4CIDR;
+    type = pkgs.lib.types.ipv4RFC1918CIDR;
     example = "10.0.1.0/24";
     description = ''
-      The base of the IPv4 address range that will be used for
-      StrongSwan clients, in CIDR format.
+      The IPv4 RFC 1918 subnet (in CIDR format) from which StrongSwan
+      client addresses will be assigned.
     '';
   };
 
