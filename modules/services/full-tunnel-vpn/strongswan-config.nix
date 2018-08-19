@@ -13,7 +13,11 @@ let
 
   secretsFile = toFile "strongswan.secrets"
     ": RSA ${key.path}";
-    
+
+  clientIPs = pkgs.lib.concatStringsSep ", " (
+    cfg.clientPrefixes.ipv4 ++ cfg.clientPrefixes.ipv6
+  );
+
 in
 mkIf cfg.enable {
 
@@ -48,7 +52,7 @@ mkIf cfg.enable {
       leftcert = "${cfg.certFile}";
       leftsendcert = "always";
       right = "%any";
-      rightsourceip = "${cfg.ipv4ClientCidr}, ${cfg.ipv6ClientPrefix}";
+      rightsourceip = "${clientIPs}";
       rightdns = "${strongSwanDns}";
       auto = "add";
     };
@@ -58,7 +62,7 @@ mkIf cfg.enable {
     };
   };
   
-  networking.nat.internalIPs = [ cfg.ipv4ClientCidr ];
+  networking.nat.internalIPs = cfg.clientPrefixes.ipv4;
 
   systemd.services.strongswan = {
     wants = [ "keys.target" ];

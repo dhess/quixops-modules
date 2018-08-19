@@ -107,8 +107,10 @@ let
   strongswan = {
     enable = true;
     remoteId = "vpn1.acme.com";
-    ipv4ClientCidr = "10.150.2.1/24";
-    ipv6ClientPrefix = "fd00:1234:5678:b::0/64";
+    clientPrefixes = {
+      ipv4 = [ "10.150.2.1/24" ];
+      ipv6 = [ "fd00:1234:5678:b::0/64" ];
+    };
     caFile = ca-cert;
     certFile = vpn1-cert;
     certKeyLiteral = builtins.readFile vpn1-certKey;
