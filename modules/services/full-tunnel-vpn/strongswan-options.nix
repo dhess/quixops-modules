@@ -26,22 +26,20 @@ with lib;
   clientPrefixes = {
 
     ipv4 = mkOption {
-      type = types.listOf pkgs.lib.types.ipv4RFC1918CIDR;
-      default = [];
-      example = [ "10.0.1.0/24" ];
+      type = pkgs.lib.types.ipv4RFC1918CIDR;
+      example = "10.0.1.0/24";
       description = ''
-        A list of IPv4 RFC 1918 subnets (in CIDR format) from which
-        StrongSwan client addresses will be assigned.
+        An IPv4 RFC 1918 subnet (in CIDR format) from which StrongSwan
+        client addresses will be assigned.
       '';
     };
 
     ipv6 = mkOption {
-      type = types.listOf pkgs.lib.types.ipv6CIDR;
-      default = [];
-      example = [ "2001:DB8::1:0/112" ];
+      type = pkgs.lib.types.ipv6CIDR;
+      example = "2001:DB8::1:0/112";
       description = ''
-        A list of IPv6 prefixes from which IPv6 addresses will be
-        assigned for StrongSwan clients.
+        An IPv6 prefix from which IPv6 addresses will be assigned for
+        StrongSwan clients.
       '';
     };
 

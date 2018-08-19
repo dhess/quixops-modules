@@ -108,8 +108,8 @@ let
     enable = true;
     remoteId = "vpn1.acme.com";
     clientPrefixes = {
-      ipv4 = [ "10.150.2.1/24" ];
-      ipv6 = [ "fd00:1234:5678:b::0/64" ];
+      ipv4 = "10.150.2.1/24";
+      ipv6 = "fd00:1234:5678:b::0/64";
     };
     caFile = ca-cert;
     certFile = vpn1-cert;
