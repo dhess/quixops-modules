@@ -112,7 +112,8 @@ let
       {
         description = "WireGuard Tunnel - ${name}";
         wants = [ "keys.target" ];
-        after = [ "network.target" "keys.target" ];
+        requires = [ "network-online.target" ];
+        after = [ "network.target" "network-online.target" "keys.target" ];
         wantedBy = [ "multi-user.target" ];
         environment.DEVICE = name;
         path = with pkgs; [ kmod iproute wireguard-tools ];
@@ -161,7 +162,7 @@ let
           ${values.postSetup}
         '';
 
-        preStop = ''
+        postStop = ''
           ip link del dev ${name}
           ${values.postShutdown}
         '';
@@ -206,7 +207,7 @@ in
   config = mkIf (cfg.interfaces != {}) {
 
     quixops.assertions.moduleHashes."services/networking/wireguard.nix" =
-      "6d8fe9c87686404f86a0cc237411a4702c527045dcd0c5c28dffbcf50faa47b2";
+      "5ecebd36bc4c694d9126f06ca6a6bb0445c9ebd46a9344ea9bb7959d531b6da4";
 
     boot.extraModulePackages = [ kernel.wireguard ];
     environment.systemPackages = [ pkgs.wireguard-tools ];
