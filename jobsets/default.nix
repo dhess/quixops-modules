@@ -24,7 +24,7 @@ let
     hidden = false;
     keepnr = 5;
     schedulingshares = 400;
-    checkinterval = 300;
+    checkinterval = 60;
     enableemail = false;
     emailoverride = "";
     nixexprpath = "jobsets/release.nix";
@@ -36,7 +36,7 @@ let
   };
 
   mkAlternate = quixopsModulesBranch: nixpkgsQuixopsBranch: nixpkgsRev: {
-    checkinterval = 300;
+    checkinterval = 60;
     inputs = {
       nixpkgs_override = mkFetchGithub "https://github.com/NixOS/nixpkgs-channels.git ${nixpkgsRev}";
       nixpkgs_quixoftic_override = mkFetchGithub "https://github.com/quixoftic/nixpkgs-quixoftic.git ${nixpkgsQuixopsBranch}";
