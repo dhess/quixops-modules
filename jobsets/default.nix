@@ -44,9 +44,21 @@ let
     };
   };
 
+  # Build against the nixpkgs repo. Runs less often due to nixpkgs'
+  # velocity.
+  mkNixpkgs = quixopsModulesBranch: nixpkgsQuixopsBranch: nixpkgsRev: {
+    checkinterval = 60 * 60 * 12;
+    inputs = {
+      nixpkgs_override = mkFetchGithub "https://github.com/NixOS/nixpkgs.git ${nixpkgsRev}";
+      nixpkgs_quixoftic_override = mkFetchGithub "https://github.com/quixoftic/nixpkgs-quixoftic.git ${nixpkgsQuixopsBranch}";
+      quixopsModules = mkFetchGithub "${quixopsModulesUri} ${quixopsModulesBranch}";
+    };
+  };
+
   mainJobsets = with pkgs.lib; mapAttrs (name: settings: defaultSettings // settings) (rec {
     master = {};
     nixos-unstable = mkAlternate "master" "master" "nixos-unstable";
+    nixpkgs = mkNixpkgs "master" "master" "master";
   });
 
   jobsetsAttrs = mainJobsets;
