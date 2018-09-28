@@ -34,7 +34,9 @@
   ./config/hardware/mbr.nix
   ./config/hardware/uefi.nix
   ./config/networking/tcp-bbr
+  ./config/nix/auto-gc
   ./config/overlays.nix
+  ./config/remote-builds/remote-build-host
   ./core/keychain
   ./core/module-hashes.nix
   ./dns/unbound-multi-instance
