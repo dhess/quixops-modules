@@ -65,6 +65,7 @@ let
     pinpon = callTest ../tests/pinpon.nix {};
     postfix-null-client = callTest ../tests/postfix-null-client.nix {};
     postfix-relay-host = callTest ../tests/postfix-relay-host.nix {};
+    remote-build-host = callSubTests ../tests/remote-build-host.nix {};
     service-status-email = callTest ../tests/service-status-email.nix {};
     tarsnapper = callTest ../tests/tarsnapper.nix {};
     tftpd-hpa = callTest ../tests/tftpd-hpa.nix {};

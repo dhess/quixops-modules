@@ -46,6 +46,9 @@ in
   };
 
   config = lib.mkIf enabled {
+
+    quixops.defaults.ssh.enable = true;
+
     nix.trustedUsers = [ cfg.user.name ];
 
     users.users."${cfg.user.name}" = {
