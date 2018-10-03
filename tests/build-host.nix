@@ -15,6 +15,10 @@ let
     ssh://alice@foo.example.com x86_64-darwin /etc/nix/alice_at_foo 4 1 big-parallel
   '';
 
+  expectedExtraMachinesFile = pkgs.writeText "extra-machines" ''
+    ssh://alice@baz.example.com aarch64-linux /etc/nix/alice_at_baz 6 2 big-parallel,nixos-test
+  '';
+
   alicePrivateKey = ''
     -----BEGIN OPENSSH PRIVATE KEY-----
     b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
@@ -45,6 +49,7 @@ let
 
   fooPublicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPsvvICWc8HDQkkIwIaHQ2xuHieJyLULqe1Z/xeJQRzi";
   barPublicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDAEBze0BfSijN9vRgvLOyJacAo7rCgr9u96hGWNkyPL";
+  bazPublicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMUTz5i9u5H2FHNAmZJyoJfIGyUm/HfGhfwnc142L3ds";
 
   remoteBuildHosts = {
     foo = {
@@ -72,54 +77,137 @@ let
     };
   };
 
-in makeTest rec {
-
-  name = "build-host";
-  meta = with pkgs.lib.maintainers; {
-    maintainers = [ dhess-qx ];
+  extraRemoteBuildHosts = {
+    baz = {
+      hostName = "baz.example.com";
+      alternateHostNames = [ "10.0.0.3" "2001:db8::3" ];
+      hostPublicKeyLiteral = bazPublicKey;
+      systems = [ "aarch64-linux" ];
+      maxJobs = 6;
+      speedFactor = 2;
+      supportedFeatures = [ "big-parallel" "nixos-test" ];
+      sshUserName = "alice";
+      sshKeyLiteral = alicePrivateKey;
+    };
   };
 
-  nodes = {
-    machine = { config, ... }: {
-      nixpkgs.localSystem.system = system;
-      imports =
-        (import pkgs.lib.quixops.modulesPath) ++
-        (import pkgs.lib.quixops.testModulesPath);
+  noExtraBuildHosts = makeTest rec {
 
-      # Use the test key deployment system.
-      deployment.reallyReallyEnable = true;
+    name = "build-host";
+    meta = with pkgs.lib.maintainers; {
+      maintainers = [ dhess-qx ];
+    };
 
-      quixops.build-host = {
-        enable = true;
-        buildMachines = remoteBuildHosts;
+    nodes = {
+      machine = { config, ... }: {
+        nixpkgs.localSystem.system = system;
+        imports =
+          (import pkgs.lib.quixops.modulesPath) ++
+          (import pkgs.lib.quixops.testModulesPath);
+
+        # Use the test key deployment system.
+        deployment.reallyReallyEnable = true;
+
+        quixops.build-host = {
+          enable = true;
+          buildMachines = remoteBuildHosts;
+        };
       };
     };
+
+    testScript  = { nodes, ... }:
+    let
+    in
+    ''
+      startAll;
+
+      subtest "check-ssh-keys", sub {
+        $machine->succeed("diff ${alicePrivateKeyFile} /etc/nix/alice_at_foo");
+        $machine->succeed("[[ `stat -c%a /etc/nix/alice_at_foo` -eq 400 ]]");
+        $machine->succeed("[[ `stat -c%a /etc/nix/alice_at_foo` -eq 400 ]]");
+        $machine->succeed("diff ${bobPrivateKeyFile} /etc/nix/bob_at_bar");
+        $machine->succeed("[[ `stat -c%a /etc/nix/bob_at_bar` -eq 400 ]]");
+        $machine->succeed("[[ `stat -c%U /etc/nix/bob_at_bar` -eq root ]]");
+      };
+
+      subtest "check-etc-nix-machines", sub {
+        $machine->succeed("diff -w ${expectedMachinesFile} /etc/nix/machines");
+      };
+
+      subtest "check-ssh_known_hosts", sub {
+        my $foostring = quotemeta ("foo.example.com,10.0.0.1,2001:db8::1 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPsvvICWc8HDQkkIwIaHQ2xuHieJyLULqe1Z/xeJQRzi");
+        my $barstring = quotemeta ("bar.example.com,10.0.0.2,2001:db8::2 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDAEBze0BfSijN9vRgvLOyJacAo7rCgr9u96hGWNkyPL");
+        my $ssh_known_hosts = $machine->succeed("cat /etc/ssh/ssh_known_hosts");
+        $ssh_known_hosts =~ /$foostring/ or die "/etc/ssh/ssh_known_hosts is missing expected `foo` host key";
+        $ssh_known_hosts =~ /$barstring/ or die "/etc/ssh/ssh_known_hosts is missing expected `bar` host key";
+      };
+    '';
   };
 
-  testScript  = { nodes, ... }:
-  let
-  in
-  ''
-    startAll;
+  extraBuildHosts = makeTest rec {
 
-    subtest "check-ssh-keys", sub {
-      $machine->succeed("diff ${alicePrivateKeyFile} /etc/nix/alice_at_foo");
-      $machine->succeed("[[ `stat -c%a /etc/nix/alice_at_foo` -eq 400 ]]");
-      $machine->succeed("diff ${bobPrivateKeyFile} /etc/nix/bob_at_bar");
-      $machine->succeed("[[ `stat -c%a /etc/nix/bob_at_bar` -eq 400 ]]");
+    name = "build-host-extra-build-hosts";
+    meta = with pkgs.lib.maintainers; {
+      maintainers = [ dhess-qx ];
     };
 
-    subtest "check-etc-nix-machines", sub {
-      $machine->succeed("diff -w ${expectedMachinesFile} /etc/nix/machines");
+    nodes = {
+      machine = { config, ... }: {
+        nixpkgs.localSystem.system = system;
+        imports =
+          (import pkgs.lib.quixops.modulesPath) ++
+          (import pkgs.lib.quixops.testModulesPath);
+
+        # Use the test key deployment system.
+        deployment.reallyReallyEnable = true;
+
+        quixops.build-host = {
+          enable = true;
+          buildMachines = remoteBuildHosts;
+          extraBuildMachines = extraRemoteBuildHosts;
+        };
+      };
     };
 
-    subtest "check-ssh_known_hosts", sub {
-      my $foostring = quotemeta ("foo.example.com,10.0.0.1,2001:db8::1 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPsvvICWc8HDQkkIwIaHQ2xuHieJyLULqe1Z/xeJQRzi");
-      my $barstring = quotemeta ("bar.example.com,10.0.0.2,2001:db8::2 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDAEBze0BfSijN9vRgvLOyJacAo7rCgr9u96hGWNkyPL");
-      my $ssh_known_hosts = $machine->succeed("cat /etc/ssh/ssh_known_hosts");
-      $ssh_known_hosts =~ /$foostring/ or die "/etc/ssh/ssh_known_hosts is missing expected `foo` host key";
-      $ssh_known_hosts =~ /$barstring/ or die "/etc/ssh/ssh_known_hosts is missing expected `bar` host key";
-    };
-  '';
+    testScript  = { nodes, ... }:
+    let
+    in
+    ''
+      startAll;
 
+      subtest "check-ssh-keys", sub {
+        $machine->succeed("diff ${alicePrivateKeyFile} /etc/nix/alice_at_foo");
+        $machine->succeed("[[ `stat -c%a /etc/nix/alice_at_foo` -eq 400 ]]");
+        $machine->succeed("[[ `stat -c%U /etc/nix/alice_at_foo` -eq root ]]");
+        $machine->succeed("diff ${bobPrivateKeyFile} /etc/nix/bob_at_bar");
+        $machine->succeed("[[ `stat -c%a /etc/nix/bob_at_bar` -eq 400 ]]");
+        $machine->succeed("[[ `stat -c%U /etc/nix/bob_at_bar` -eq root ]]");
+        $machine->succeed("diff ${alicePrivateKeyFile} /etc/nix/alice_at_baz");
+        $machine->succeed("[[ `stat -c%a /etc/nix/alice_at_baz` -eq 400 ]]");
+        $machine->succeed("[[ `stat -c%U /etc/nix/alice_at_baz` -eq root ]]");
+      };
+
+      subtest "check-etc-nix-machines", sub {
+        $machine->succeed("diff -w ${expectedMachinesFile} /etc/nix/machines");
+      };
+
+      subtest "check-etc-nix-extra-machines", sub {
+        $machine->succeed("diff -w ${expectedExtraMachinesFile} /etc/nix/extra-machines");
+      };
+
+      subtest "check-ssh_known_hosts", sub {
+        my $foostring = quotemeta ("foo.example.com,10.0.0.1,2001:db8::1 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPsvvICWc8HDQkkIwIaHQ2xuHieJyLULqe1Z/xeJQRzi");
+        my $barstring = quotemeta ("bar.example.com,10.0.0.2,2001:db8::2 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDAEBze0BfSijN9vRgvLOyJacAo7rCgr9u96hGWNkyPL");
+        my $bazstring = quotemeta ("baz.example.com,10.0.0.3,2001:db8::3 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMUTz5i9u5H2FHNAmZJyoJfIGyUm/HfGhfwnc142L3ds");
+        my $ssh_known_hosts = $machine->succeed("cat /etc/ssh/ssh_known_hosts");
+        $ssh_known_hosts =~ /$foostring/ or die "/etc/ssh/ssh_known_hosts is missing expected `foo` host key";
+        $ssh_known_hosts =~ /$barstring/ or die "/etc/ssh/ssh_known_hosts is missing expected `bar` host key";
+        $ssh_known_hosts =~ /$bazstring/ or die "/etc/ssh/ssh_known_hosts is missing expected `baz` host key";
+      };
+    '';
+  };
+
+in
+{
+  inherit noExtraBuildHosts extraBuildHosts;
 }

@@ -5,9 +5,11 @@ let
   cfg = config.quixops.build-host;
   enabled = cfg.enable;
 
+  extraMachinesPath = "nix/extra-machines";
+
   sshKeyName = host: user: "${user}_at_${host}";
 
-  buildMachines = lib.mapAttrsToList (host: descriptor: with descriptor;
+  mkBuildMachines = remoteBuildHosts: lib.mapAttrsToList (host: descriptor: with descriptor;
     {
       inherit hostName systems maxJobs speedFactor mandatoryFeatures supportedFeatures;
       sshUser = "ssh://${sshUserName}";
@@ -17,16 +19,16 @@ let
       in
         config.quixops.keychain.keys.${keyname}.path;
     }
-  ) cfg.buildMachines;
+  ) remoteBuildHosts;
 
-  knownHosts = lib.mapAttrsToList (host: descriptor:
+  knownHosts = remoteBuildHosts: lib.mapAttrsToList (host: descriptor:
     {
       hostNames = lib.singleton descriptor.hostName ++ descriptor.alternateHostNames;
       publicKey = descriptor.hostPublicKeyLiteral;
     }
-  ) cfg.buildMachines;
+  ) remoteBuildHosts;
 
-  keys = lib.mapAttrs' (host: descriptor:
+  genKeys = remoteBuildHosts: lib.mapAttrs' (host: descriptor:
   let
     keyName = sshKeyName host descriptor.sshUserName;
   in
@@ -36,7 +38,7 @@ let
       user = cfg.sshKeyFileOwner;
       group = "root";
       permissions = "0400";
-  }) cfg.buildMachines;
+  }) remoteBuildHosts;
 
 in
 {
@@ -91,9 +93,51 @@ in
 
     buildMachines = lib.mkOption {
       default = {};
-      description = "An attrset containing remote build host descriptors.";
+      description = ''
+        An attrset containing remote build host descriptors.
+
+        The machines in this attrset will be added to
+        <literal>/etc/nix/machines</literal>, so that they're used by
+        <literal>nix-daemon</literal> for remote builds that are
+        initiated from this host.
+      '';
       type = lib.types.attrsOf pkgs.lib.types.remoteBuildHost;
     };
+
+    extraBuildMachines = lib.mkOption {
+      default = {};
+      description = ''
+        An attrset containing remote build host descriptors.
+
+        The machines in this attrset will be added to a file named by
+        the <option>extraBuildMachinesFile</option> option.
+
+        Note that these machines will <em>not</em> automatically be
+        used by <literal>nix-daemon</literal>, but you can use these
+        machine definitions for other programs that expect the same
+        file format (e.g., Hydra).
+
+        This functionaliy is useful when you want to use
+        different/additional build machines for a local Hydra than
+        <literal>nix-daemon</literal> uses.
+      '';
+      type = lib.types.attrsOf pkgs.lib.types.remoteBuildHost;
+    };
+
+    extraBuildMachinesFile = lib.mkOption {
+      type = lib.types.path;
+      default = "/etc/${extraMachinesPath}";
+      readOnly = true;
+      description = ''
+        The name of the file in which the remote build hosts defined
+        by <option>extraBuildMachines</option> will be stored.
+
+        This attribute is read-only, and is provided so that other
+        modules can safely determine the path to the file containing
+        these definitions.
+      '';
+    };
+
   };
 
   config = lib.mkIf enabled {
@@ -105,11 +149,33 @@ in
     ];
 
     nix.distributedBuilds = true;
-    nix.buildMachines = buildMachines;
+    nix.buildMachines = mkBuildMachines cfg.buildMachines;
 
-    programs.ssh.knownHosts = knownHosts;
+    programs.ssh.knownHosts = (knownHosts cfg.buildMachines) ++ (knownHosts cfg.extraBuildMachines);
 
-    quixops.keychain.keys = keys;
+    quixops.keychain.keys =
+      (genKeys cfg.buildMachines) // (genKeys cfg.extraBuildMachines);
+
+
+    # We need to generate our own machines file for the extra
+    # machines. Unfortunately, this functionality is not exported from
+    # Nixpkgs, so this code is taken from nixpkgs
+    # (nixos/modules/services/misc/nix-daemon.nix):
+
+    environment.etc."${extraMachinesPath}" =
+      { text =
+          lib.concatMapStrings (machine:
+            "${if machine ? sshUser then "${machine.sshUser}@" else ""}${machine.hostName} "
+            + machine.system or (lib.concatStringsSep "," machine.systems)
+            + " ${machine.sshKey or "-"} ${toString machine.maxJobs or 1} "
+            + toString (machine.speedFactor or 1)
+            + " "
+            + lib.concatStringsSep "," (machine.mandatoryFeatures or [] ++ machine.supportedFeatures or [])
+            + " "
+            + lib.concatStringsSep "," machine.mandatoryFeatures or []
+            + "\n"
+          ) (mkBuildMachines cfg.extraBuildMachines);
+      };
 
   };
 
