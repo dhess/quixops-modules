@@ -31,7 +31,7 @@ let
           ] ++ (import pkgs.lib.quixops.modulesPath);
           quixops.remote-build-host = {
             enable = true;
-            user.sshKeyFiles = pkgs.lib.singleton remoteBuilderPublicKey;
+            user.sshPublicKeyFiles = pkgs.lib.singleton remoteBuilderPublicKey;
           };
       } // machineAttrs;
       client = { config, ... }: {
