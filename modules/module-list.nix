@@ -37,6 +37,7 @@
   ./config/nix/auto-gc
   ./config/overlays.nix
   ./config/remote-builds/remote-build-host
+  ./config/remote-builds/build-host
   ./core/keychain
   ./core/module-hashes.nix
   ./dns/unbound-multi-instance

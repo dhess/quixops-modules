@@ -514,4 +514,126 @@ rec {
     };
   });
 
+
+  # A remote build host type.
+  #
+  # This type is mostly compatible with what's expected by the
+  # attrsets in the list `nix.buildMachines`. The major difference is
+  # that, here, the SSH private key is specified as a literal rather
+  # than as a filename, to prevent you from mistakenly putting the
+  # file containing the SSH private key into the Nix store.
+  #
+  # In addition to those attributes, it also provides a list of
+  # alternate hostnames and an SSH host key, which are useful for
+  # configuring SSH on a build host to guarantee that nix-daemon's
+  # initial SSH attempt to log into the remote builder will connect
+  # without failing.
+
+  remoteBuildHost = types.submodule {
+    options = {
+
+      hostName = mkOption {
+        type = pkgs.lib.types.nonEmptyStr;
+        example = "builder.example.com";
+        description = ''
+          The primary host name of the remote build host. This is the
+          name that should be used in the remote build host's
+          `nix.buildMachines` entry.
+        '';
+      };
+
+      alternateHostNames = mkOption {
+        type = types.listOf pkgs.lib.types.nonEmptyStr;
+        default = [];
+        example = [ "192.168.1.1" "2001:db8::1" ];
+        description = ''
+          A list of alternate names by which the host is known. At the
+          very least, this should include the IPv4 and/or IPv6
+          address(es) to which <varname>hostName</varname> resolves, as
+          in some situations, <literal>nix-daemon</literal> or Hydra
+          will use an IP address rather than a hostname.
+        '';
+      };
+
+      hostPublicKeyLiteral = mkOption {
+        type = pkgs.lib.types.nonEmptyStr;
+        example = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMUTz5i9u5H2FHNAmZJyoJfIGyUm/HfGhfwnc142L3ds";
+        description = ''
+          A string literal containing the host's SSH public key. This
+          can be obtained by running <literal>ssh-keyscan</literal> on
+          the host.
+        '';
+      };
+
+      systems = mkOption {
+        type = types.nonEmptyListOf pkgs.lib.types.nonEmptyStr;
+        example = [ "x86_64-linux" "i686-linux" ];
+        description = ''
+          A list of Nix system types for which this remote build host
+          can build derivations.
+        '';
+      };
+
+      maxJobs = mkOption {
+        type = types.ints.positive;
+        default = 1;
+        example = 8;
+        description = ''
+          The maximum number of jobs to be run in parallel on this
+          remote build host.
+        '';
+      };
+
+      speedFactor = mkOption {
+        type = types.ints.positive;
+        default = 1;
+        example = 2;
+        description = ''
+          A positive integer whose value represents the remote build
+          host's performance, where higher values mean "faster."
+        '';
+      };
+
+      mandatoryFeatures = mkOption {
+        type = types.listOf pkgs.lib.types.nonEmptyStr;
+        default = [];
+        example = [ "perf" ];
+        description = ''
+          A list of features that the host must provide.
+        '';
+      };
+
+      supportedFeatures = mkOption {
+        type = types.listOf pkgs.lib.types.nonEmptyStr;
+        default = [];
+        example = [ "kvm" "big-parallel" ];
+        description = ''
+          A list of features that the host supports.
+        '';
+      };
+
+      sshUserName = mkOption {
+        type = pkgs.lib.types.nonEmptyStr;
+        example = "remote-builder";
+        description = ''
+          The user name to be used for builds on the remote builder.
+          Note that this user must be a member of
+          <option>nix.trustedUsers</option> on the remote host.
+
+          Note: this value should be just the bare user name; do not
+          include a <literal>ssh://</literal> prefix.
+        '';
+      };
+
+      sshKeyLiteral = mkOption {
+        type = pkgs.lib.types.nonEmptyStr;
+        description = ''
+          The SSH private key for <varname>sshUser</varname>, as a
+          literal string.
+        '';
+      };
+
+    };
+  };
+
 }

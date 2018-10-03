@@ -58,6 +58,7 @@ let
     ## Modules.
     accept = callSubTests ../tests/accept.nix {};
     apcupsd-net = callTest ../tests/apcupsd-net.nix {};
+    build-host = callTest ../tests/build-host.nix {};
     hydra-manual-setup = callTest ../tests/hydra-manual-setup.nix { system = "x86_64-linux"; };
     full-tunnel-vpn = callSubTests ../tests/full-tunnel-vpn.nix {};
     mellon-auto-unlock = callTest ../tests/mellon-auto-unlock.nix {};
