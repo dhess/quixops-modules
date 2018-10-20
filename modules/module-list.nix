@@ -19,6 +19,7 @@
   ./config/hardware/intel/common.nix
   ./config/hardware/intel/haswell.nix
   ./config/hardware/intel/kaby-lake.nix
+  ./config/hardware/intel/sandy-bridge.nix
   ./config/hardware/smartd/1x-non-removable.nix
   ./config/hardware/smartd/2x-non-removable.nix
   ./config/hardware/smartd/36x-hotswap.nix
