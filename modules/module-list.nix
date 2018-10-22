@@ -43,6 +43,7 @@
   ./core/keychain
   ./core/module-hashes.nix
   ./dns/unbound-multi-instance
+  ./email/dovecot
   ./email/service-status-email
   ./email/null-client
   ./email/relay-host
