@@ -16,6 +16,7 @@
   ./config/hardware/apu2/apu3c4.nix
   ./config/hardware/intel/broadwell-de.nix
   ./config/hardware/intel/centerton.nix
+  ./config/hardware/intel/coffee-lake.nix
   ./config/hardware/intel/common.nix
   ./config/hardware/intel/haswell.nix
   ./config/hardware/intel/kaby-lake.nix
