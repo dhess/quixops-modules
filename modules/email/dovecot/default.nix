@@ -22,6 +22,10 @@ let
       ssl_key = <${cfg.sslServerKey}
       ssl_ca = <${cfg.sslCACert}
       ssl_dh = <${cfg.dhParamsFile}
+      ssl_prefer_server_ciphers = yes
+      ssl_min_protocol = TLSv2
+      ssl_cipher_list = ${cfg.sslCiphers}
+
       disable_plaintext_auth = yes
 
       default_internal_user = ${cfg.user}
@@ -243,6 +247,15 @@ in
     dhParamsFile = mkOption {
       type = types.path;
       description = "Path to the server's DH params file.";
+    };
+
+    sslCiphers = mkOption {
+      type = pkgs.lib.types.nonEmptyStr;
+      default = pkgs.lib.security.sslModernCiphers;
+      example = "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256";
+      description = ''
+        Specify the list of SSL ciphers that the server will accept.
+      '';
     };
 
     enablePAM = mkOption {
