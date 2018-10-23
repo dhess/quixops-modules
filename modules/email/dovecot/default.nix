@@ -17,20 +17,13 @@ let
       base_dir = ${baseDir}
       protocols = ${concatStringsSep " " cfg.protocols}
       sendmail_path = /run/wrappers/bin/sendmail
-    ''
 
-    (if isNull cfg.sslServerCert then ''
-      ssl = no
-      disable_plaintext_auth = no
-    '' else ''
       ssl_cert = <${cfg.sslServerCert}
       ssl_key = <${cfg.sslServerKey}
-      ${optionalString (!(isNull cfg.sslCACert)) ("ssl_ca = <" + cfg.sslCACert)}
-      ssl_dh = <${config.security.dhparams.params.dovecot2.path}
+      ssl_ca = <${cfg.sslCACert}
+      ssl_dh = <${cfg.dhParamsFile}
       disable_plaintext_auth = yes
-    '')
 
-    ''
       default_internal_user = ${cfg.user}
       default_internal_group = ${cfg.group}
       ${optionalString (cfg.mailUser != null) "mail_uid = ${cfg.mailUser}"}
@@ -233,21 +226,23 @@ in
     };
 
     sslCACert = mkOption {
-      type = types.nullOr types.path;
-      default = null;
+      type = types.path;
       description = "Path to the server's CA certificate key.";
     };
 
     sslServerCert = mkOption {
-      type = types.nullOr types.path;
-      default = null;
+      type = types.path;
       description = "Path to the server's public key.";
     };
 
     sslServerKey = mkOption {
-      type = types.nullOr types.path;
-      default = null;
+      type = types.path;
       description = "Path to the server's private key.";
+    };
+
+    dhParamsFile = mkOption {
+      type = types.path;
+      description = "Path to the server's DH params file.";
     };
 
     enablePAM = mkOption {
@@ -307,14 +302,10 @@ in
 
     security.pam.services.dovecot2 = mkIf cfg.enablePAM {};
 
-    security.dhparams = mkIf (! isNull cfg.sslServerCert) {
-      enable = true;
-      params.dovecot2 = {};
-    };
-   services.dovecot2.protocols =
-     optional cfg.enableImap "imap"
-     ++ optional cfg.enablePop3 "pop3"
-     ++ optional cfg.enableLmtp "lmtp";
+    services.dovecot2.protocols =
+      optional cfg.enableImap "imap"
+      ++ optional cfg.enablePop3 "pop3"
+      ++ optional cfg.enableLmtp "lmtp";
 
     users.users = [
       { name = "dovenull";
