@@ -23,7 +23,7 @@ let
       ssl_ca = <${cfg.sslCACert}
       ssl_dh = <${cfg.dhParamsFile}
       ssl_prefer_server_ciphers = yes
-      ssl_min_protocol = TLSv2
+      ssl_min_protocol = TLSv1.2
       ssl_cipher_list = ${cfg.sslCiphers}
 
       disable_plaintext_auth = yes
