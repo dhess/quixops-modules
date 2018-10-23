@@ -303,7 +303,7 @@ in
   config = mkIf cfg.enable {
 
     quixops.assertions.moduleHashes."services/mail/dovecot.nix" =
-      "5ecebd36bc4c694d9126f06ca6a6bb0445c9ebd46a9344ea9bb7959d531b6da4";
+      "9c868ffb18fd19dd4284dc20a2e6661f9d6212f8154c8b7f3a222b6c8fd9f688";
 
     security.pam.services.dovecot2 = mkIf cfg.enablePAM {};
 
