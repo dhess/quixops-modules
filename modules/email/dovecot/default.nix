@@ -39,6 +39,10 @@ let
       pop3_uidl_format = %08Xv%08Xu
 
       auth_mechanisms = plain
+
+      protocol imap {
+        mail_plugins = $mail_plugins imap_zlib
+      }
     ''
 
     (if cfg.enablePAM then ''
