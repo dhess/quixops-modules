@@ -34,7 +34,7 @@ let
       maildir_copy_with_hardlinks = yes
       pop3_uidl_format = %08Xv%08Xu
 
-      auth_mechanisms = plain login
+      auth_mechanisms = plain
 
       service auth {
         user = root
