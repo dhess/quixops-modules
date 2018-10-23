@@ -35,13 +35,9 @@ let
       pop3_uidl_format = %08Xv%08Xu
 
       auth_mechanisms = plain
-
-      service auth {
-        user = root
-      }
     ''
 
-    (optionalString cfg.enablePAM ''
+    (if cfg.enablePAM then ''
       userdb {
         driver = passwd
       }
@@ -49,6 +45,10 @@ let
       passdb {
         driver = pam
         args = ${optionalString cfg.showPAMFailure "failure_show_msg=yes"} dovecot2
+      }
+    '' else ''
+      service auth-worker {
+        user = $default_internal_user
       }
     '')
 
