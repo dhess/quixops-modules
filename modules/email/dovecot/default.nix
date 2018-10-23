@@ -233,19 +233,19 @@ in
     };
 
     sslCACert = mkOption {
-      type = types.nullOr types.str;
+      type = types.nullOr types.path;
       default = null;
       description = "Path to the server's CA certificate key.";
     };
 
     sslServerCert = mkOption {
-      type = types.nullOr types.str;
+      type = types.nullOr types.path;
       default = null;
       description = "Path to the server's public key.";
     };
 
     sslServerKey = mkOption {
-      type = types.nullOr types.str;
+      type = types.nullOr types.path;
       default = null;
       description = "Path to the server's private key.";
     };
