@@ -45,6 +45,29 @@ let
       }
     ''
 
+    (optionalString cfg.lmtp.inet.enable (
+      let
+        userString = if cfg.mailUser != null then "user = ${cfg.mailUser}" else "";
+        ipv4Addresses = concatStringsSep " " cfg.lmtp.inet.ipv4Addresses;
+        ipv6Addresses = concatStringsSep " " cfg.lmtp.inet.ipv6Addresses;
+      in ''
+        protocol lmtp {
+          ssl = yes
+        }
+
+        service lmtp {
+          ${userString}
+
+          process_min_avail = 5
+
+          inet_listener lmtp {
+            address = 127.0.0.1 ::1 ${ipv6Addresses} ${ipv4Addresses}
+            port = ${toString cfg.lmtp.inet.port}
+            ssl = yes
+          }
+        }
+      ''))
+
     (if cfg.enablePAM then ''
       userdb {
         driver = passwd
@@ -90,7 +113,7 @@ let
       }
 
       plugin {
-        quota_rule = *:storage=${cfg.quotaGlobalPerUser} 
+        quota_rule = *:storage=${cfg.quotaGlobalPerUser}
         quota = maildir:User quota # per virtual mail user quota # BUG/FIXME broken, we couldn't get this working
         quota_status_success = DUNNO
         quota_status_nouser = DUNNO
@@ -155,12 +178,6 @@ in
       description = "Start the IMAP listener (when Dovecot is enabled).";
     };
 
-    enableLmtp = mkOption {
-      type = types.bool;
-      default = false;
-      description = "Start the LMTP listener (when Dovecot is enabled).";
-    };
-
     protocols = mkOption {
       type = types.listOf types.str;
       default = [ ];
@@ -177,6 +194,82 @@ in
       type = types.str;
       default = "dovecot2";
       description = "Dovecot group name.";
+    };
+
+    lmtp = {
+
+      user = mkOption {
+        type = types.nullOr types.str;
+        default = cfg.mailUser;
+        description = ''
+          This option allows you to specify under which user ID the
+          LMTP service runs.
+
+          By default, the Dovecot LMTP service runs as root. If you're
+          using a pure "virtual mail" Dovecot setup, this may not be
+          necessary, as in that case, the LMTP service can run as the
+          virtual mail user.
+
+          The default value of this option is the same as the
+          <option>services.dovecot2.mailUser</option> option, since,
+          if you are setting that option, you're likely running
+          Dovecot in a pure virtual mail configuration and may benefit
+          from the additional security provided by running the LMTP
+          service as the virtual mail user.
+
+          If you want the Dovecot default value, set this option to
+          <literal>null</literal>.
+
+          Note that this option is ignored unless the LMTP inet
+          service is enabled.
+        '';
+      };
+
+      inet = {
+
+        enable = mkEnableOption ''
+          Enable the LMTP service on one or more IP addresses.
+
+          Note that the LMTP inet service will also be configured for
+          TLS/SSL support, using the same certificates that are
+          specified for the other Dovecot TLS/SSL services.
+        '';
+
+        ipv4Addresses = mkOption {
+          type = types.listOf pkgs.lib.types.ipv4NoCIDR;
+          default = [];
+          example = [ "192.0.2.1" ];
+          description = ''
+            A list of IPv4 addresses on which the LMTP service will listen.
+
+            Note that the LMTP service, if enabled, will always listen
+            on the IPv4 loopback address, <literal>127.0.0.1</literal>
+          '';
+        };
+
+        ipv6Addresses = mkOption {
+          type = types.listOf pkgs.lib.types.ipv6NoCIDR;
+          default = [];
+          example = [ "2001:db8::1" ];
+          description = ''
+            A list of IPv6 addresses on which the LMTP service will listen.
+
+            Note that the LMTP service, if enabled, will always listen
+            on the IPv6 loopback address, <literal>::1</literal>
+          '';
+        };
+
+        port = mkOption {
+          type = pkgs.lib.types.port;
+          default = 24;
+          example = 26;
+          description = ''
+            The port on which the LMTP service will listen.
+          '';
+        };
+
+      };
+
     };
 
     extraConfig = mkOption {
@@ -322,7 +415,7 @@ in
     services.dovecot2.protocols =
       optional cfg.enableImap "imap"
       ++ optional cfg.enablePop3 "pop3"
-      ++ optional cfg.enableLmtp "lmtp";
+      ++ optional cfg.lmtp.inet.enable "lmtp";
 
     users.users = [
       { name = "dovenull";
