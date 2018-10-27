@@ -44,9 +44,11 @@
   ./core/module-hashes.nix
   ./dns/unbound-multi-instance
   ./email/dovecot
-  ./email/service-status-email
   ./email/null-client
+  ./email/opendkim
+  #./email/postfix-mta
   ./email/relay-host
+  ./email/service-status-email
   ./networking/accept
   ./networking/pcap-prep
   ./networking/wireguard

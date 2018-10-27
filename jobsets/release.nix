@@ -64,6 +64,7 @@ let
     full-tunnel-vpn = callSubTests ../tests/full-tunnel-vpn.nix {};
     mellon-auto-unlock = callTest ../tests/mellon-auto-unlock.nix {};
     netsniff-ng = callSubTests ../tests/netsniff-ng.nix {};
+    opendkim = callTest ../tests/opendkim.nix {};
     pinpon = callTest ../tests/pinpon.nix {};
     postfix-null-client = callTest ../tests/postfix-null-client.nix {};
     postfix-relay-host = callTest ../tests/postfix-relay-host.nix {};
