@@ -105,12 +105,15 @@ in makeTest rec {
     deployment.reallyReallyEnable = true;
 
     services.postfix.enable = true;
-    services.dovecot2.enable = true;
-    services.dovecot2.protocols = [ "imap" "pop3" ];
-    services.dovecot2.sslCACert = exampleCA1Pem;
-    services.dovecot2.sslServerCert = server1Pem;
-    services.dovecot2.sslServerKey = server1Key;
-    services.dovecot2.dhParamsFile = pkgs.lib.security.ffdhe3072Pem;
+    services.dovecot2 = {
+      enable = true;
+      protocols = [ "imap" "pop3" ];
+      sslCACert = exampleCA1Pem;
+      sslServerCert = server1Pem;
+      sslServerKey = server1Key;
+      dhParamsFile = pkgs.lib.security.ffdhe3072Pem;
+      lmtp.inet.enable = true;
+    };
 
     environment.systemPackages = let
       sendTestMail = pkgs.writeScriptBin "send-testmail" ''
