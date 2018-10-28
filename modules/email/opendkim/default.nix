@@ -92,15 +92,19 @@ let
 
   keyFileName = keyName: "opendkim-${keyName}-private";
 
-  # Note that this file doesn't contain any keys, just paths to files
-  # containing keys.
+  # Note that this file doesn't contain any key material, only paths
+  # to files containing key material.
   
   keyTableFile = pkgs.writeText "opendkim.key.table" (
       concatMapStringsSep "\n" (row:
+        "${row.keyName}    ${row.domain}:${row.selector}:${row.keyFile}")
+      (mapAttrsToList (name: row:
         let
-          keyFile = config.quixops.keychain.keys."${keyFileName row.keyName}".path;
-        in "${row.keyName}    ${row.domain}:${row.selector}:${keyFile}")
-      (mapAttrsToList (_: row: row) cfg.keyTable));
+          keyFile = config.quixops.keychain.keys."${keyFileName name}".path;
+        in
+          row // { inherit keyFile; })
+        cfg.keyTable)
+  );
 
 
   signingTableFile = pkgs.writeText "opendkim.signing.table" (

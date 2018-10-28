@@ -73,7 +73,7 @@ in makeTest rec {
 
         keyTable = {
           example = {
-            keyName = "example";
+            keyName = "example.com";
             domain = "example.com";
             selector = "2018.10.27";
             privateKeyLiteral = justAnExampleKey;
