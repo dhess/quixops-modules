@@ -50,9 +50,12 @@ let
         userString = if cfg.mailUser != null then "user = ${cfg.mailUser}" else "";
         ipv4Addresses = concatStringsSep " " cfg.lmtp.inet.ipv4Addresses;
         ipv6Addresses = concatStringsSep " " cfg.lmtp.inet.ipv6Addresses;
+        mailPlugins = if cfg.sieveScripts != {} then "mail_plugins = $mail_plugins sieve" else "";
       in ''
         protocol lmtp {
           ssl = yes
+          ${mailPlugins}
+          postmaster_address = ${cfg.lmtp.postmasterAddress}
         }
 
         service lmtp {
@@ -197,6 +200,15 @@ in
     };
 
     lmtp = {
+
+      postmasterAddress = mkOption {
+        type = pkgs.lib.types.nonEmptyStr;
+        example = "postmaster@example.com";
+        description = ''
+          The RFC 2142 "postmaster" address for the domain for which
+          Dovecot LMTP is delivering mail.
+        '';
+      };
 
       user = mkOption {
         type = types.nullOr types.str;

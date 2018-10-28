@@ -112,7 +112,10 @@ in makeTest rec {
       sslServerCert = server1Pem;
       sslServerKey = server1Key;
       dhParamsFile = pkgs.lib.security.ffdhe3072Pem;
-      lmtp.inet.enable = true;
+      lmtp = {
+        postmasterAddress = "root@localhost";
+        inet.enable = true;
+      };
     };
 
     environment.systemPackages = let
