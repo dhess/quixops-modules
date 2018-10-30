@@ -41,6 +41,7 @@ let
 
       protocol imap {
         mail_plugins = $mail_plugins imap_zlib
+        mail_max_userip_connections = ${toString cfg.imap.maxUserIPConnections}
       }
     ''
 
@@ -168,16 +169,24 @@ in
   options.services.dovecot2 = {
     enable = mkEnableOption "Dovecot 2.x IMAP server";
 
-    enableImap = mkOption {
-      type = types.bool;
-      default = true;
-      description = "Start the IMAP listener (when Dovecot is enabled).";
-    };
-
     protocols = mkOption {
       type = types.listOf types.str;
       default = [ ];
       description = "Additional listeners to start when Dovecot is enabled.";
+    };
+
+    imap = {
+      enable = mkEnableOption "Enable IMAP services";
+
+      maxUserIPConnections = mkOption {
+        type = types.ints.positive;
+        default = 20;
+        example = 5;
+        description = ''
+          The maximum number of IPs from which a given user can
+          connect.
+        '';
+      };
     };
 
     user = mkOption {
@@ -418,7 +427,7 @@ in
     security.pam.services.dovecot2 = mkIf cfg.enablePAM {};
 
     services.dovecot2.protocols =
-      optional cfg.enableImap "imap"
+      optional cfg.imap.enable "imap"
       ++ optional cfg.lmtp.inet.enable "lmtp";
 
     users.users = [

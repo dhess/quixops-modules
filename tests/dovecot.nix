@@ -107,7 +107,7 @@ in makeTest rec {
     services.postfix.enable = true;
     services.dovecot2 = {
       enable = true;
-      protocols = [ "imap" ];
+      imap.enable = true;
       sslCACert = exampleCA1Pem;
       sslServerCert = server1Pem;
       sslServerKey = server1Key;
