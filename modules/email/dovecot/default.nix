@@ -43,7 +43,7 @@ let
 
       namespace inbox {
         inbox = yes
-        separator = ${cfg.separator}
+        ${optionalString (cfg.separator != null) "separator = ${cfg.separator}"}
         ${concatStringsSep "\n" (map mailboxConfig cfg.mailboxes)}
       }
 
@@ -442,15 +442,18 @@ in
     };
 
     separator = mkOption {
-      type = pkgs.lib.types.nonEmptyStr;
-      default = "/";
-      example = ".";
+      type = types.nullOr pkgs.lib.types.nonEmptyStr;
+      default = null;
+      example = "/";
       description = ''
         The mailbox hierarchical separator; i.e., character that is
         used to separate a parent mailbox name from its child mailbox
         names. This is only used in the logical namespace (e.g., that
         seen by an IMAP client), <em>not</em> in the mail store
         filesystem.
+
+        If null (the default), the logical separator will be
+        determined by the mailbox format.
 
         <strong>Note</strong>: if you change this after users have
         created nested mailboxes, expect things to break.
