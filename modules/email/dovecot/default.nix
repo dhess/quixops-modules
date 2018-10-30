@@ -41,6 +41,11 @@ let
 
       recipient_delimiter = ${cfg.recipientDelimiter}
 
+      namespace inbox {
+        inbox=yes
+        ${concatStringsSep "\n" (map mailboxConfig cfg.mailboxes)}
+      }
+
       protocol imap {
         mail_plugins = $mail_plugins imap_zlib
         mail_max_userip_connections = ${toString cfg.imap.maxUserIPConnections}
@@ -94,15 +99,6 @@ let
     (optionalString (cfg.sieveScripts != {}) ''
       plugin {
         ${concatStringsSep "\n" (mapAttrsToList (to: from: "sieve_${to} = ${stateDir}/sieve/${to}") cfg.sieveScripts)}
-      }
-    '')
-
-    (optionalString (cfg.mailboxes != []) ''
-      protocol imap {
-        namespace inbox {
-          inbox=yes
-          ${concatStringsSep "\n" (map mailboxConfig cfg.mailboxes)}
-        }
       }
     '')
 
