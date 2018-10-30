@@ -39,6 +39,8 @@ let
 
       auth_mechanisms = plain
 
+      recipient_delimiter = ${cfg.recipientDelimiter}
+
       protocol imap {
         mail_plugins = $mail_plugins imap_zlib
         mail_max_userip_connections = ${toString cfg.imap.maxUserIPConnections}
@@ -51,7 +53,10 @@ let
         ipv4Addresses = concatStringsSep " " cfg.lmtp.inet.ipv4Addresses;
         ipv6Addresses = concatStringsSep " " cfg.lmtp.inet.ipv6Addresses;
         mailPlugins = if cfg.sieveScripts != {} then "mail_plugins = $mail_plugins sieve" else "";
+        saveToDetailMailbox = if cfg.lmtp.saveToDetailMailbox then "lmtp_save_to_detail_mailbox = yes" else "";
       in ''
+        ${saveToDetailMailbox}
+
         protocol lmtp {
           ssl = yes
           ${mailPlugins}
@@ -239,6 +244,24 @@ in
         '';
       };
 
+      saveToDetailMailbox = mkOption {
+        type = types.bool;
+        default = true;
+        description = ''
+          If true, LMTP will save incoming email to the "detail"
+          mailbox; that is, to the mailbox specified by the detail
+          part of the envelope To: email address. For example, if this
+          option is enabled and the address extension recipient
+          delimiter is "+" and the incoming message is addressed to
+          "bob+sales@example.com", the LMTP delivery agent will save
+          the message to a mailbox named "sales", rather than to Bob's
+          inbox.
+
+          The LMTP delivery agent will also automatically create the
+          detail mailbox upon delivery, if it does not already exist.
+        '';
+      };
+
       inet = {
 
         enable = mkEnableOption ''
@@ -392,6 +415,16 @@ in
       default = [];
       example = [ { name = "Spam"; specialUse = "Junk"; auto = "create"; } ];
       description = "Configure mailboxes and auto create or subscribe them.";
+    };
+
+    recipientDelimiter = mkOption {
+      type = pkgs.lib.types.nonEmptyStr;
+      default = "+";
+      example = "-";
+      description = ''
+        The detail delimiter for extended addresses, e.g.,
+        "bob+sales@example.com".
+      '';
     };
 
     enableQuota = mkOption {
