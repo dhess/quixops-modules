@@ -42,7 +42,8 @@ let
       recipient_delimiter = ${cfg.recipientDelimiter}
 
       namespace inbox {
-        inbox=yes
+        inbox = yes
+        separator = ${cfg.separator}
         ${concatStringsSep "\n" (map mailboxConfig cfg.mailboxes)}
       }
 
@@ -420,6 +421,22 @@ in
       description = ''
         The detail delimiter for extended addresses, e.g.,
         "bob+sales@example.com".
+      '';
+    };
+
+    separator = mkOption {
+      type = pkgs.lib.types.nonEmptyStr;
+      default = "/";
+      example = ".";
+      description = ''
+        The mailbox hierarchical separator; i.e., character that is
+        used to separate a parent mailbox name from its child mailbox
+        names. This is only used in the logical namespace (e.g., that
+        seen by an IMAP client), <em>not</em> in the mail store
+        filesystem.
+
+        <strong>Note</strong>: if you change this after users have
+        created nested mailboxes, expect things to break.
       '';
     };
 
