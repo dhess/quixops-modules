@@ -36,7 +36,6 @@ let
       mail_location = ${cfg.mailLocation}
 
       maildir_copy_with_hardlinks = yes
-      pop3_uidl_format = %08Xv%08Xu
 
       auth_mechanisms = plain
 
@@ -167,13 +166,7 @@ in
   disabledModules = [ "services/mail/dovecot.nix" ];
 
   options.services.dovecot2 = {
-    enable = mkEnableOption "Dovecot 2.x POP3/IMAP server";
-
-    enablePop3 = mkOption {
-      type = types.bool;
-      default = false;
-      description = "Start the POP3 listener (when Dovecot is enabled).";
-    };
+    enable = mkEnableOption "Dovecot 2.x IMAP server";
 
     enableImap = mkOption {
       type = types.bool;
@@ -426,7 +419,6 @@ in
 
     services.dovecot2.protocols =
       optional cfg.enableImap "imap"
-      ++ optional cfg.enablePop3 "pop3"
       ++ optional cfg.lmtp.inet.enable "lmtp";
 
     users.users = [
@@ -466,7 +458,7 @@ in
     environment.etc."dovecot/dovecot.conf".source = cfg.configFile;
 
     systemd.services.dovecot2 = {
-      description = "Dovecot IMAP/POP3 server";
+      description = "Dovecot IMAP server";
 
       after = [ "keys.target" "network.target" ];
       wants = [ "keys.target" ];
@@ -505,9 +497,6 @@ in
     environment.systemPackages = [ dovecotPkg ];
 
     assertions = [
-      { assertion = intersectLists cfg.protocols [ "pop3" "imap" ] != [];
-        message = "dovecot needs at least one of the IMAP or POP3 listeners enabled";
-      }
       { assertion = isNull cfg.sslServerCert == isNull cfg.sslServerKey
           && (!(isNull cfg.sslCACert) -> !(isNull cfg.sslServerCert || isNull cfg.sslServerKey));
         message = "dovecot needs both sslServerCert and sslServerKey defined for working crypto";

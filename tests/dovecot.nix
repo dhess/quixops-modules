@@ -107,7 +107,7 @@ in makeTest rec {
     services.postfix.enable = true;
     services.dovecot2 = {
       enable = true;
-      protocols = [ "imap" "pop3" ];
+      protocols = [ "imap" ];
       sslCACert = exampleCA1Pem;
       sslServerCert = server1Pem;
       sslServerKey = server1Key;
@@ -157,24 +157,7 @@ in makeTest rec {
           assert msg[0][1].strip() == b'Hello world!'
       '';
 
-      testPop = pkgs.writeScriptBin "test-pop" ''
-        #!${pkgs.python3.interpreter}
-        import poplib
-
-        pop = poplib.POP3('localhost')
-        try:
-          pop.user('bob')
-          pop.pass_('foobar')
-          assert len(pop.list()[1]) == 1
-          status, fullmail, size = pop.retr(1)
-          assert status.startswith(b'+OK ')
-          body = b"".join(fullmail[fullmail.index(b""):]).strip()
-          assert body == b"I'm running short of ideas!"
-        finally:
-          pop.quit()
-      '';
-
-    in [ sendTestMail sendTestMailViaDeliveryAgent testImap testPop ];
+    in [ sendTestMail sendTestMailViaDeliveryAgent testImap ];
   };
 
   testScript = ''
@@ -184,6 +167,5 @@ in makeTest rec {
     $machine->succeed('send-lda');
     $machine->waitUntilFails('[ "$(postqueue -p)" != "Mail queue is empty" ]');
     $machine->succeed('test-imap');
-    $machine->succeed('test-pop');
   '';
 }
