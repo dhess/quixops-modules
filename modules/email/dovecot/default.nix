@@ -51,6 +51,14 @@ let
         mail_plugins = $mail_plugins imap_zlib
         mail_max_userip_connections = ${toString cfg.imap.maxUserIPConnections}
       }
+
+      service imap {
+        vsz_limit = ${toString cfg.imap.vszLimit} M
+      }
+
+      service indexer-worker {
+        vsz_limit = ${toString cfg.indexer.vszLimit} M
+      }
     ''
 
     (optionalString cfg.lmtp.inet.enable (
@@ -187,6 +195,15 @@ in
         description = ''
           The maximum number of IPs from which a given user can
           connect.
+        '';
+      };
+
+      vszLimit = mkOption {
+        type = types.ints.positive;
+        default = 512;
+        example = 1024;
+        description = ''
+          The IMAP service virtual size limit, in megabytes.
         '';
       };
     };
@@ -462,6 +479,16 @@ in
       description = "Quota limit for the user in bytes. Supports suffixes b, k, M, G, T and %.";
     };
 
+    indexer = {
+      vszLimit = mkOption {
+        type = types.ints.positive;
+        default = 512;
+        example = 1024;
+        description = ''
+          The indexer-worker service virtual size limit, in megabytes.
+        '';
+      };
+    };
   };
 
 
