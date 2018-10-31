@@ -10,7 +10,7 @@
 with lib;
 
 let
-  cfg = config.services.znc;
+  cfg = config.services.qx-znc;
 
   deployed-config = config.quixops.keychain.keys.znc-config.path;
 
@@ -136,12 +136,15 @@ in
 
 {
 
-  disabledModules = [ "services/networking/znc.nix" ];
+  disabledModules = [
+    "services/networking/znc/default.nix"
+    "services/networking/znc/options.nix"
+  ];
 
   ###### Interface
 
   options = {
-    services.znc = {
+    services.qx-znc = {
       enable = mkEnableOption "Enable a ZNC service for a user.";
 
       configLiteral = mkOption {
@@ -403,8 +406,8 @@ in
 
   config = mkIf cfg.enable {
 
-    quixops.assertions.moduleHashes."services/networking/znc.nix" =
-      "d0f9d25fc355e6b1afd23649afb16d3db6c8a0b886bd55a4228fc62442c68dd2";
+    quixops.assertions.moduleHashes."services/networking/znc/default.nix" =
+      "dda5dd0b30393aba8be2b21fe48dcb0bf2733dbf28e93deb376e67258d6c42c7";
 
     quixops.keychain.keys.znc-config = {
       text = cfg.configLiteral;

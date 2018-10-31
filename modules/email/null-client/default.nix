@@ -109,7 +109,7 @@ in
   config = mkIf enabled {
 
     quixops.assertions.moduleHashes."services/mail/postfix.nix" =
-      "4bd84b1e40118e4f1822376945b3405797d9c41fc1ca8d12373daa737130af32";
+      "f5fed80f255562040e51210d116f31b2b77241464ed7f09fe5c46c4e81b05681";
 
     quixops.keychain.keys.postfix-null-client-cert = {
       inherit user group;

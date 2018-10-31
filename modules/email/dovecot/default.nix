@@ -6,9 +6,6 @@ let
   cfg = config.services.dovecot2;
   dovecotPkg = pkgs.dovecot;
 
-  # Not yet upstream.
-  dovenull2gid = 47;
-
   baseDir = "/run/dovecot2";
   stateDir = "/var/lib/dovecot";
 
@@ -498,7 +495,7 @@ in
   config = mkIf cfg.enable {
 
     quixops.assertions.moduleHashes."services/mail/dovecot.nix" =
-      "9c868ffb18fd19dd4284dc20a2e6661f9d6212f8154c8b7f3a222b6c8fd9f688";
+      "4f6f876a8d7c6fb787bdd4bd692d4d66fb71746e0eba865917bf5e15dd1a0d6b";
 
     security.pam.services.dovecot2 = mkIf cfg.enablePAM {};
 
@@ -534,9 +531,7 @@ in
       }
     ++ singleton
       { name = "dovenull";
-        # Not yet upstream.
-        #gid = config.ids.gids.dovenull2;
-        gid = dovenull2gid;
+        gid = config.ids.gids.dovenull2;
       };
 
     environment.etc."dovecot/modules".source = modulesDir;

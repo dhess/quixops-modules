@@ -26,13 +26,13 @@ let
           # Use the test key deployment system.
           deployment.reallyReallyEnable = true;
 
-          services.znc = {
+          services.qx-znc = {
             enable = true;
             mutable = false;
             openFirewall = true;
             configLiteral = pkgs.lib.quixops.mkZncConfig {
               inherit pkgs;
-              zncServiceConfig = config.services.znc;
+              zncServiceConfig = config.services.qx-znc;
             };
             confOptions = {
               host = "localhost";
@@ -59,13 +59,13 @@ let
           # Use the test key deployment system.
           deployment.reallyReallyEnable = true;
 
-          services.znc = {
+          services.qx-znc = {
             enable = true;
             mutable = false;
             openFirewall = true;
             configLiteral = pkgs.lib.quixops.mkZncConfig {
               inherit pkgs;
-              zncServiceConfig = config.services.znc;
+              zncServiceConfig = config.services.qx-znc;
             };
             confOptions = {
               userName = "bob-znc";
@@ -96,15 +96,15 @@ let
         $localhostServer->waitForUnit("znc.service");
 
         subtest "no-remote-connections", sub {
-          $client->fail("${pkgs.netcat}/bin/nc -w 5 localhostServer ${builtins.toString nodes.localhostServer.config.services.znc.confOptions.port}");
+          $client->fail("${pkgs.netcat}/bin/nc -w 5 localhostServer ${builtins.toString nodes.localhostServer.config.services.qx-znc.confOptions.port}");
         };
 
         subtest "localhost-connections", sub {
-          $localhostServer->succeed("${pkgs.netcat}/bin/nc -w 5 localhost ${builtins.toString nodes.localhostServer.config.services.znc.confOptions.port}");
+          $localhostServer->succeed("${pkgs.netcat}/bin/nc -w 5 localhost ${builtins.toString nodes.localhostServer.config.services.qx-znc.confOptions.port}");
         };
 
         subtest "allow-remote-connections", sub {
-          $client->succeed("${pkgs.netcat}/bin/nc -w 5 server ${builtins.toString nodes.server.config.services.znc.confOptions.port}");
+          $client->succeed("${pkgs.netcat}/bin/nc -w 5 server ${builtins.toString nodes.server.config.services.qx-znc.confOptions.port}");
         };
       '';
 
