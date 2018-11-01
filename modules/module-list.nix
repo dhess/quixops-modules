@@ -46,7 +46,7 @@
   ./email/dovecot
   ./email/null-client
   ./email/opendkim
-  #./email/postfix-mta
+  ./email/postfix-mta
   ./email/relay-host
   ./email/service-status-email
   ./networking/accept
