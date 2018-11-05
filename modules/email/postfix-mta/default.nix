@@ -145,6 +145,10 @@ in
         biff = no
         proxy_interfaces = ${proxy_interfaces}
 
+        append_dot_mydomain = no
+        mynetworks_style = host
+        relay_domains =
+
         milter_default_action = accept
         smtpd_milters = ${smtpd_milters}
         non_smtpd_milters = ${non_smtpd_milters}
