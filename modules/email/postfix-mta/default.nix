@@ -31,15 +31,15 @@ in
       A Postfix mail transfer agent (MTA), i.e., a host that can send
       and receive mail for one or more domains.
 
-      Note that this particular configuration does <em>not</em>
-      deliver mail to local storage. Mail that is received by this MTA
-      (for the domains that it serves) is handed off to an MDA via
-      LMTP+TLS over a TCP connection. This accommodates the decoupling
-      of mail storage and IMAP hosts, which can often be locked down
-      very tightly (e.g., only accessible on an internal network, or
-      via VPN), from public mail transport hosts, which must be
-      connected to the public Internet and communicate with untrusted
-      hosts in order to be useful.
+      Note that this particular configuration does not use Postfix to
+      delivery deliver mail to local accounts. Mail that is received
+      by this MTA (for the domains that it serves) is handed off to an
+      MDA via Postfix's virtual_transport option. This accommodates
+      the decoupling of mail storage and IMAP hosts, which can often
+      be locked down very tightly (e.g., only accessible on an
+      internal network, or via VPN), from public mail transport hosts,
+      which must be connected to the public Internet and communicate
+      with untrusted hosts in order to be useful.
 
       Furthermore, this configuration will only accept mail relay from
       clients that authenticate via client certificates on the
@@ -51,26 +51,6 @@ in
       example = "example.com";
       description = ''
         Postfix's <literal>mydomain<literal> setting.
-      '';
-    };
-
-    myDestination = mkOption {
-      type = types.nonEmptyListOf pkgs.lib.types.nonEmptyStr;
-      default = [
-        "$myhostname"
-        "localhost.$mydomain"
-        "localhost"
-        "$mydomain"
-      ];
-      example = literalExample [
-        "$myhostname"
-        "localhost.$mydomain"
-        "localhost"
-        "$mydomain"
-        "another.local.tld"
-      ];
-      description = ''
-        Postfix's <literal>mydestination</literal> setting.
       '';
     };
 
@@ -114,6 +94,49 @@ in
       };
     };
 
+    virtual = {
+      transport = mkOption {
+        type = pkgs.lib.types.nonEmptyStr;
+        example = "lmtp:hostname:port";
+        description = ''
+          Postfix's <literal>virtual_transport</literal> setting.
+        '';
+      };
+
+      mailboxDomains = mkOption {
+        type = types.nonEmptyListOf pkgs.lib.types.nonEmptyStr;
+        default = [
+          "$mydomain"
+        ];
+        example = literalExample [
+          "$mydomain"
+          "another.local.tld"
+        ];
+        description = ''
+          Postfix's <literal>virtual_mailbox_domains</literal> setting.
+        '';
+      };
+
+      aliasDomains = mkOption {
+        type = types.nonEmptyListOf pkgs.lib.types.nonEmptyStr;
+        default = [];
+        example = literalExample [
+          "another.local.tld"
+        ];
+        description = ''
+          Postfix's <literal>virtual_alias_domains</literal> setting.
+        '';
+      };
+
+      aliasMaps = mkOption {
+        type = types.lines;
+        default = "";
+        description = ''
+          Entries for the Postfix's <literal>virtual_alias_maps</literal> file.
+        '';
+      };
+    };
+
     extraConfig = mkOption {
       type = types.lines;
       default = "";
@@ -132,14 +155,22 @@ in
       enable = true;
       domain = cfg.myDomain;
       origin = "$mydomain";
-      destination = cfg.myDestination;
       hostname = cfg.myHostname;
+
+      # Disable Postfix delivery; all delivery goes through the
+      # virtual transport.
+
+      destination = [ "" ];
+
+      virtual = cfg.virtual.aliasMaps;
 
       extraConfig =
       let
         proxy_interfaces = concatStringsSep " " cfg.proxyInterfaces;
         smtpd_milters = concatStringsSep " " cfg.milters.smtpd;
         non_smtpd_milters = concatStringsSep " " cfg.milters.nonSmtpd;
+        virtual_mailbox_domains = concatStringsSep " " cfg.virtual.mailboxDomains;
+        virtual_alias_domains = concatStringsSep " " cfg.virtual.aliasDomains;
       in
       ''
         biff = no
@@ -152,6 +183,10 @@ in
         milter_default_action = accept
         smtpd_milters = ${smtpd_milters}
         non_smtpd_milters = ${non_smtpd_milters}
+
+        virtual_transport = ${cfg.virtual.transport}
+        virtual_mailbox_domains = ${virtual_mailbox_domains}
+        virtual_alias_domains = ${virtual_alias_domains}
       '' + cfg.extraConfig;
 
     };
