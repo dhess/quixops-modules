@@ -177,6 +177,8 @@ in
         proxy_interfaces = ${proxy_interfaces}
 
         append_dot_mydomain = no
+        remote_header_rewrite_domain = domain.invalid
+
         mynetworks_style = host
         relay_domains =
 
