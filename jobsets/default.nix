@@ -7,7 +7,7 @@
 
 let
 
-  quixopsModulesUri = "https://github.com/quixoftic/quixops-modules.git";
+  quixopsModulesUri = "https://github.com/dhess/quixops-modules.git";
 
   mkFetchGithub = value: {
     inherit value;
