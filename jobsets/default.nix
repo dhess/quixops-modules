@@ -39,7 +39,7 @@ let
     checkinterval = 60;
     inputs = {
       nixpkgs_override = mkFetchGithub "https://github.com/NixOS/nixpkgs-channels.git ${nixpkgsRev}";
-      nixpkgs_quixoftic_override = mkFetchGithub "https://github.com/quixoftic/nixpkgs-quixoftic.git ${nixpkgsQuixopsBranch}";
+      nixpkgs_quixoftic_override = mkFetchGithub "https://github.com/dhess/nixpkgs-quixoftic.git ${nixpkgsQuixopsBranch}";
       quixopsModules = mkFetchGithub "${quixopsModulesUri} ${quixopsModulesBranch}";
     };
   };
@@ -50,7 +50,7 @@ let
     checkinterval = 60 * 60 * 12;
     inputs = {
       nixpkgs_override = mkFetchGithub "https://github.com/NixOS/nixpkgs.git ${nixpkgsRev}";
-      nixpkgs_quixoftic_override = mkFetchGithub "https://github.com/quixoftic/nixpkgs-quixoftic.git ${nixpkgsQuixopsBranch}";
+      nixpkgs_quixoftic_override = mkFetchGithub "https://github.com/dhess/nixpkgs-quixoftic.git ${nixpkgsQuixopsBranch}";
       quixopsModules = mkFetchGithub "${quixopsModulesUri} ${quixopsModulesBranch}";
     };
   };

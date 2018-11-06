@@ -1,3 +1,3 @@
 # quixops-modules
 
-Quixoftic modules for NixOps deployments.
+Useful modules for NixOps deployments.

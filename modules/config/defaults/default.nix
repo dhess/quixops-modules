@@ -16,9 +16,8 @@ in
       Enable all of the QuixOps configuration defaults.
 
       These defaults will configure a NixOS server according to the
-      Quixoftic security requirements. Note that some of the
-      defaults may not be appropriate for an interactive desktop
-      system.
+      good security practice. Note that some of the defaults may not
+      be appropriate for an interactive desktop system.
     '';
   };
 
