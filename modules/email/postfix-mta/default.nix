@@ -39,6 +39,8 @@ let
     240.0.0.0/4            REJECT Domain MX in class E reserved network (RFC 1700)
   '';
 
+  acmeRoot = "/var/lib/acme/acme-challenge";
+
 in
 {
   meta.maintainers = lib.maintainers.dhess-qx;
@@ -62,6 +64,10 @@ in
       Furthermore, this configuration will only accept mail relay from
       clients that authenticate via client certificates on the
       submission port.
+
+      For this service to work, you must open TCP ports 25 and 587 for
+      the SMTP and submission protocols; and 80 and 443 for ACME
+      TLS certificate provisioning.
     '';
 
     myDomain = mkOption {
@@ -335,6 +341,42 @@ in
 
     quixops.assertions.moduleHashes."services/mail/postfix.nix" =
       "f5fed80f255562040e51210d116f31b2b77241464ed7f09fe5c46c4e81b05681";
+    quixops.assertions.moduleHashes."security/acme.nix" =
+      "d87bf3fddbdcd3c42f5ba8d543c6b1680d3797fad8403d4c073af6cdb5278997";
+
+
+    # This Nginx vhost exists only to provision ACME certs for the
+    # Postfix MTA.
+
+    services.nginx = {
+      enable = true;
+      virtualHosts."${cfg.myHostname}" = {
+        forceSSL = true;
+        useACMEHost = "${cfg.myHostname}";
+        locations."/" = {
+          root = acmeRoot;
+        };
+      };
+    };
+
+
+    # If this MX is configured correctly, we only need the ACME cert
+    # for myhostname, as that's the name that it'll be reporting both
+    # to SMTP clients (upon mail receipt) and to SMTP servers (upon
+    # mail delivery). In other words, we don't need to add any virtual
+    # domains to the ACME extraDomains.
+
+    security.acme.certs."${cfg.myHostname}" = {
+      webroot = acmeRoot;
+      email = "postmaster@${cfg.myDomain}";
+      allowKeysForGroup = true;
+      inherit group;
+      postRun = ''
+        systemctl reload postfix
+        systemctl reload nginx
+      '';
+    };
+
 
     services.postfix = {
       enable = true;
