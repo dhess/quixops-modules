@@ -76,7 +76,7 @@ in
   config = mkIf config.services.ntp.enable {
 
     quixops.assertions.moduleHashes."services/networking/ntpd.nix" =
-      "660709cc9bd7b7269d7f91ac278d2d7b9f51a53ab02425c27778af2f405b9fe0";
+      "8f742ebd032e91e0bee51c6a16f4518a5af32cdbada3eef00ec8e776c4ceb811";
 
     # Make tools such as ntpq available in the system path.
     environment.systemPackages = [ pkgs.ntp ];
