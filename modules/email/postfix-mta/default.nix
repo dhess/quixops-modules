@@ -39,7 +39,11 @@ let
     240.0.0.0/4            REJECT Domain MX in class E reserved network (RFC 1700)
   '';
 
-  acmeRoot = "/var/lib/acme/acme-challenge";
+  acmeRoot = config.security.acme.directory;
+  acmeChallenge = "${acmeRoot}/acme-challenge";
+  acmeCertDir = "${acmeRoot}/${cfg.myHostname}";
+  acmeCertPublic = "${acmeCertDir}/fullchain.pem";
+  acmeCertPrivate = "${acmeCertDir}/key.pem";
 
 in
 {
@@ -354,7 +358,7 @@ in
         forceSSL = true;
         useACMEHost = "${cfg.myHostname}";
         locations."/" = {
-          root = acmeRoot;
+          root = acmeChallenge;
         };
       };
     };
@@ -367,7 +371,7 @@ in
     # domains to the ACME extraDomains.
 
     security.acme.certs."${cfg.myHostname}" = {
-      webroot = acmeRoot;
+      webroot = acmeChallenge;
       email = "postmaster@${cfg.myDomain}";
       allowKeysForGroup = true;
       inherit group;
@@ -392,6 +396,10 @@ in
       destination = [ "" ];
 
       virtual = cfg.virtual.aliasMaps;
+
+      sslCACert = "/etc/ssl/certs/ca-certificates.crt";
+      sslCert = acmeCertPublic;
+      sslKey = acmeCertPrivate;
 
       mapFiles = {
         "relay_clientcerts" = relay_clientcerts;
@@ -440,12 +448,17 @@ in
         relay_clientcerts = hash:/etc/postfix/relay_clientcerts
         smtpd_tls_fingerprint_digest = sha1
 
+        smtpd_tls_security_level = may
+        smtpd_tls_dh1024_param_file = ${pkgs.lib.security.ffdhe2048Pem}
+
         ${smtpd_client_restrictions}
         ${smtpd_helo_restrictions}
         ${smtpd_sender_restrictions}
         ${smtpd_relay_restrictions}
         ${smtpd_recipient_restrictions}
         ${smtpd_data_restrictions}
+
+        smtp_tls_security_level = may
 
         unverified_recipient_reject_reason = Address lookup failed
       '' + cfg.extraConfig;
