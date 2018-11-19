@@ -271,6 +271,7 @@ in
       { name = "opendkim";
         group = cfg.group;
         uid = config.ids.uids.opendkim;
+        extraGroups = [ "keys" ];
       });
 
     users.groups = optionalAttrs (cfg.group == "opendkim") (singleton

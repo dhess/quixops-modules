@@ -69,7 +69,6 @@ let
         ${saveToDetailMailbox}
 
         protocol lmtp {
-          ssl = yes
           ${mailPlugins}
           postmaster_address = ${cfg.lmtp.postmasterAddress}
         }
@@ -82,7 +81,6 @@ let
           inet_listener lmtp {
             address = 127.0.0.1 ::1 ${ipv6Addresses} ${ipv4Addresses}
             port = ${toString cfg.lmtp.inet.port}
-            ssl = yes
           }
         }
       ''))
