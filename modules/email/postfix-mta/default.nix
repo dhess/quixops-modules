@@ -406,13 +406,38 @@ in
         "bogus_mx" = bogus_mx;
       };
 
+      config = {
+        milter_default_action = "accept";
+        smtpd_milters = cfg.milters.smtpd;
+        non_smtpd_milters = cfg.milters.nonSmtpd;
+
+        biff = "no";
+
+        proxy_interfaces = cfg.proxyInterfaces;
+
+        append_dot_mydomain = "no";
+        remote_header_rewrite_domain = "domain.invalid";
+
+        mynetworks_style = "host";
+        relay_domains = "";
+
+        virtual_transport = cfg.virtual.transport;
+        virtual_mailbox_domains = cfg.virtual.mailboxDomains;
+        virtual_alias_domains = cfg.virtual.aliasDomains;
+
+        relay_clientcerts = "hash:/etc/postfix/relay_clientcerts";
+
+        smtpd_tls_fingerprint_digest = "sha1";
+        smtpd_tls_security_level = "may";
+        smtpd_tls_dh1024_param_file = "${pkgs.lib.security.ffdhe2048Pem}";
+
+        smtp_tls_security_level = "may";
+
+        unverified_recipient_reject_reason = "Address lookup failed";
+      };
+
       extraConfig =
       let
-        proxy_interfaces = concatStringsSep ", " cfg.proxyInterfaces;
-        smtpd_milters = concatStringsSep ", " cfg.milters.smtpd;
-        non_smtpd_milters = concatStringsSep ", " cfg.milters.nonSmtpd;
-        virtual_mailbox_domains = concatStringsSep ", " cfg.virtual.mailboxDomains;
-        virtual_alias_domains = concatStringsSep ", " cfg.virtual.aliasDomains;
         smtpd_client_restrictions = optionalString (cfg.smtpd.clientRestrictions != null)
           ("smtpd_client_restrictions = " + (concatStringsSep ", " cfg.smtpd.clientRestrictions));
         smtpd_helo_restrictions = optionalString (cfg.smtpd.heloRestrictions != null)
@@ -428,39 +453,12 @@ in
           ("smtpd_data_restrictions = " + (concatStringsSep ", " cfg.smtpd.dataRestrictions));
       in
       ''
-        biff = no
-        proxy_interfaces = ${proxy_interfaces}
-
-        append_dot_mydomain = no
-        remote_header_rewrite_domain = domain.invalid
-
-        mynetworks_style = host
-        relay_domains =
-
-        milter_default_action = accept
-        smtpd_milters = ${smtpd_milters}
-        non_smtpd_milters = ${non_smtpd_milters}
-
-        virtual_transport = ${cfg.virtual.transport}
-        virtual_mailbox_domains = ${virtual_mailbox_domains}
-        virtual_alias_domains = ${virtual_alias_domains}
-
-        relay_clientcerts = hash:/etc/postfix/relay_clientcerts
-        smtpd_tls_fingerprint_digest = sha1
-
-        smtpd_tls_security_level = may
-        smtpd_tls_dh1024_param_file = ${pkgs.lib.security.ffdhe2048Pem}
-
         ${smtpd_client_restrictions}
         ${smtpd_helo_restrictions}
         ${smtpd_sender_restrictions}
         ${smtpd_relay_restrictions}
         ${smtpd_recipient_restrictions}
         ${smtpd_data_restrictions}
-
-        smtp_tls_security_level = may
-
-        unverified_recipient_reject_reason = Address lookup failed
       '' + cfg.extraConfig;
 
     };
