@@ -45,6 +45,8 @@ let
   acmeCertPublic = "${acmeCertDir}/fullchain.pem";
   acmeCertPrivate = "${acmeCertDir}/key.pem";
 
+  submissionKeyFile = config.quixops.keychain.keys."sasl-tls-key".path;
+
 in
 {
   meta.maintainers = lib.maintainers.dhess-qx;
@@ -298,6 +300,96 @@ in
       };
     };
 
+    submission = {
+      listenAddresses = mkOption {
+        type = types.nonEmptyListOf (types.either pkgs.lib.types.ipv4NoCIDR pkgs.lib.types.ipv6NoCIDR);
+        default = [ "127.0.0.1" "::1" ];
+        example = [ "127.0.0.1" "::1" "10.0.0.2" "2001:db8::2" ];
+        description = ''
+          A list of IPv4 and/or IPv6 addresses on which Postfix will
+          listen for incoming submission connections.
+
+          Note that you should also list any loopback addresses here on
+          which you want Postfix to accept local submission requests.
+        '';
+      };
+
+      myHostname = mkOption {
+        type = pkgs.lib.types.nonEmptyStr;
+        default = cfg.myHostname;
+        example = "submission.example.com";
+        description = ''
+          Postfix's <literal>myhostname</literal> setting for the
+          submission server.
+
+          By default, this value is the same as
+          <option>myHostname</option>, but it's sometimes useful to
+          use different names for submission and SMTP.
+        '';
+      };
+
+      smtpd = {
+        saslPath = mkOption {
+          type = pkgs.lib.types.nonEmptyStr;
+          default = "private/auth";
+          example = "inet:dovecot.example.com:12345";
+          description = ''
+            Postfix's <literal>smtpd_sasl_path</literal> setting
+            for the submission server.
+
+            The default value points to a local Dovecot server's
+            SASL UNIX domain socket.
+          '';
+        };
+
+        saslType = mkOption {
+          type = pkgs.lib.types.nonEmptyStr;
+          default = "dovecot";
+          example = "cyrus";
+          description = ''
+            Postfix's <literal>smtpd_sasl_type</literal> setting
+            for the submission server.
+
+            The default value configures Postfix to use Dovecot
+            SASL.
+          '';
+        };
+
+        tlsCertFile = mkOption {
+          type = types.path;
+          description = ''
+            Postfix's <literal>smtpd_tls_cert_file</literal> setting
+            for the submission server.
+
+            Note that this certificate is only used for the submission
+            server, not for communication with public SMTP servers.
+            This is because, typically, you want to use a self-signed
+            CA and certificate for TLS encryption with your submission
+            clients.
+
+            If you do use your own self-signed CA and certificate,
+            this certificate file should include the full chain:
+            root CA all the way down to the server certificate
+            itself.
+          '';
+        };
+
+        tlsKeyLiteral = mkOption {
+          type = pkgs.lib.types.nonEmptyStr;
+          example = "<private key>";
+          description = ''
+            The private key corresponding to the
+            <option>submission.smtpdTLSCertFile</option> option,
+            represented as a string literal.
+
+            This key will be written to a file that is securely
+            deployed to the host. It will not be written to the Nix
+            store.
+          '';
+        };
+      };
+    };
+
     virtual = {
       transport = mkOption {
         type = pkgs.lib.types.nonEmptyStr;
@@ -357,6 +449,13 @@ in
     quixops.assertions.moduleHashes."security/acme.nix" =
       "d87bf3fddbdcd3c42f5ba8d543c6b1680d3797fad8403d4c073af6cdb5278997";
 
+    quixops.keychain.keys."sasl-tls-key" = {
+      destDir = "/var/lib/postfix/keys";
+      text = cfg.submission.smtpd.tlsKeyLiteral;
+      user = config.services.postfix.user;
+      group = config.services.postfix.group;
+      permissions = "0400";
+    };
 
     # This Nginx vhost exists only to provision ACME certs for the
     # Postfix MTA.
@@ -470,6 +569,49 @@ in
         ${smtpd_data_restrictions}
       '' + cfg.extraConfig;
 
+      # We don't use enableSubmission here because we want to limit it
+      # to just the listenAddresses, and the NixOS submissionOptions
+      # is too limited to permit that. We have to construct the
+      # "submission" master.cf line manually.
+      #
+      # Note: smtpd_client_restrictions here will allow submission
+      # clients that present a TLS client certificate to relay mail
+      # *for this MTA's domains only*, because the Postfix
+      # configuration only permits mail to be sent to other domains by
+      # authenticated clients, and presenting a TLS client certificate
+      # does not count as "authenticated." (It might make sense to
+      # change this if, for example, more clients started supporting
+      # TLS client certificates.)
+
+      enableSubmission = false;
+      masterConfig = listToAttrs (map (ip:
+        { name = "[${ip}]:submission";
+          value = {
+            type = "inet";
+            private = false;
+            command = "smtpd";
+            args = [
+              "-o" "myhostname=${cfg.submission.myHostname}"
+              "-o" "tls_preempt_cipherlist=yes"
+              "-o" "syslog_name=postfix/submission"
+              "-o" "smtpd_tls_security_level=encrypt"
+              "-o" "smtpd_tls_cert_file=${cfg.submission.smtpd.tlsCertFile}"
+              "-o" "smtpd_tls_key_file=${submissionKeyFile}"
+              "-o" "smtpd_sasl_auth_enable=yes"
+              "-o" "smtpd_sasl_path=${cfg.submission.smtpd.saslPath}"
+              "-o" "smtpd_sasl_type=${cfg.submission.smtpd.saslType}"
+              "-o" "smtpd_sasl_security_options=noanonymous,noplaintext"
+              "-o" "smtpd_sasl_tls_security_options=noanonymous"
+              "-o" "smtpd_sasl_local_domain=$mydomain"
+              "-o" "smtpd_sasl_authenticated_header=yes"
+              "-o" "smtpd_client_restrictions=permit_sasl_authenticated,permit_tls_clientcerts,reject"
+              "-o" "smtpd_sender_restrictions=reject_sender_login_mismatch"
+              "-o" "smtpd_recipient_restrictions=reject_non_fqdn_recipient,reject_unknown_recipient_domain,permit_sasl_authenticated,reject"
+              "-o" "milter_macro_daemon_name=ORIGINATING"
+            ];
+          };
+        }
+      ) cfg.submission.listenAddresses);
     };
 
     services.rspamd = {
