@@ -646,9 +646,9 @@ in
       enableSubmission = false;
       masterConfig =
       let
-        smtpd_client_restrictions = concatStringsSep ", " cfg.submission.smtpd.clientRestrictions;
-        smtpd_sender_restrictions = concatStringsSep ", " cfg.submission.smtpd.senderRestrictions;
-        smtpd_recipient_restrictions = concatStringsSep ", " cfg.submission.smtpd.recipientRestrictions;
+        smtpd_client_restrictions = concatStringsSep "," cfg.submission.smtpd.clientRestrictions;
+        smtpd_sender_restrictions = concatStringsSep "," cfg.submission.smtpd.senderRestrictions;
+        smtpd_recipient_restrictions = concatStringsSep "," cfg.submission.smtpd.recipientRestrictions;
       in
       listToAttrs (map (ip:
         { name = "[${ip}]:submission";
