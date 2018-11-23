@@ -328,7 +328,62 @@ in
         '';
       };
 
+      # Generally speaking, we're less picky about restrictions on
+      # submission clients as we assume they're authenticated (via
+      # SASL, TLS cert, etc.), so we have separate settings for the
+      # submission service restrictions.
+
       smtpd = {
+
+        clientRestrictions = mkOption {
+          type = types.listOf pkgs.lib.types.nonEmptyStr;
+          default = [
+            "permit_sasl_authenticated"
+            "permit_tls_clientcerts"
+            "reject"
+          ];
+          example = literalExample [
+            "permit_sasl_authenticated"
+            "reject"
+          ];
+          description = ''
+            The submission server's
+            <literal>smtpd_client_restrictions</literal> setting.
+          '';
+        };
+
+        senderRestrictions = mkOption {
+          type = types.listOf pkgs.lib.types.nonEmptyStr;
+          default = [
+            "reject_sender_login_mismatch"
+          ];
+          example = literalExample [
+            "reject_unauthenticated_sender_login_mismatch"
+          ];
+          description = ''
+            The submission server's
+            <literal>smtpd_sender_restrictions</literal> setting.
+          '';
+        };
+
+        recipientRestrictions = mkOption {
+          type = types.listOf pkgs.lib.types.nonEmptyStr;
+          default = [
+            "reject_non_fqdn_recipient"
+            "reject_unknown_recipient_domain"
+            "permit_sasl_authenticated"
+            "reject"
+          ];
+          example = literalExample [
+            "permit_sasl_authenticated"
+            "reject"
+          ];
+          description = ''
+            The submission server's
+            <literal>smtpd_recipient_restrictions</literal> setting.
+          '';
+        };
+
         saslPath = mkOption {
           type = pkgs.lib.types.nonEmptyStr;
           default = "private/auth";
@@ -589,7 +644,13 @@ in
       # TLS client certificates.)
 
       enableSubmission = false;
-      masterConfig = listToAttrs (map (ip:
+      masterConfig =
+      let
+        smtpd_client_restrictions = concatStringsSep ", " cfg.submission.smtpd.clientRestrictions;
+        smtpd_sender_restrictions = concatStringsSep ", " cfg.submission.smtpd.senderRestrictions;
+        smtpd_recipient_restrictions = concatStringsSep ", " cfg.submission.smtpd.recipientRestrictions;
+      in
+      listToAttrs (map (ip:
         { name = "[${ip}]:submission";
           value = {
             type = "inet";
@@ -609,9 +670,9 @@ in
               "-o" "smtpd_sasl_tls_security_options=noanonymous"
               "-o" "smtpd_sasl_local_domain=$mydomain"
               "-o" "smtpd_sasl_authenticated_header=yes"
-              "-o" "smtpd_client_restrictions=permit_sasl_authenticated,permit_tls_clientcerts,reject"
-              "-o" "smtpd_sender_restrictions=reject_sender_login_mismatch"
-              "-o" "smtpd_recipient_restrictions=reject_non_fqdn_recipient,reject_unknown_recipient_domain,permit_sasl_authenticated,reject"
+              "-o" "smtpd_client_restrictions=${smtpd_client_restrictions}"
+              "-o" "smtpd_sender_restrictions=${smtpd_sender_restrictions}"
+              "-o" "smtpd_recipient_restrictions=${smtpd_recipient_restrictions}"
               "-o" "milter_macro_daemon_name=ORIGINATING"
             ];
           };
