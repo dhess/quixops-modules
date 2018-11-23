@@ -539,6 +539,11 @@ in
         smtpd_tls_security_level = "may";
         smtpd_tls_dh1024_param_file = "${pkgs.lib.security.ffdhe2048Pem}";
 
+        # Allow SASL-authenticated senders to send as different users
+        # according to their virtual mailbox mappings.
+
+        smtpd_sender_login_maps = [ "hash:/etc/postfix/virtual" ];
+
         smtp_tls_security_level = "may";
 
         unverified_recipient_reject_reason = "Address lookup failed";
