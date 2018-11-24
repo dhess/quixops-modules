@@ -185,6 +185,14 @@ in
         '';
       };
 
+      # NOTE: we should include reject_unknown_helo_hostname, but it
+      # appears to be a common problem with Exchange servers (gee,
+      # what a surprise), and also Apple mail servers (!), that they
+      # send e-mail with the HELO set to some internal domain name
+      # that doesn't resolve on the public Internet, so this is
+      # probably too strict to get away with, despite the fact that
+      # it's a violation of RFC 2821 section 3.6.
+
       heloRestrictions = mkOption {
         type = types.nullOr (types.listOf pkgs.lib.types.nonEmptyStr);
         # XXXX TODO dhess - add helo_checks for our own MXes.
@@ -192,7 +200,8 @@ in
           "permit_mynetworks"
           "permit_sasl_authenticated"
           "permit_tls_clientcerts"
-          "reject_unknown_helo_hostname"
+          "reject_invalid_helo_hostname"
+          "reject_non_fqdn_helo_hostname"
         ];
         example = literalExample [
           "permit_mynetworks"
