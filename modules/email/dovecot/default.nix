@@ -9,7 +9,16 @@ let
   baseDir = "/run/dovecot2";
   stateDir = "/var/lib/dovecot";
 
-  dovecotConf = concatStrings [
+  antiSpamSieveScripts = {
+    imapsieve_mailbox1_before = ./report-spam.sieve;
+    imapsieve_mailbox2_before = ./report-ham.sieve;
+  };
+
+  dovecotConf =
+  let
+    imapPlugins = optionalString (cfg.antispam.enable) "imap_sieve";
+  in
+  concatStrings [
     ''
       base_dir = ${baseDir}
       protocols = ${concatStringsSep " " cfg.protocols}
@@ -45,7 +54,7 @@ let
       }
 
       protocol imap {
-        mail_plugins = $mail_plugins imap_zlib
+        mail_plugins = $mail_plugins imap_zlib ${imapPlugins}
         mail_max_userip_connections = ${toString cfg.imap.maxUserIPConnections}
       }
 
@@ -103,6 +112,23 @@ let
     (optionalString (cfg.sieveScripts != {}) ''
       plugin {
         ${concatStringsSep "\n" (mapAttrsToList (to: from: "sieve_${to} = ${stateDir}/sieve/${to}") cfg.sieveScripts)}
+      }
+    '')
+
+    (optionalString cfg.antispam.enable ''
+      plugin {
+        sieve_plugins = sieve_imapsieve sieve_extprograms
+        sieve_global_extensions = +vnd.dovecot.pipe +vnd.dovecot.environment
+        sieve_pipe_bin_dir = ${stateDir}/sieve
+
+        imapsieve_mailbox1_name = ${cfg.antispam.junkMailbox}
+        imapsieve_mailbox1_causes = COPY
+        imapsieve_mailbox1_before = ${stateDir}/sieve/imapsieve_mailbox1_before
+
+        imapsieve_mailbox2_name = *
+        imapsieve_mailbox2_from = ${cfg.antispam.junkMailbox}
+        imapsieve_mailbox2_causes = COPY
+        imapsieve_mailbox2_before = ${stateDir}/sieve/imapsieve_mailbox2_before
       }
     '')
 
@@ -314,6 +340,61 @@ in
           '';
         };
 
+      };
+
+    };
+
+    antispam = {
+      enable = mkEnableOption ''
+        Enable anti-spam training with sieve, per
+        https://wiki2.dovecot.org/HowTo/AntispamWithSieve.
+      '';
+
+      trashMailbox = mkOption {
+        type = pkgs.lib.types.nonEmptyStr;
+        default = "Trash";
+        example = "Deleted Messages";
+        description = ''
+          The IMAP server's special "Trash" mailbox.
+        '';
+      };
+
+      junkMailbox = mkOption {
+        type = pkgs.lib.types.nonEmptyStr;
+        default = "Junk";
+        example = "Spam";
+        description = ''
+          The IMAP server's special "Junk" mailbox.
+        '';
+      };
+
+      scripts = {
+        learnHam = mkOption {
+          type = types.path;
+          description = ''
+            The script to be run when a message is moved from the
+            "Junk" mailbox to any other mailbox other than the "Trash"
+            mailbox.
+
+            See
+            https://wiki2.dovecot.org/HowTo/AntispamWithSieve#Shell_scripts
+            for details. You must integrate this script into your
+            particular spam system.
+          '';
+        };
+
+        learnSpam = mkOption {
+          type = types.path;
+          description = ''
+            The script to be run when a message is moved from any
+            mailbox to the "Junk" mailbox.
+
+            See
+            https://wiki2.dovecot.org/HowTo/AntispamWithSieve#Shell_scripts
+            for details. You must integrate this script into your
+            particular spam system.
+          '';
+        };
       };
 
     };
@@ -568,6 +649,22 @@ in
           fi
           ${pkgs.dovecot_pigeonhole}/bin/sievec '${stateDir}/sieve/${to}'
         '') cfg.sieveScripts)}
+        chown -R '${cfg.mailUser}:${cfg.mailGroup}' '${stateDir}/sieve'
+      '' + optionalString cfg.antispam.enable ''
+        mkdir -p ${stateDir}/sieve
+        ${concatStringsSep "\n" (mapAttrsToList (to: from: ''
+          if [ -d '${from}' ]; then
+            mkdir '${stateDir}/sieve/${to}'
+            cp -p "${from}/"*.sieve '${stateDir}/sieve/${to}'
+          else
+            cp -p '${from}' '${stateDir}/sieve/${to}'
+          fi
+          ${pkgs.dovecot_pigeonhole}/bin/sievec '${stateDir}/sieve/${to}'
+        '') antiSpamSieveScripts)}
+        cp ${cfg.antispam.scripts.learnSpam} ${stateDir}/sieve/learn-spam.sh
+        chmod +x ${stateDir}/sieve/learn-spam.sh
+        cp ${cfg.antispam.scripts.learnHam} ${stateDir}/sieve/learn-ham.sh
+        chmod +x ${stateDir}/sieve/learn-ham.sh
         chown -R '${cfg.mailUser}:${cfg.mailGroup}' '${stateDir}/sieve'
       '';
     };
