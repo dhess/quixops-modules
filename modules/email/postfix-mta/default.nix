@@ -602,6 +602,10 @@ in
       # is too limited to permit that. We have to construct the
       # "submission" master.cf line manually.
       #
+      # We also don't use enableSmtp because we want to disable MIME
+      # output conversion, to avoid breaking DKIM signatures, and
+      # upstream doesn't support this.
+      #
       # Note: smtpd_client_restrictions here will allow submission
       # clients that present a TLS client certificate to relay mail
       # *for this MTA's domains only*, because the Postfix
@@ -612,6 +616,7 @@ in
       # TLS client certificates.)
 
       enableSubmission = false;
+      enableSmtp = false;
       masterConfig =
       let
         smtpd_client_restrictions = concatStringsSep "," cfg.submission.smtpd.clientRestrictions;
@@ -642,7 +647,19 @@ in
             ];
           };
         }
-      ) cfg.submission.listenAddresses);
+      ) cfg.submission.listenAddresses)
+      // {
+        smtp = {
+          args = [ "-o" "disable_mime_output_conversion=yes" ];
+        };
+        relay = {
+          command = "smtp";
+          args = [
+            "-o" "smtp_fallback_relay="
+            "-o" "disable_mime_output_conversion=yes"
+          ];
+        };
+      };
     };
   };
 
