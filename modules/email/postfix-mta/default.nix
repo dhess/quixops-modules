@@ -124,6 +124,92 @@ in
       };
     };
 
+    postscreen = {
+      enable = mkEnableOption "Enable postscreen.";
+
+      accessList = mkOption {
+        type = types.path;
+        description = ''
+          This module sets Postfix's
+          <literal>postscreen_access_list</literal> to
+          <literal>"permit_mynetworks"</literal> and the contents of
+          this file, specified in Postfix CIDR table format.
+        '';
+      };
+
+      blacklistAction = mkOption {
+        type = types.enum [
+          "ignore"
+          "enforce"
+          "drop"
+        ];
+        default = "ignore";
+        example = "enforce";
+        description = ''
+          Postfix's <literal>postscreen_blacklist_action</literal> setting.
+
+          The default value ("ignore") is the same as Postfix's default.
+        '';
+      };
+
+      greetWait = mkOption {
+        type = types.nullOr pkgs.lib.types.nonEmptyStr;
+        default = null;
+        example = "8s";
+        description = ''
+          Postfix's <literal>postscreen_greet_wait</literal> setting.
+
+          The default is to use Postfix's default value.
+        '';
+      };
+
+      greetAction = mkOption {
+        type = types.enum [
+          "ignore"
+          "enforce"
+          "drop"
+        ];
+        default = "ignore";
+        example = "enforce";
+        description = ''
+          Postfix's <literal>postscreen_greet_action</literal> setting.
+
+          The default value ("ignore") is the same as Postfix's default.
+        '';
+      };
+
+      dnsblSites = mkOption {
+        type = types.listOf pkgs.lib.types.nonEmptyStr;
+        default = [
+          "zen.spamhaus.org"
+        ];
+        example = [
+          "example1.org"
+          "example2.org"
+        ];
+        description = ''
+          Postfix's <literal>postscreen_dnsbl_sites</literal> setting.
+
+          The default is to use <literal>zen.spamhaus.org</literal>.
+        '';
+      };
+
+      dnsblAction = mkOption {
+        type = types.enum [
+          "ignore"
+          "enforce"
+          "drop"
+        ];
+        default = "ignore";
+        example = "enforce";
+        description = ''
+          Postfix's <literal>postscreen_dnsbl_action</literal> setting.
+
+          The default value ("ignore") is the same as Postfix's default.
+        '';
+      };
+    };
+
     recipientDelimiter = mkOption {
       type = types.str;
       default = "+";
@@ -570,7 +656,20 @@ in
         smtp_tls_security_level = "may";
 
         unverified_recipient_reject_reason = "Address lookup failed";
-      };
+      }
+      //
+      (if cfg.postscreen.enable then
+      {
+        postscreen_access_list = [
+          "permit_mynetworks"
+          "cidr:${cfg.postscreen.accessList}"
+        ];
+        postscreen_blacklist_action = cfg.postscreen.blacklistAction;
+        postscreen_greet_wait = cfg.postscreen.greetWait;
+        postscreen_greet_action = cfg.postscreen.greetAction;
+        postscreen_dnsbl_sites = cfg.postscreen.dnsblSites;
+        postscreen_dnsbl_action = cfg.postscreen.dnsblAction;
+      } else {});
 
       extraConfig =
       let
@@ -605,6 +704,9 @@ in
       # We also don't use enableSmtp because we want to disable MIME
       # output conversion, to avoid breaking DKIM signatures, and
       # upstream doesn't support this.
+      #
+      # Finally, we use postscreen, so we need to tweak the upstream
+      # smtp_inet definition.
       #
       # Note: smtpd_client_restrictions here will allow submission
       # clients that present a TLS client certificate to relay mail
@@ -648,7 +750,8 @@ in
           };
         }
       ) cfg.submission.listenAddresses)
-      // {
+      //
+      {
         smtp = {
           args = [ "-o" "disable_mime_output_conversion=yes" ];
         };
@@ -659,7 +762,33 @@ in
             "-o" "disable_mime_output_conversion=yes"
           ];
         };
-      };
+      } // (if cfg.postscreen.enable then
+      {
+        smtp_inet = mkForce {
+          name = "smtp";
+          type = "inet";
+          private = false;
+          maxproc = 1;
+          command = "postscreen";
+        };
+        smtpd_pass = {
+          name = "smtpd";
+          type = "pass";
+          command = "smtpd";
+        };
+        tlsproxy = {
+          name = "tlsproxy";
+          type = "unix";
+          command = "tlsproxy";
+          maxproc = 0;
+        };
+        dnsblog = {
+          name = "dnsblog";
+          type = "unix";
+          command = "dnsblog";
+          maxproc = 0;
+        };
+      } else {});
     };
   };
 
