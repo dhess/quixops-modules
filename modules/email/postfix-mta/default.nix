@@ -57,9 +57,6 @@ in
       A Postfix mail transfer agent (MTA), i.e., a host that can send
       and receive mail for one or more domains.
 
-      This configuration uses rspamd as a spam-prevention mechanism
-      for incoming mail.
-
       Note that this particular configuration does not use Postfix to
       delivery deliver mail to local accounts. Mail that is received
       by this MTA (for the domains that it serves) is handed off to an
@@ -115,9 +112,6 @@ in
         default = [];
         description = ''
           A list of smtpd milter sockets to use with the MTA.
-
-          Note that the rspamd milter will be configured
-          automatically; you do not need to specify it here.
         '';
       };
 
@@ -126,9 +120,6 @@ in
         default = [];
         description = ''
           A list of non-smtpd milter sockets to use with the MTA.
-
-          Note that the rspamd milter will be configured
-          automatically; you do not need to specify it here.
         '';
       };
     };
@@ -652,12 +643,6 @@ in
           };
         }
       ) cfg.submission.listenAddresses);
-    };
-
-    services.rspamd = {
-      enable = true;
-      debug = true;
-      postfix.enable = true;
     };
   };
 
