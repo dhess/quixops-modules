@@ -227,7 +227,7 @@ in
 
     # Keep track of changes in the upstream module.
     quixops.assertions.moduleHashes."services/monitoring/apcupsd.nix" =
-      "2dfee0c5fd1f2788045a49476b85c9102f18c97d87a7e485e6256e54f9c09070";
+      "e4897f6051c92066b2cb7db54ed7f74fc4cd232b22abc780488f63acd49f1b01";
 
     quixops.keychain.keys."${keyName}" = {
       destDir = stateDir;
