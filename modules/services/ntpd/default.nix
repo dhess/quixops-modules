@@ -18,6 +18,10 @@ let
   configFile = pkgs.writeText "ntp.conf" ''
     driftfile ${stateDir}/ntp.drift
 
+    restrict default ${toString cfg.restrictDefault}
+    restrict -6 default ${toString cfg.restrictDefault}
+    restrict source ${toString cfg.restrictSource}
+
     restrict 127.0.0.1
     restrict -6 ::1
 
@@ -42,9 +46,38 @@ in
       enable = mkOption {
         default = false;
         description = ''
-          Whether to synchronise your machine's time using the NTP
-          protocol.
+          Whether to synchronise your machine's time using ntpd, as a peer in
+          the NTP network.
+          </para>
+          <para>
+          Disables <literal>systemd.timesyncd</literal> if enabled.
         '';
+      };
+
+      restrictDefault = mkOption {
+        type = types.listOf types.str;
+        description = ''
+          The restriction flags to be set by default.
+          </para>
+          <para>
+          The default flags prevent external hosts from using ntpd as a DDoS
+          reflector, setting system time, and querying OS/ntpd version. As
+          recommended in section 6.5.1.1.3, answer "No" of
+          http://support.ntp.org/bin/view/Support/AccessRestrictions
+        '';
+        default = [ "limited" "kod" "nomodify" "notrap" "noquery" "nopeer" ];
+      };
+
+      restrictSource = mkOption {
+        type = types.listOf types.str;
+        description = ''
+          The restriction flags to be set on source.
+          </para>
+          <para>
+          The default flags allow peers to be added by ntpd from configured
+          pool(s), but not by other means.
+        '';
+        default = [ "limited" "kod" "nomodify" "notrap" "noquery" ];
       };
 
       servers = mkOption {
@@ -57,6 +90,7 @@ in
       extraFlags = mkOption {
         type = types.listOf types.str;
         description = "Extra flags passed to the ntpd command.";
+        example = literalExample ''[ "--interface=eth0" ]'';
         default = [];
       };
 
@@ -76,11 +110,13 @@ in
   config = mkIf config.services.ntp.enable {
 
     quixops.assertions.moduleHashes."services/networking/ntpd.nix" =
-      "8f742ebd032e91e0bee51c6a16f4518a5af32cdbada3eef00ec8e776c4ceb811";
+      "800a4a18c31007f9d99fd07176f4b2b46f790a1bec74471bb1500a685c2125c6";
 
     # Make tools such as ntpq available in the system path.
     environment.systemPackages = [ pkgs.ntp ];
     services.timesyncd.enable = mkForce false;
+
+    systemd.services.systemd-timedated.environment = { SYSTEMD_TIMEDATED_NTP_SERVICES = "ntpd.service"; };
 
     users.users = singleton
       { name = ntpUser;
