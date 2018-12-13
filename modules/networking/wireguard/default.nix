@@ -128,7 +128,7 @@ let
           keyPath = keys."${keyName name}".path;
         in
         ''
-          modprobe wireguard
+	  ${optionalString (!config.boot.isContainer) "modprobe wireguard"}
 
           ${values.preSetup}
 
@@ -207,7 +207,7 @@ in
   config = mkIf (cfg.interfaces != {}) {
 
     quixops.assertions.moduleHashes."services/networking/wireguard.nix" =
-      "5ecebd36bc4c694d9126f06ca6a6bb0445c9ebd46a9344ea9bb7959d531b6da4";
+      "7ee71ebb08976efceb1d4452fb3babdc3a007e9fa6f21057ee79ab1b1ff70e43";
 
     boot.extraModulePackages = [ kernel.wireguard ];
     environment.systemPackages = [ pkgs.wireguard-tools ];
