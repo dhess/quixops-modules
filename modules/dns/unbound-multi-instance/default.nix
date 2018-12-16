@@ -25,6 +25,7 @@ let
         username: unbound
         chroot: "${stateDir}"
         pidfile: ""
+        tls-cert-bundle: ${cfg.tlsCertBundle}
         ${concatMapStringsSep "\n  " (ip: "interface: ${ip}") cfg.listenAddresses}
         ${concatMapStringsSep "\n  " (cidr: "access-control: ${cidr} allow") cfg.allowedAccess}
         ${optionalString cfg.enableRootTrustAnchor "auto-trust-anchor-file: ${rootTrustAnchorFile}"}
@@ -53,6 +54,7 @@ let
         optionalString (cfg.forwardAddresses != []) ''
           forward-zone:
             name: .
+            ${optionalString cfg.dnsOverTLS "forward-tls-upstream: yes"}
         '' +
         concatMapStringsSep "\n" (x: "    forward-addr: ${x}") cfg.forwardAddresses}
     '';
@@ -143,10 +145,25 @@ in {
             '';
           };
 
+          tlsCertBundle = mkOption {
+            type = types.path;
+            default = "${pkgs.cacert.out}/etc/ssl/certs/ca-bundle.crt";
+            example = "/etc/ssl/certs/ca-bundle.crt";
+            description = ''
+              Unbound's <literal>tls-cert-bundle</literal> setting; used for
+              authenticating connections to outside peers, e.g., for DNS
+              over TLS connections.
+            '';
+          };
+
+          dnsOverTLS = mkEnableOption ''
+            If true, enable DNS over TLS. Note that this requires the
+            use of forwarding addresses that support DNS over TLS.
+          '';
+
           forwardAddresses = mkOption {
-            default = pkgs.lib.dns.googleDNS;
             example = [ "8.8.8.8" "2001:4860:4860::8888" ];
-            type = types.nonEmptyListOf (types.either pkgs.lib.types.ipv4NoCIDR pkgs.lib.types.ipv6NoCIDR);
+            type = types.nonEmptyListOf pkgs.lib.types.nonEmptyStr;
             description = ''
               The address(es) of forwarding servers for this Unbound
               instance. Both IPv4 and IPv6 addresses are supported.
