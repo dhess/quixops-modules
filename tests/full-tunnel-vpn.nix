@@ -149,7 +149,11 @@ let
     privateKeyLiteral = builtins.readFile wg-server-key;
     peers."client" = {
       # Test with a whole LAN behind the remote peer IP.
-      allowedIPs = [ "10.150.3.2/32" "fd00:1234:5678:c::2/64" "10.0.44.0/24" ];
+      allowedIPs = [
+        { ip = "10.150.3.2/32"; }
+        { ip = "fd00:1234:5678:c::2/64"; }
+        { ip =  "10.0.44.0/24"; }
+      ];
       natInternalIPs = [ "10.150.3.2/32" "10.0.44.0/24" ];
       publicKeyFile = wg-client-pub;
       presharedKeyLiteral = builtins.readFile wg-psk;

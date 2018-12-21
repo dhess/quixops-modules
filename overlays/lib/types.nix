@@ -445,6 +445,41 @@ rec {
 
   # A WireGuard peer.
 
+  wgAllowedIP = types.submodule {
+    options = {
+      ip = mkOption {
+        type = types.either pkgs.lib.types.ipv4CIDR pkgs.lib.types.ipv6CIDR;
+        example = "10.192.122.3/32";
+        description = ''
+          An IPv4 or IPv6 address (with CIDR mask) from which this
+          peer is allowed to send incoming traffic. The catch-all IPv4
+          address <literal>0.0.0.0/0</literal> may be specified for
+          all matching IPv4 addresses, and the catch-all IPv6 address
+          <literal>::/0</literal> may be specified for matching all
+          IPv6 addresses.
+        '';
+      };
+
+      route = {
+        enable = mkEnableOption ''
+          If enabled, a static route will be created on this WireGuard
+          device for the given IP address.
+        '';
+
+        table = mkOption {
+          default = "main";
+          example = "vpn";
+          type = pkgs.lib.types.nonEmptyStr;
+          description = ''
+            The kernel routing table to which the static route (if any) will be added.
+
+            The default is the main kernel routing table.
+          '';
+        };
+      };
+    };
+  };
+
   wgPeer = types.submodule ({ config, name, ... }: {
     options = {
 
@@ -480,13 +515,14 @@ rec {
       };
 
       allowedIPs = mkOption {
-        example = [ "10.192.122.3/32" "10.192.124.1/24" ];
-        type = types.listOf (types.either pkgs.lib.types.ipv4CIDR pkgs.lib.types.ipv6CIDR);
-        description = ''List of IP (v4 or v6) addresses with CIDR masks from
-        which this peer is allowed to send incoming traffic and to which
-        outgoing traffic for this peer is directed. The catch-all 0.0.0.0/0 may
-        be specified for matching all IPv4 addresses, and ::/0 may be specified
-        for matching all IPv6 addresses.'';
+        example = literalExample [
+          { ip = "10.192.122.3/32"; route.enable = true; }
+        ];
+        type = types.listOf wgAllowedIP;
+        description = ''
+          List of IP addresses (and optional routes) for IPs that are
+          allowed on this WireGuard interface.
+        '';
       };
 
       endpoint = mkOption {

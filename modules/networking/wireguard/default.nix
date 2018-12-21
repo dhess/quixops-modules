@@ -1,6 +1,9 @@
 ## This module improves upon the Nixpkgs module by using better
 ## typesafety, requiring peer PSKs, and ensuring that PSKs and private
 ## keys aren't written to the Nix store.
+##
+## It also eliminiates the global table and allowedIPsAsRoutes options
+## and moves those to a per-allowed IP setting.
 
 { config, lib, pkgs, ... }:
 
@@ -79,29 +82,10 @@ let
         description = "Commands called after shutting down the interface.";
       };
 
-      table = mkOption {
-        default = "main";
-        type = pkgs.lib.types.nonEmptyStr;
-        description = ''The kernel routing table to add this interface's
-        associated routes to. Setting this is useful for e.g. policy routing
-        ("ip rule") or virtual routing and forwarding ("ip vrf"). Both numeric
-        table IDs and table names (/etc/rt_tables) can be used. Defaults to
-        "main".'';
-      };
-
       peers = mkOption {
         default = {};
         description = "Peers linked to the interface.";
         type = types.attrsOf pkgs.lib.types.wgPeer;
-      };
-
-      allowedIPsAsRoutes = mkOption {
-        example = false;
-        default = true;
-        type = types.bool;
-        description = ''
-          Determines whether to add allowed IPs as routes or not.
-        '';
       };
     };
 
@@ -126,6 +110,7 @@ let
         script =
         let
           keyPath = keys."${keyName name}".path;
+          peers = mapAttrsToList (_: peer: peer) values.peers;
         in
         ''
 	  ${optionalString (!config.boot.isContainer) "modprobe wireguard"}
@@ -142,22 +127,27 @@ let
             optionalString (values.listenPort != null) " listen-port ${toString values.listenPort}"}
 
           ${concatMapStringsSep "\n" (peer:
-            let pskPath = keys."${pskName name peer.name}".path;
+            let
+              pskPath = keys."${pskName name peer.name}".path;
+              allowedIPs = map (allowedIP: allowedIP.ip) peer.allowedIPs;
             in
               "wg set ${name} peer ${peer.publicKey}" +
               " preshared-key ${pskPath}" +
               optionalString (peer.endpoint != null) " endpoint ${peer.endpoint}" +
               optionalString (peer.persistentKeepalive != null) " persistent-keepalive ${toString peer.persistentKeepalive}" +
-              optionalString (peer.allowedIPs != []) " allowed-ips ${concatStringsSep "," peer.allowedIPs}"
-            ) (mapAttrsToList (_: peer: peer) values.peers)}
+              optionalString (allowedIPs != []) " allowed-ips ${concatStringsSep "," allowedIPs}"
+            ) peers}
 
           ip link set up dev ${name}
 
-          ${optionalString (values.allowedIPsAsRoutes != false) (concatStringsSep "\n" (concatMap (peer:
-              (map (allowedIP:
-                "ip route replace ${allowedIP} dev ${name} table ${values.table}"
-              ) peer.allowedIPs)
-            ) (mapAttrsToList (_: peer: peer) values.peers)))}
+          ${concatMapStringsSep "\n"
+              (peer:
+                concatMapStringsSep
+                  "\n"
+                  (allowedIP:
+                    optionalString allowedIP.route.enable "ip route replace ${allowedIP.ip} dev ${name} table ${allowedIP.route.table}")
+                  peer.allowedIPs)
+              peers}
 
           ${values.postSetup}
         '';

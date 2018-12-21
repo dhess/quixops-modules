@@ -88,13 +88,14 @@ with lib;
         };
 
         allowedIPs = mkOption {
-          example = [ "10.192.122.3/32" "10.192.124.1/24" ];
-          type = types.nonEmptyListOf (types.either pkgs.lib.types.ipv4CIDR pkgs.lib.types.ipv6CIDR);
-          description = ''List of IP (v4 or v6) addresses, in CIDR format, from
-          which this peer is allowed to send incoming traffic and to which
-          outgoing traffic for this peer is directed. The catch-all 0.0.0.0/0 may
-          be specified for matching all IPv4 addresses, and ::/0 may be specified
-          for matching all IPv6 addresses.'';
+          example = literalExample [
+            { ip = "10.192.122.3/32"; route.enable = true; }
+          ];
+          type = types.listOf pkgs.lib.types.wgAllowedIP;
+          description = ''
+            List of IP addresses (and optional routes) for IPs that are
+            allowed on this WireGuard interface.
+          '';
         };
 
         natInternalIPs = mkOption {
