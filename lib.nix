@@ -27,7 +27,7 @@ let
 
   nixpkgs = import fetchNixPkgs;
   nixpkgs-quixoftic = import fetchNixPkgsQuixoftic;
-  nixpkgs-lib-quixoftic = import fetchNixPkgsQuixoftic;
+  nixpkgs-lib-quixoftic = import fetchNixPkgsLibQuixoftic;
 
   pkgs = nixpkgs {};
 
