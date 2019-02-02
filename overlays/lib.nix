@@ -14,10 +14,6 @@ in
 
   lib = (super.lib or {}) // {
 
-    maintainers = super.lib.maintainers // {
-      dhess-pers = "Drew Hess <src@drewhess.com>";
-    };
-
     ## quixops lib namespace.
 
     quixops = {
@@ -47,6 +43,5 @@ in
     };
 
     types = (super.lib.types or {}) // localTypes;
-
   };
 }
