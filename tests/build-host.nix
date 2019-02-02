@@ -95,7 +95,7 @@ let
 
     name = "build-host";
     meta = with pkgs.lib.maintainers; {
-      maintainers = [ dhess-qx ];
+      maintainers = [ dhess-pers ];
     };
 
     nodes = {
@@ -148,7 +148,7 @@ let
 
     name = "build-host-extra-build-hosts";
     meta = with pkgs.lib.maintainers; {
-      maintainers = [ dhess-qx ];
+      maintainers = [ dhess-pers ];
     };
 
     nodes = {

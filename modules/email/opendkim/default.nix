@@ -151,7 +151,7 @@ let
 
 in
 {
-  meta.maintainers = lib.maintainers.dhess-qx;
+  meta.maintainers = lib.maintainers.dhess-pers;
 
   # Not evaluating for some reason; I'm getting:
   # The option `services.opendkim.keyPath' defined in `/nix/store/.../nixos/modules/rename.nix' does not exist.

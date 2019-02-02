@@ -45,7 +45,7 @@ let
   makeSshTest = name: machineAttrs: makeTest {
     name = "ssh-${name}";
     meta = with pkgs.lib.maintainers; {
-      maintainers = [ dhess-qx ];
+      maintainers = [ dhess-pers ];
     };
 
     nodes = {

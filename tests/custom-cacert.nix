@@ -180,7 +180,7 @@ let
     makeTest {
       name = "mkCacert-${name}";
       meta = with pkgs.lib; {
-        maintainers = [ maintainers.dhess-qx ];
+        maintainers = [ maintainers.dhess-pers ];
       };
 
       nodes = {

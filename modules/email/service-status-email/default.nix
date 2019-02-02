@@ -114,6 +114,6 @@ in
       }) gcfg.recipients;
   };
 
-  meta.maintainers = lib.maintainers.dhess-qx;
+  meta.maintainers = lib.maintainers.dhess-pers;
 
 }

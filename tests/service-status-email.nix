@@ -10,7 +10,7 @@ in makeTest rec {
   name = "service-status-email";
 
   meta = with pkgs.lib.maintainers; {
-    maintainers = [ dhess-qx ];
+    maintainers = [ dhess-pers ];
   };
 
   nodes = {

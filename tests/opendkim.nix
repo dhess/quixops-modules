@@ -48,7 +48,7 @@ in makeTest rec {
   name = "opendkim";
 
   meta = with pkgs.lib.maintainers; {
-    maintainers = [ dhess-qx ];
+    maintainers = [ dhess-pers ];
   };
 
   nodes = {

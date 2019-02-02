@@ -23,7 +23,7 @@ in makeTest rec {
   name = "pinpon";
 
   meta = with pkgs.lib.maintainers; {
-    maintainers = [ dhess-qx ];
+    maintainers = [ dhess-pers ];
   };
 
   nodes = {

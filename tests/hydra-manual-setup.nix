@@ -17,7 +17,7 @@ in makeTest rec {
   name = "hydra-manual-setup";
 
   meta = with pkgs.lib.maintainers; {
-    maintainers = [ dhess-qx ];
+    maintainers = [ dhess-pers ];
   };
 
   nodes = {

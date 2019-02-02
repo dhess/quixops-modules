@@ -33,7 +33,7 @@ let
     inherit name;
 
     meta = with pkgs.lib.maintainers; {
-      maintainers = [ dhess-qx ];
+      maintainers = [ dhess-pers ];
     };
 
     nodes = {

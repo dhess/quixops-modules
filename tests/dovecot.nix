@@ -93,7 +93,7 @@ in makeTest rec {
   name = "dovecot";
 
   meta = with pkgs.lib.maintainers; {
-    maintainers = [ dhess-qx ];
+    maintainers = [ dhess-pers ];
   };
 
   machine = { config, ... }: {

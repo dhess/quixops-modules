@@ -11,7 +11,7 @@ let
     makeTest {
       name = "environment-${name}";
       meta = with pkgs.lib.maintainers; {
-        maintainers = [ dhess-qx ];
+        maintainers = [ dhess-pers ];
       };
       machine = { config, ... }: {
         nixpkgs.localSystem.system = system;

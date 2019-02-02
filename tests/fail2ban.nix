@@ -8,7 +8,7 @@ makeTest {
   name = "fail2ban-config";
 
   meta = with pkgs.lib.maintainers; {
-    maintainers = [ dhess-qx ];
+    maintainers = [ dhess-pers ];
   };
 
   nodes = {

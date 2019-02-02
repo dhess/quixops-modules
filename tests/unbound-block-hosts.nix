@@ -28,7 +28,7 @@ let
       name = "unbound-block-hosts-${name}";
 
       meta = with pkgs.lib.maintainers; {
-        maintainers = [ dhess-qx ];
+        maintainers = [ dhess-pers ];
       };
 
       nodes = {

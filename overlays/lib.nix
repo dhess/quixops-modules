@@ -15,7 +15,7 @@ in
   lib = (super.lib or {}) // {
 
     maintainers = super.lib.maintainers // {
-      dhess-qx = "Drew Hess <src@drewhess.com>";
+      dhess-pers = "Drew Hess <src@drewhess.com>";
     };
 
     ## quixops lib namespace.

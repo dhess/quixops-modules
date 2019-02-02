@@ -10,7 +10,7 @@ in makeTest rec {
   name = "suricata";
 
   meta = with pkgs.lib.maintainers; {
-    maintainers = [ dhess-qx ];
+    maintainers = [ dhess-pers ];
   };
 
   machine = { config, ... }: {
