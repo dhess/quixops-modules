@@ -13,5 +13,6 @@ let
 in
 self //
 {
-  overlays.lib = import ./overlays/lib.nix;
+  overlays.quixops-modules = import ./overlays/lib/quixops-modules.nix;
+  overlays.types = import ./overlays/lib/types.nix;
 }

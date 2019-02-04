@@ -6,5 +6,6 @@ in
 [
   localLib.fetchNixPkgsQuixoftic
   localLib.fetchNixPkgsLibQuixoftic
-  ./overlays/lib.nix
+  ./overlays/lib/quixops-modules.nix
+  ./overlays/lib/types.nix
 ]

@@ -40,7 +40,7 @@ let
 
       server = { config, ... }: {
         nixpkgs.localSystem.system = system;
-        imports = (import pkgs.lib.quixops.modulesPath);
+        imports = (import pkgs.lib.quixops-modules.modulesPath);
         networking.useDHCP = false;
         networking.extraHosts = extraHosts;
         networking.firewall.enable = true;

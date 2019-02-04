@@ -54,7 +54,7 @@ let
           imports = [
             ./common/users.nix
             ./common/root-user.nix
-          ] ++ (import pkgs.lib.quixops.modulesPath);
+          ] ++ (import pkgs.lib.quixops-modules.modulesPath);
           users.users.root.openssh.authorizedKeys.keys = [
             rootPublicKey
           ];
@@ -86,7 +86,7 @@ let
       };
       client = { config, ... }: {
           nixpkgs.localSystem.system = system;
-          imports = (import pkgs.lib.quixops.modulesPath);
+          imports = (import pkgs.lib.quixops-modules.modulesPath);
       };
     };
 

@@ -16,7 +16,7 @@ in makeTest rec {
   nodes = {
     machine = { config, ... }: {
       nixpkgs.localSystem.system = system;
-      imports = (import pkgs.lib.quixops.modulesPath);
+      imports = (import pkgs.lib.quixops-modules.modulesPath);
 
       services.service-status-email = {
         enable = true;

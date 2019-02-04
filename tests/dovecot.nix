@@ -98,8 +98,8 @@ in makeTest rec {
 
   machine = { config, ... }: {
     imports = [ ./common/user-account.nix ] ++
-      (import pkgs.lib.quixops.modulesPath) ++
-      (import pkgs.lib.quixops.testModulesPath);
+      (import pkgs.lib.quixops-modules.modulesPath) ++
+      (import pkgs.lib.quixops-modules.testing.testModulesPath);
 
     # Use the test key deployment system.
     deployment.reallyReallyEnable = true;

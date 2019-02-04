@@ -18,7 +18,7 @@ let
 
         imports = [
           ./common/users.nix
-        ] ++ (import pkgs.lib.quixops.modulesPath);
+        ] ++ (import pkgs.lib.quixops-modules.modulesPath);
       } // machineAttrs;
       testScript = { nodes, ... }:
       let

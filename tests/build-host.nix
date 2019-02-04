@@ -102,8 +102,8 @@ let
       machine = { config, ... }: {
         nixpkgs.localSystem.system = system;
         imports =
-          (import pkgs.lib.quixops.modulesPath) ++
-          (import pkgs.lib.quixops.testModulesPath);
+          (import pkgs.lib.quixops-modules.modulesPath) ++
+          (import pkgs.lib.quixops-modules.testing.testModulesPath);
 
         # Use the test key deployment system.
         deployment.reallyReallyEnable = true;
@@ -155,8 +155,8 @@ let
       machine = { config, ... }: {
         nixpkgs.localSystem.system = system;
         imports =
-          (import pkgs.lib.quixops.modulesPath) ++
-          (import pkgs.lib.quixops.testModulesPath);
+          (import pkgs.lib.quixops-modules.modulesPath) ++
+          (import pkgs.lib.quixops-modules.testing.testModulesPath);
 
         # Use the test key deployment system.
         deployment.reallyReallyEnable = true;

@@ -17,7 +17,7 @@ in makeTest rec {
 
     machine = { config, ... }: {
       nixpkgs.localSystem.system = system;
-      imports = (import pkgs.lib.quixops.modulesPath);
+      imports = (import pkgs.lib.quixops-modules.modulesPath);
       services.tarsnapper = {
         enable = true;
         keyLiteral = "notarealkey";

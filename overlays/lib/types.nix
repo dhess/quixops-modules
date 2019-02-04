@@ -4,14 +4,12 @@
 # is a derivative work of NixOps, it is covered by the GNU LGPL; see
 # the LICENSE file included with this source distribution.
 
-{ lib
-, pkgs
-, ...
-}:
+self: super:
 
-with lib;
+with super.lib;
 
-rec {
+let
+
   ## A key type for configuring secrets that are stored in the
   ## filesystem. The option names and types here are compatible with
   ## NixOps's `keyType`, so they can be mechanically mapped to
@@ -23,7 +21,7 @@ rec {
   key = types.submodule ({ config, name, ... }: {
     options.text = mkOption {
       example = "super secret stuff";
-      type = pkgs.lib.types.nonEmptyStr;
+      type = super.lib.types.nonEmptyStr;
       description = ''
         This designates the text that the key should contain. So if
         the key name is <replaceable>password</replaceable> and
@@ -36,7 +34,7 @@ rec {
 
     options.destDir = mkOption {
       default = "/run/keys";
-      type = pkgs.lib.types.nonStorePath;
+      type = super.lib.types.nonStorePath;
       description = ''
         When specified, this allows changing the destDir directory of the key
         file from its default value of <filename>/run/keys</filename>.
@@ -47,7 +45,7 @@ rec {
     };
 
     options.path = mkOption {
-      type = pkgs.lib.types.nonStorePath;
+      type = super.lib.types.nonStorePath;
       default = "${config.destDir}/${name}";
       internal = true;
       description = ''
@@ -61,7 +59,7 @@ rec {
 
     options.user = mkOption {
       default = "root";
-      type = pkgs.lib.types.nonEmptyStr;
+      type = super.lib.types.nonEmptyStr;
       description = ''
         The user which will be the owner of the key file.
       '';
@@ -69,7 +67,7 @@ rec {
 
     options.group = mkOption {
       default = "root";
-      type = pkgs.lib.types.nonEmptyStr;
+      type = super.lib.types.nonEmptyStr;
       description = ''
         The group that will be set for the key file.
       '';
@@ -78,7 +76,7 @@ rec {
     options.permissions = mkOption {
       default = "0400";
       example = "0640";
-      type = pkgs.lib.types.nonEmptyStr;
+      type = super.lib.types.nonEmptyStr;
       description = ''
         The default permissions to set for the key file, needs to be in the
         format accepted by <citerefentry><refentrytitle>chmod</refentrytitle>
@@ -92,7 +90,7 @@ rec {
     options = {
 
       protocol = mkOption {
-        type = pkgs.lib.types.nonEmptyStr;
+        type = super.lib.types.nonEmptyStr;
         example = "tcp";
         description = ''
           The protocol of the rule or packet to check.
@@ -100,7 +98,7 @@ rec {
       };
 
       interface = mkOption {
-        type = types.nullOr pkgs.lib.types.nonEmptyStr;
+        type = types.nullOr super.lib.types.nonEmptyStr;
         default = null;
         example = "eth0";
         description = ''
@@ -112,7 +110,7 @@ rec {
 
       src = {
         port = mkOption {
-          type = types.nullOr (types.either pkgs.lib.types.port (types.strMatching "[[:digit:]]+:[[:digit:]]+"));
+          type = types.nullOr (types.either super.lib.types.port (types.strMatching "[[:digit:]]+:[[:digit:]]+"));
           default = null;
           example = "67:68";
           description = ''
@@ -126,7 +124,7 @@ rec {
         };
 
         ip = mkOption {
-          type = types.nullOr pkgs.lib.types.ipv4CIDR;
+          type = types.nullOr super.lib.types.ipv4CIDR;
           default = null;
           example = "10.0.0.0/24";
           description = ''
@@ -140,7 +138,7 @@ rec {
 
       dest = {
         port = mkOption {
-          type = types.nullOr (types.either pkgs.lib.types.port (types.strMatching "[[:digit:]]+:[[:digit:]]+"));
+          type = types.nullOr (types.either super.lib.types.port (types.strMatching "[[:digit:]]+:[[:digit:]]+"));
           default = null;
           example = "8000:8007";
           description = ''
@@ -149,7 +147,7 @@ rec {
         };
 
         ip = mkOption {
-          type = types.nullOr pkgs.lib.types.ipv4CIDR;
+          type = types.nullOr super.lib.types.ipv4CIDR;
           default = null;
           example = "10.0.0.0/24";
           description = ''
@@ -168,7 +166,7 @@ rec {
     options = {
 
       protocol = mkOption {
-        type = pkgs.lib.types.nonEmptyStr;
+        type = super.lib.types.nonEmptyStr;
         example = "tcp";
         description = ''
           The protocol of the rule or packet to check.
@@ -176,7 +174,7 @@ rec {
       };
 
       interface = mkOption {
-        type = types.nullOr pkgs.lib.types.nonEmptyStr;
+        type = types.nullOr super.lib.types.nonEmptyStr;
         default = null;
         example = "eth0";
         description = ''
@@ -188,7 +186,7 @@ rec {
 
       src = {
         port = mkOption {
-          type = types.nullOr (types.either pkgs.lib.types.port (types.strMatching "[[:digit:]]+:[[:digit:]]+"));
+          type = types.nullOr (types.either super.lib.types.port (types.strMatching "[[:digit:]]+:[[:digit:]]+"));
           default = null;
           example = "67:68";
           description = ''
@@ -202,7 +200,7 @@ rec {
         };
 
         ip = mkOption {
-          type = types.nullOr pkgs.lib.types.ipv6CIDR;
+          type = types.nullOr super.lib.types.ipv6CIDR;
           default = null;
           example = "2001:db8::3:0/64";
           description = ''
@@ -216,7 +214,7 @@ rec {
 
       dest = {
         port = mkOption {
-          type = types.nullOr (types.either pkgs.lib.types.port (types.strMatching "[[:digit:]]+:[[:digit:]]+"));
+          type = types.nullOr (types.either super.lib.types.port (types.strMatching "[[:digit:]]+:[[:digit:]]+"));
           default = null;
           example = "8000:8007";
           description = ''
@@ -225,7 +223,7 @@ rec {
         };
 
         ip = mkOption {
-          type = types.nullOr pkgs.lib.types.ipv6CIDR;
+          type = types.nullOr super.lib.types.ipv6CIDR;
           default = null;
           example = "2001:db8::3:0/64";
           description = ''
@@ -256,7 +254,7 @@ rec {
       };
 
       ip = mkOption {
-        type = pkgs.lib.types.ipv4CIDR;
+        type = super.lib.types.ipv4CIDR;
         example = "192.168.1.0/24";
         description = ''
           The IPv4 address of the subnet in CIDR notation.
@@ -264,7 +262,7 @@ rec {
       };
 
       prefix = mkOption {
-        type = pkgs.lib.types.nonEmptyStr;
+        type = super.lib.types.nonEmptyStr;
         example = "192.168.1";
         description = ''
           Just the prefix part of the IPv4 address of the subnet.
@@ -287,7 +285,7 @@ rec {
       };
 
       router = mkOption {
-        type = types.nullOr pkgs.lib.types.ipv4NoCIDR;
+        type = types.nullOr super.lib.types.ipv4NoCIDR;
         example = "192.168.1.1";
         description = ''
           The subnet's default router, expressed as an IPv4 address.
@@ -319,10 +317,10 @@ rec {
         type = types.nullOr (types.submodule {
           options = {
             start = mkOption {
-              type = pkgs.lib.types.ipv4NoCIDR;
+              type = super.lib.types.ipv4NoCIDR;
             };
             end = mkOption {
-              type = pkgs.lib.types.ipv4NoCIDR;
+              type = super.lib.types.ipv4NoCIDR;
             };
           };
         });
@@ -358,7 +356,7 @@ rec {
       };
 
       nameservers = mkOption {
-        type = types.listOf (types.either pkgs.lib.types.ipv4NoCIDR pkgs.lib.types.ipv6NoCIDR);
+        type = types.listOf (types.either super.lib.types.ipv4NoCIDR super.lib.types.ipv6NoCIDR);
         default = [];
         example = [ "192.168.0.8" "2001:db8::8" ];
         description = ''
@@ -368,7 +366,7 @@ rec {
       };
 
       deny = mkOption {
-        type = types.listOf pkgs.lib.types.nonEmptyStr;
+        type = types.listOf super.lib.types.nonEmptyStr;
         default = [];
         example = [ "unknown-clients" ];
         description = ''
@@ -395,7 +393,7 @@ rec {
       };
 
       ip = mkOption {
-        type = pkgs.lib.types.ipv6CIDR;
+        type = super.lib.types.ipv6CIDR;
         example = "2001:db8::/64";
         description = ''
           The IPv6 address of the subnet in CIDR notation.
@@ -403,7 +401,7 @@ rec {
       };
 
       prefix = mkOption {
-        type = pkgs.lib.types.nonEmptyStr;
+        type = super.lib.types.nonEmptyStr;
         example = "2001:db8::";
         description = ''
           Just the prefix part of the IPv6 address of the subnet.
@@ -426,7 +424,7 @@ rec {
       };
 
       router = mkOption {
-        type = types.nullOr pkgs.lib.types.ipv6NoCIDR;
+        type = types.nullOr super.lib.types.ipv6NoCIDR;
         example = "fe80::1";
         description = ''
           The subnet's default router, expressed as an IPv6 address.
@@ -448,7 +446,7 @@ rec {
   wgAllowedIP = types.submodule {
     options = {
       ip = mkOption {
-        type = types.either pkgs.lib.types.ipv4CIDR pkgs.lib.types.ipv6CIDR;
+        type = types.either super.lib.types.ipv4CIDR super.lib.types.ipv6CIDR;
         example = "10.192.122.3/32";
         description = ''
           An IPv4 or IPv6 address (with CIDR mask) from which this
@@ -469,7 +467,7 @@ rec {
         table = mkOption {
           default = "main";
           example = "vpn";
-          type = pkgs.lib.types.nonEmptyStr;
+          type = super.lib.types.nonEmptyStr;
           description = ''
             The kernel routing table to which the static route (if any) will be added.
 
@@ -484,7 +482,7 @@ rec {
     options = {
 
       name = mkOption {
-        type = pkgs.lib.types.nonEmptyStr;
+        type = super.lib.types.nonEmptyStr;
         default = "${name}";
         description = ''
           A short name for the peer. The name should be a valid
@@ -497,12 +495,12 @@ rec {
 
       publicKey = mkOption {
         example = "xTIBA5rboUvnH4htodjb6e697QjLERt1NAB4mZqp8Dg=";
-        type = pkgs.lib.types.nonEmptyStr;
+        type = super.lib.types.nonEmptyStr;
         description = "The base64 public key the peer.";
       };
 
       presharedKeyLiteral = mkOption {
-        type = pkgs.lib.types.nonEmptyStr;
+        type = super.lib.types.nonEmptyStr;
         example = "<key>";
         description = ''
           The WireGuard pre-shared key for this peer, as a string
@@ -569,7 +567,7 @@ rec {
     options = {
 
       hostName = mkOption {
-        type = pkgs.lib.types.nonEmptyStr;
+        type = super.lib.types.nonEmptyStr;
         example = "builder.example.com";
         description = ''
           The primary host name of the remote build host. This is the
@@ -579,7 +577,7 @@ rec {
       };
 
       alternateHostNames = mkOption {
-        type = types.listOf pkgs.lib.types.nonEmptyStr;
+        type = types.listOf super.lib.types.nonEmptyStr;
         default = [];
         example = [ "192.168.1.1" "2001:db8::1" ];
         description = ''
@@ -592,7 +590,7 @@ rec {
       };
 
       hostPublicKeyLiteral = mkOption {
-        type = pkgs.lib.types.nonEmptyStr;
+        type = super.lib.types.nonEmptyStr;
         example = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMUTz5i9u5H2FHNAmZJyoJfIGyUm/HfGhfwnc142L3ds";
         description = ''
           A string literal containing the host's SSH public key. This
@@ -602,7 +600,7 @@ rec {
       };
 
       systems = mkOption {
-        type = types.nonEmptyListOf pkgs.lib.types.nonEmptyStr;
+        type = types.nonEmptyListOf super.lib.types.nonEmptyStr;
         example = [ "x86_64-linux" "i686-linux" ];
         description = ''
           A list of Nix system types for which this remote build host
@@ -631,7 +629,7 @@ rec {
       };
 
       mandatoryFeatures = mkOption {
-        type = types.listOf pkgs.lib.types.nonEmptyStr;
+        type = types.listOf super.lib.types.nonEmptyStr;
         default = [];
         example = [ "perf" ];
         description = ''
@@ -640,7 +638,7 @@ rec {
       };
 
       supportedFeatures = mkOption {
-        type = types.listOf pkgs.lib.types.nonEmptyStr;
+        type = types.listOf super.lib.types.nonEmptyStr;
         default = [];
         example = [ "kvm" "big-parallel" ];
         description = ''
@@ -649,7 +647,7 @@ rec {
       };
 
       sshUserName = mkOption {
-        type = pkgs.lib.types.nonEmptyStr;
+        type = super.lib.types.nonEmptyStr;
         example = "remote-builder";
         description = ''
           The user name to be used for builds on the remote builder.
@@ -662,7 +660,7 @@ rec {
       };
 
       sshKeyLiteral = mkOption {
-        type = pkgs.lib.types.nonEmptyStr;
+        type = super.lib.types.nonEmptyStr;
         description = ''
           The SSH private key for <varname>sshUser</varname>, as a
           literal string.
@@ -672,4 +670,15 @@ rec {
     };
   };
 
+in {
+  lib = (super.lib or {}) // {
+    types = (super.lib.types or {}) // {
+      inherit key;
+      inherit fwRule fwRule6;
+      inherit ipv4Subnet dhcp4Subnet;
+      inherit ipv6Subnet;
+      inherit wgAllowedIP wgPeer;
+      inherit remoteBuildHost;
+    };
+  };
 }

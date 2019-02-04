@@ -20,8 +20,8 @@ let
         {
           nixpkgs.localSystem.system = system;
           imports =
-            (import pkgs.lib.quixops.modulesPath) ++
-            (import pkgs.lib.quixops.testModulesPath);
+            (import pkgs.lib.quixops-modules.modulesPath) ++
+            (import pkgs.lib.quixops-modules.testing.testModulesPath);
 
           # Use the test key deployment system.
           deployment.reallyReallyEnable = true;
@@ -30,7 +30,7 @@ let
             enable = true;
             mutable = false;
             openFirewall = true;
-            configLiteral = pkgs.lib.quixops.mkZncConfig {
+            configLiteral = pkgs.lib.quixops-modules.mkZncConfig {
               inherit pkgs;
               zncServiceConfig = config.services.qx-znc;
             };
@@ -53,8 +53,8 @@ let
         {
           nixpkgs.localSystem.system = system;
           imports =
-            (import pkgs.lib.quixops.modulesPath) ++
-            (import pkgs.lib.quixops.testModulesPath);
+            (import pkgs.lib.quixops-modules.modulesPath) ++
+            (import pkgs.lib.quixops-modules.testing.testModulesPath);
 
           # Use the test key deployment system.
           deployment.reallyReallyEnable = true;
@@ -63,7 +63,7 @@ let
             enable = true;
             mutable = false;
             openFirewall = true;
-            configLiteral = pkgs.lib.quixops.mkZncConfig {
+            configLiteral = pkgs.lib.quixops-modules.mkZncConfig {
               inherit pkgs;
               zncServiceConfig = config.services.qx-znc;
             };

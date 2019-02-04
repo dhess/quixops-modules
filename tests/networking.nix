@@ -19,7 +19,7 @@ let
 
       server = { config, ... }: {
         nixpkgs.localSystem.system = system;
-        imports = (import pkgs.lib.quixops.modulesPath);
+        imports = (import pkgs.lib.quixops-modules.modulesPath);
       } // machineAttrs;
 
       client = { ... }: {

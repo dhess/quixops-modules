@@ -17,7 +17,7 @@ let
         nixpkgs.localSystem.system = system;
         imports = [
           ./common/users.nix
-        ] ++ (import pkgs.lib.quixops.modulesPath);
+        ] ++ (import pkgs.lib.quixops-modules.modulesPath);
       } // machineAttrs;
       testScript = { ... }:
       ''
