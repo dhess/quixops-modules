@@ -187,7 +187,7 @@ let
 
         client = { config, ... }: {
           nixpkgs.localSystem.system = system;
-          imports = (import pkgs.lib.quixops-modules.modulesPath);
+          imports = pkgs.lib.quixops-modules.modules;
         } // clientAttrs;
 
         server1 = { config, ... }: {

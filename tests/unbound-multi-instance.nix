@@ -50,7 +50,7 @@ in makeTest rec {
 
      server = { config, ... }: {
        nixpkgs.localSystem.system = system;
-       imports = (import pkgs.lib.quixops-modules.modulesPath);
+       imports = pkgs.lib.quixops-modules.modules;
        networking.useDHCP = false;
        networking.firewall.allowedUDPPorts = [ 53 ];
        networking.firewall.allowedTCPPorts = [ 53 ];

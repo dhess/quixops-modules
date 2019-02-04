@@ -120,8 +120,8 @@ let
   server = openvpn: strongswan: wireguard: { config, ... }: {
     nixpkgs.localSystem.system = system;
     imports =
-      (import pkgs.lib.quixops-modules.modulesPath) ++
-      (import pkgs.lib.quixops-modules.testing.testModulesPath);
+      pkgs.lib.quixops-modules.modules ++
+      pkgs.lib.quixops-modules.testing.testModules;
 
     # Use the test key deployment system.
     deployment.reallyReallyEnable = true;

@@ -28,7 +28,7 @@ let
       server = { config, ... }: {
           nixpkgs.localSystem.system = system;
           imports = [
-          ] ++ (import pkgs.lib.quixops-modules.modulesPath);
+          ] ++ pkgs.lib.quixops-modules.modules;
           quixops.remote-build-host = {
             enable = true;
             user.sshPublicKeyFiles = pkgs.lib.singleton remoteBuilderPublicKey;
@@ -36,7 +36,7 @@ let
       } // machineAttrs;
       client = { config, ... }: {
           nixpkgs.localSystem.system = system;
-          imports = (import pkgs.lib.quixops-modules.modulesPath);
+          imports = pkgs.lib.quixops-modules.modules;
       };
     };
 

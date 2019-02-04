@@ -7,7 +7,12 @@ let
 
 
   # A list of all the NixOS modules exported by this package.
-  modulesPath = ../../modules/module-list.nix;
+  modulesList = ../../modules/module-list.nix;
+
+
+  # All NixOS modules exported by this package. To use, add this
+  # expression to your configuration's list of imports.
+  modules = import modulesList;
 
 
   # Create the text of a znc config file, so that it can be securely
@@ -19,17 +24,26 @@ let
   # NOTE: do NOT use these in production. They will do bad
   # things, like writing secrets to your Nix store. Use them ONLY
   # for testing. You have been warned!
-  testModulesPath = ../../test-modules/module-list.nix;
+  testModulesList = ../../test-modules/module-list.nix;
+
+
+  # All the NixOS test modules exported by this package.
+  #
+  # NOTE: do NOT use these in production. They will do bad
+  # things, like writing secrets to your Nix store. Use them ONLY
+  # for testing. You have been warned!
+  testModules = import testModulesList;
 
 in
 {
   lib = (super.lib or {}) // {
     quixops-modules = (super.lib.quixops-modules or {}) // {
-      inherit path modulesPath;
+      inherit path;
+      inherit modules modulesList;
       inherit mkZncConfig;
 
       testing = (super.lib.quixops-modules.testing or {}) // {
-        inherit testModulesPath;
+        inherit testModules testModulesList;
       };      
     };
   };

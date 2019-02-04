@@ -26,8 +26,8 @@ in makeTest rec {
     host = { config, ... }: {
       nixpkgs.localSystem.system = system;
       imports =
-        (import pkgs.lib.quixops-modules.modulesPath) ++
-        (import pkgs.lib.quixops-modules.testing.testModulesPath);
+        pkgs.lib.quixops-modules.modules ++
+        pkgs.lib.quixops-modules.testing.testModules;
 
        networking.useDHCP = false;
        networking.firewall.allowedTCPPorts = [ 25 587 ];

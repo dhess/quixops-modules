@@ -15,7 +15,7 @@ in makeTest rec {
 
   machine = { config, ... }: {
     nixpkgs.localSystem.system = system;
-    imports = (import pkgs.lib.quixops-modules.modulesPath);
+    imports = pkgs.lib.quixops-modules.modules;
     quixops.hardware.hwutils.enable = true;
   };
 

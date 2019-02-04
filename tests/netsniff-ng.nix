@@ -19,7 +19,7 @@ let
 
       sniffer = { config, ... }: {
         nixpkgs.localSystem.system = system;
-        imports = (import pkgs.lib.quixops-modules.modulesPath);
+        imports = pkgs.lib.quixops-modules.modules;
 
         services.netsniff-ng.instances.test = {
           inputInterface = "eth0";

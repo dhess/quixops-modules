@@ -16,7 +16,7 @@ in makeTest rec {
   nodes = {
     client = { config, ... }: {
       nixpkgs.localSystem.system = system;
-      imports = (import pkgs.lib.quixops-modules.modulesPath);
+      imports = pkgs.lib.quixops-modules.modules;
       services.mellon-auto-unlock.locks.front-door = {
         description = "Front door daily auto-unlock";
         mellonUrl = "http://localhost";

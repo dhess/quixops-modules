@@ -21,8 +21,8 @@ in makeTest rec {
     server1 = { config, ... }: {
       nixpkgs.localSystem.system = system;
       imports =
-        (import pkgs.lib.quixops-modules.modulesPath) ++
-        (import pkgs.lib.quixops-modules.testing.testModulesPath);
+        pkgs.lib.quixops-modules.modules ++
+        pkgs.lib.quixops-modules.testing.testModules;
 
       networking.firewall.allowedUDPPorts = [ 69 ];
       services.tftpd-hpa.enable = true;
@@ -54,8 +54,8 @@ in makeTest rec {
     server2 = { config, ... }: {
       nixpkgs.localSystem.system = system;
       imports =
-        (import pkgs.lib.quixops-modules.modulesPath) ++
-        (import pkgs.lib.quixops-modules.testing.testModulesPath);
+        pkgs.lib.quixops-modules.modules ++
+        pkgs.lib.quixops-modules.testing.testModules;
 
       networking.firewall.allowedUDPPorts = [ 69 ];
       boot.kernelModules = [ "dummy" ];
