@@ -13,6 +13,15 @@ let
 in
 self //
 {
+  # Note: I don't yet provide a NUR-style module attrset, because the
+  # modules provided by this repo are quite complicated and
+  # interdependent. Furthermore, they're written with the assumption
+  # that you're using the overlay provided by the repo, so you'd need
+  # to use this repo as an overlay and not as a NUR import, anyway.
+  #
+  # A future version might refactor things so that they're
+  # NUR-compatible.
+
   overlays.quixops-modules = import ./overlays/lib/quixops-modules.nix;
   overlays.types = import ./overlays/lib/types.nix;
 }
