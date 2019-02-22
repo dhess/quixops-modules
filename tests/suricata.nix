@@ -32,7 +32,8 @@ in makeTest rec {
       $out =~ /hiredis async with libevent:\s+yes\n/ or die "Missing hiredis or libevent support.";
       $out =~ /Hyperscan support:\s+yes\n/ or die "Missing Hyperscan support.";
       $out =~ /Libnet support:\s+yes\n/ or die "Missing libnet support.";
-      $out =~ /Rust support .* yes\n/ or die "Missing Rust support.";
+      $out =~ /Prelude support:\s+yes\n/ or die "Missing libprelude support.";
+      $out =~ /Rust support:\s+yes\n/ or die "Missing Rust support.";
     };
   '';
 }
